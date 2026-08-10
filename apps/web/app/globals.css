@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens for the Healthify UI: a private, premium health vault —
+ * warm neutrals instead of clinical gray, a deep teal + muted gold accent
+ * instead of a generic SaaS blue, soft ambient shadows instead of hard
+ * black ones. Status colors (§29/§84) are never the sole signal — every
+ * consumer pairs them with text + an icon.
+ */
+:root {
+  --color-bg: #faf9f5;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f1ea;
+  --color-border: #e7e2d6;
+  --color-border-strong: #d9d3c3;
+  --color-text: #1c1e1a;
+  --color-text-muted: #63665e;
+  --color-text-faint: #96988c;
+
+  --color-brand: #0d4a45;
+  --color-brand-hover: #0a3934;
+  --color-brand-foreground: #f6f4ec;
+  --color-brand-tint: #e6eeec;
+
+  --color-accent: #a9793f;
+  --color-accent-tint: #f6efe1;
+  --color-accent-foreground: #ffffff;
+
+  --color-danger: #a13c30;
+  --color-danger-tint: #fbece9;
+
+  --status-green: #2f6f4f;
+  --status-green-tint: #e7f2ea;
+  --status-yellow: #96741c;
+  --status-yellow-tint: #fbf3dd;
+  --status-orange: #ab5f28;
+  --status-orange-tint: #fcede0;
+  --status-red: #a13c30;
+  --status-red-tint: #fbece9;
+  --status-neutral: #63665e;
+  --status-neutral-tint: #f0eee6;
+
+  --focus-ring: #0d4a45;
+
+  --shadow-color: 30 26 15;
+  --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.05);
+  --shadow-md: 0 2px 8px rgb(var(--shadow-color) / 0.06), 0 1px 2px rgb(var(--shadow-color) / 0.04);
+  --shadow-lg: 0 16px 40px -12px rgb(var(--shadow-color) / 0.16), 0 4px 12px rgb(var(--shadow-color) / 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #14140f;
+    --color-surface: #1b1b15;
+    --color-surface-muted: #21211a;
+    --color-border: #322f24;
+    --color-border-strong: #423e2f;
+    --color-text: #f1efe6;
+    --color-text-muted: #b3b0a1;
+    --color-text-faint: #7d7a6d;
+
+    --color-brand: #6cbcab;
+    --color-brand-hover: #86cdbe;
+    --color-brand-foreground: #0d1a17;
+    --color-brand-tint: #1a2b27;
+
+    --color-accent: #d9ac6e;
+    --color-accent-tint: #2c2417;
+    --color-accent-foreground: #1c1409;
+
+    --color-danger: #e39184;
+    --color-danger-tint: #2e1a16;
+
+    --status-green: #7ac29e;
+    --status-green-tint: #17281f;
+    --status-yellow: #e0bd63;
+    --status-yellow-tint: #2c260f;
+    --status-orange: #e0a06a;
+    --status-orange-tint: #2e2213;
+    --status-red: #e39184;
+    --status-red-tint: #2e1a16;
+    --status-neutral: #b3b0a1;
+    --status-neutral-tint: #21211a;
+
+    --focus-ring: #6cbcab;
+
+    --shadow-color: 0 0 0;
+    --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.3);
+    --shadow-md: 0 2px 10px rgb(var(--shadow-color) / 0.35);
+    --shadow-lg: 0 20px 48px -12px rgb(var(--shadow-color) / 0.55);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-faint: var(--color-text-faint);
+  --color-brand: var(--color-brand);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-brand-foreground: var(--color-brand-foreground);
+  --color-brand-tint: var(--color-brand-tint);
+  --color-accent: var(--color-accent);
+  --color-accent-tint: var(--color-accent-tint);
+  --color-danger: var(--color-danger);
+  --color-danger-tint: var(--color-danger-tint);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-feature-settings: "ss01" 1;
+}
+
+::selection {
+  background: var(--color-accent-tint);
+  color: var(--color-text);
+}

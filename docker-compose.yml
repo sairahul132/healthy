@@ -1,0 +1,71 @@
+name: healthify
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: healthify
+      POSTGRES_PASSWORD: healthify_dev_only
+      POSTGRES_DB: healthify
+    ports:
+      - "5432:5432"
+    volumes:
+      - healthify_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthify -d healthify"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # S3-compatible object storage for local dev. Swapped for real AWS S3 via
+  # STORAGE_* env vars in staging/production — application code is unaware
+  # of the difference (see apps/api/app/providers/storage_provider.py).
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: healthify_dev
+      MINIO_ROOT_PASSWORD: healthify_dev_only
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - healthify_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: dev
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  healthify_postgres_data:
+  healthify_minio_data:

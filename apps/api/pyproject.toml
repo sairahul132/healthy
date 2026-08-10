@@ -1,0 +1,30 @@
+[project]
+name = "healthify-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+# S101: asserts are how pytest works. B008: Depends(...) in argument
+# defaults is FastAPI's idiomatic DI pattern, not the footgun this rule
+# targets elsewhere.
+ignore = ["S101", "B008"]
+
+[tool.mypy]
+python_version = "3.12"
+disallow_untyped_defs = true
+ignore_missing_imports = true
+# This package has no __init__.py files (implicit namespace packages) —
+# without these, mypy can't tell app/db/types.py apart from stdlib `types`.
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "."
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
