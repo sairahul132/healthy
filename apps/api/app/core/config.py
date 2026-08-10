@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     storage_provider: str = "s3_compatible"
     storage_endpoint_url: str | None = None
-    storage_bucket: str = "healthify-documents"
+    storage_bucket: str = "healthy-documents"
     storage_access_key: str = ""
     storage_secret_key: str = ""
     storage_region: str = "us-east-1"

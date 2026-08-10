@@ -10,14 +10,14 @@ from app.core.security import (
     create_access_token,
     decrypt_field,
     encrypt_field,
-    generate_healthify_id,
+    generate_healthy_id,
     generate_opaque_token,
     generate_otp_code,
     hash_secret,
     hmac_lookup_hash,
     verify_secret,
 )
-from app.db.models import HealthifyId, HealthProfile, User, UserIdentity
+from app.db.models import HealthProfile, HealthyId, User, UserIdentity
 from app.db.models.health_profile import Sex
 from app.db.models.session import Session as SessionModel
 from app.db.models.user_identity import IdentityType
@@ -159,19 +159,19 @@ class AuthService:
             )
         )
 
-        healthify_id = await self._unique_healthify_id()
-        self._users.add(HealthifyId(user_id=user.id, healthify_id=healthify_id))
+        healthy_id = await self._unique_healthy_id()
+        self._users.add(HealthyId(user_id=user.id, healthy_id=healthy_id))
         self._users.add(HealthProfile(user_id=user.id))
 
         await self._db.flush()
         return user
 
-    async def _unique_healthify_id(self) -> str:
+    async def _unique_healthy_id(self) -> str:
         for _ in range(10):
-            candidate = generate_healthify_id()
-            if not await self._users.healthify_id_exists(candidate):
+            candidate = generate_healthy_id()
+            if not await self._users.healthy_id_exists(candidate):
                 return candidate
-        raise RuntimeError("Could not generate a unique Healthify ID.")  # pragma: no cover
+        raise RuntimeError("Could not generate a unique Healthy ID.")  # pragma: no cover
 
     async def _create_session(self, user_id: uuid.UUID) -> tuple[SessionModel, str]:
         settings = get_settings()
@@ -230,7 +230,7 @@ class AuthService:
         if user is None:
             raise UnauthorizedError("Account no longer exists.")
 
-        healthify_id = await self._users.get_healthify_id(user_id)
+        healthy_id = await self._users.get_healthy_id(user_id)
         profile = await self._users.get_health_profile(user_id)
         identities = await self._users.list_identities(user_id)
 
@@ -252,7 +252,7 @@ class AuthService:
         )
 
         return UserResponse(
-            healthify_id=healthify_id.healthify_id if healthify_id else "",
+            healthy_id=healthy_id.healthy_id if healthy_id else "",
             name=profile.display_name if profile else None,
             date_of_birth=profile.date_of_birth if profile else None,
             sex=profile.sex.value if profile and profile.sex else None,

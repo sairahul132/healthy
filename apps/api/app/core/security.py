@@ -17,9 +17,9 @@ from app.core.config import get_settings
 
 _hasher = PasswordHasher()
 
-# Excludes 0/O/1/I to avoid transcription ambiguity when a Healthify ID is read aloud
+# Excludes 0/O/1/I to avoid transcription ambiguity when a Healthy ID is read aloud
 # or copied from a printed card.
-_HEALTHIFY_ID_ALPHABET = "".join(
+_HEALTHY_ID_ALPHABET = "".join(
     c for c in (string.ascii_uppercase + string.digits) if c not in "01OI"
 )
 
@@ -74,12 +74,12 @@ def decrypt_field(ciphertext: str) -> str:
 
 
 def _random_id_segment() -> str:
-    return "".join(secrets.choice(_HEALTHIFY_ID_ALPHABET) for _ in range(4))
+    return "".join(secrets.choice(_HEALTHY_ID_ALPHABET) for _ in range(4))
 
 
-def generate_healthify_id() -> str:
-    """HFY-XXXX-XXXX — random, not sequential, not derived from any PII or DB id (§11)."""
-    return f"HFY-{_random_id_segment()}-{_random_id_segment()}"
+def generate_healthy_id() -> str:
+    """HLT-XXXX-XXXX — random, not sequential, not derived from any PII or DB id (§11)."""
+    return f"HLT-{_random_id_segment()}-{_random_id_segment()}"
 
 
 def generate_opaque_token() -> str:

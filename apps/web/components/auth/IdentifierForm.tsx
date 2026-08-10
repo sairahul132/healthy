@@ -35,7 +35,7 @@ export function IdentifierForm({ mode }: { mode: "register" | "login" }) {
       const message =
         error instanceof ApiError
           ? error.message
-          : "Healthify can't be reached right now. Please try again shortly.";
+          : "Healthy can't be reached right now. Please try again shortly.";
       setError("identifier", { type: "server", message });
     },
   });

@@ -31,7 +31,7 @@ export function Topbar() {
           </p>
           {user ? (
             <p className="font-mono text-[11px] leading-tight text-[var(--color-text-faint)]">
-              {user.healthifyId}
+              {user.healthyId}
             </p>
           ) : null}
         </div>

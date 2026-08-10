@@ -22,7 +22,7 @@ import { ReportValidationError } from "@/lib/reports/provider";
  * import it directly.
  */
 
-const STORAGE_KEY = "healthify_mock_reports_v1";
+const STORAGE_KEY = "healthy_mock_reports_v1";
 const ALLOWED_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png"];
 const MAX_SIZE_BYTES = 20 * 1024 * 1024;
 

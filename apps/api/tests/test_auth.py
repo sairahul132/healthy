@@ -10,7 +10,7 @@ async def test_register_then_verify_creates_account(
     body = await register_and_verify(client, otp_provider, identifier)
 
     user = body["user"]
-    assert user["healthifyId"].startswith("HFY-")
+    assert user["healthyId"].startswith("HLT-")
     assert user["email"] == identifier
     assert user["phone"] is None
     assert user["allergies"] == []
@@ -30,7 +30,7 @@ async def test_same_identifier_logs_back_into_same_account(
         "/api/v1/auth/verify-otp", json={"identifier": identifier, "code": code}
     )
     assert second.status_code == 200
-    assert second.json()["user"]["healthifyId"] == first["user"]["healthifyId"]
+    assert second.json()["user"]["healthyId"] == first["user"]["healthyId"]
 
 
 async def test_wrong_code_is_rejected(client: AsyncClient, otp_provider: RecordingOtpProvider):

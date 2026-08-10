@@ -1,4 +1,4 @@
-# Healthify — Web
+# Healthy — Web
 
 Patient-facing frontend. Next.js (App Router, TypeScript strict), Tailwind
 CSS v4, TanStack Query, React Hook Form + Zod. See
@@ -14,7 +14,7 @@ backend this now talks to for real.
 - **Sharing** — patient creates category-scoped share links; OTP-verified
   recipient view at `/s/[token]`; access requests; approve/decline; revoke
   (`app/(app)/share`, `app/s/[token]`, §42-57) — real backend
-- **Dashboard** — Healthify ID, health overview, recent reports, quick
+- **Dashboard** — Healthy ID, health overview, recent reports, quick
   actions (`app/(app)/dashboard`)
 - **Reports** — upload, async processing status, structured results with
   deterministic clinical status + trends (`app/(app)/reports/*`) — **mock**,
@@ -22,7 +22,7 @@ backend this now talks to for real.
 - **Timeline** — chronological health events (`app/(app)/timeline`) — mock
 
 Nav items for features not yet built (Health category pages, Medicines,
-Permissions, Ask Healthify) are visible but disabled with a "Soon" badge —
+Permissions, Ask Healthy) are visible but disabled with a "Soon" badge —
 see `components/layout/nav-items.ts` — rather than linking to dead pages.
 
 ### Two servers now — this needs apps/api running
@@ -65,7 +65,7 @@ logged to the **apps/api terminal**: `MOCK OTP for <identifier>: <code>`.
    app (`npm run dev`)
 2. **Create your vault** → enter any phone/email → **Send one-time code**
 3. Check the **apps/api terminal** for the code, enter it here
-4. You land on the dashboard with a real Healthify ID and an empty profile
+4. You land on the dashboard with a real Healthy ID and an empty profile
    (nothing pre-seeded — this account is really persisted in `apps/api`'s
    SQLite/Postgres DB)
 5. Reports/Timeline still work exactly as before — synthetic, client-side,
@@ -77,9 +77,9 @@ logged to the **apps/api terminal**: `MOCK OTP for <identifier>: <code>`.
    identifier as the recipient (e.g. `doctor@example.com` — must differ
    from your own login identifier) → pick a duration → **Generate secure
    link**
-2. Copy the link (`/s/<token>`) — Healthify can't show it to you again
+2. Copy the link (`/s/<token>`) — Healthy can't show it to you again
 3. Open that link **in a private/incognito window** (so it doesn't share
-   your patient cookies) — you'll see your Healthify ID and a prompt for
+   your patient cookies) — you'll see your Healthy ID and a prompt for
    the recipient's identifier
 4. Enter the *same* identifier you shared with (a different one is
    rejected — that's the "who" access control working) → check the

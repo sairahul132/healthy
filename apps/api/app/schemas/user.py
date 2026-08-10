@@ -10,7 +10,7 @@ class EmergencyContact(CamelModel):
 
 
 class UserResponse(CamelModel):
-    healthify_id: str
+    healthy_id: str
     name: str | None
     date_of_birth: date | None
     sex: str | None

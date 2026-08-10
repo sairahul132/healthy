@@ -79,7 +79,7 @@ export function RecipientFlow({ token }: { token: string }) {
   return (
     <AuthShell
       title="Protected Health Record"
-      description={`Healthify ID: ${preview.data.healthifyId ?? "—"}`}
+      description={`Healthy ID: ${preview.data.healthyId ?? "—"}`}
     >
       <IdentifyStep
         token={token}

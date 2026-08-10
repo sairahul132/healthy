@@ -17,6 +17,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Medicines", href: "/medicines", icon: "medicines", enabled: false },
   { label: "Share", href: "/share", icon: "share", enabled: true },
   { label: "Permissions", href: "/permissions", icon: "permissions", enabled: false },
-  { label: "Ask Healthify", href: "/ask", icon: "assistant", enabled: false },
+  { label: "Ask Healthy", href: "/ask", icon: "assistant", enabled: false },
   { label: "Profile", href: "/profile", icon: "profile", enabled: true },
 ];

@@ -1,4 +1,4 @@
-# Healthify — API
+# Healthy — API
 
 FastAPI backend. Phase 1 scope (see [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)):
 OTP auth, health profile, and patient-controlled sharing (§42-57). Reports/
@@ -27,7 +27,7 @@ uvicorn app.main:app --reload --port 8000
 A working `.env` for local dev (no Postgres/Redis needed):
 
 ```
-DATABASE_URL=sqlite+aiosqlite:///./healthify_dev.db
+DATABASE_URL=sqlite+aiosqlite:///./healthy_dev.db
 REDIS_URL=redis://localhost:6379/0
 JWT_SIGNING_KEY=dev-only-change-me-00000000000000000000000000000000
 FIELD_ENCRYPTION_KEY=dev-only-change-me-00000000000000000000000000000000

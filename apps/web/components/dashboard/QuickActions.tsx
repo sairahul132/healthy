@@ -5,7 +5,7 @@ const ACTIONS: Array<{ label: string; href: string; icon: IconName; enabled: boo
   { label: "Upload Report", href: "/reports/upload", icon: "reports", enabled: true },
   { label: "View Timeline", href: "/timeline", icon: "timeline", enabled: true },
   { label: "Share Health", href: "/share", icon: "share", enabled: true },
-  { label: "Ask Healthify", href: "/ask", icon: "assistant", enabled: false },
+  { label: "Ask Healthy", href: "/ask", icon: "assistant", enabled: false },
 ];
 
 export function QuickActions() {

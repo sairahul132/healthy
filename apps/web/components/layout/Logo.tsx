@@ -22,7 +22,7 @@ export function Logomark({ className }: { className?: string }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("font-display text-lg font-medium tracking-tight", className)}>
-      Healthify
+      Healthy
     </span>
   );
 }

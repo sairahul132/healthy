@@ -2,12 +2,12 @@ import Link from "next/link";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { IdentifierForm } from "@/components/auth/IdentifierForm";
 
-export const metadata = { title: "Create your Healthify vault" };
+export const metadata = { title: "Create your Healthy vault" };
 
 export default function RegisterPage() {
   return (
     <AuthShell
-      title="Create your Healthify vault"
+      title="Create your Healthy vault"
       description="No password needed — we'll send a one-time code to verify it's you."
       footer={
         <span className="text-[var(--color-text-muted)]">

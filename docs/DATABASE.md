@@ -1,4 +1,4 @@
-# Healthify — Database (Phase 1 schema)
+# Healthy — Database (Phase 1 schema)
 
 Full target schema is the ~30 tables listed in the master spec (§68). We are creating only
 the tables Phase 1 needs; later phases add tables via new Alembic migrations rather than
@@ -9,7 +9,7 @@ altering this design out from under itself.
 ```mermaid
 erDiagram
     USERS ||--o{ USER_IDENTITIES : has
-    USERS ||--|| HEALTHIFY_IDS : has
+    USERS ||--|| HEALTHY_IDS : has
     USERS ||--|| HEALTH_PROFILES : has
     USERS ||--o{ DEVICES : registers
     USERS ||--o{ SESSIONS : has
@@ -35,10 +35,10 @@ erDiagram
         timestamptz verified_at
     }
 
-    HEALTHIFY_IDS {
+    HEALTHY_IDS {
         uuid id PK
         uuid user_id FK
-        text healthify_id UK "HFY-XXXX-XXXX, random"
+        text healthy_id UK "HLT-XXXX-XXXX, random"
         timestamptz created_at
     }
 
@@ -105,8 +105,8 @@ erDiagram
   plus a keyed-hash (HMAC) column for equality lookup — the plaintext is never queried
   directly, and no other table stores phone/email at all. `health_profiles` never contains
   a phone/email column.
-- **Healthify ID (§11):** generated from a CSPRNG, checked for uniqueness against
-  `healthify_ids.healthify_id`, format `HFY-XXXX-XXXX` using a Crockford-base32-style
+- **Healthy ID (§11):** generated from a CSPRNG, checked for uniqueness against
+  `healthy_ids.healthy_id`, format `HLT-XXXX-XXXX` using a Crockford-base32-style
   alphabet (excludes ambiguous characters). Never derived from the UUID or any PII.
 - **OTP storage (§10):** only a hash of the OTP is ever stored (argon2), never the code
   itself. `attempt_count` + `expires_at` enforce brute-force limits at the DB level in

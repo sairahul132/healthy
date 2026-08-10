@@ -14,7 +14,7 @@ import type { AuthProvider, OtpChallenge } from "@/lib/auth/provider";
  * (see lib/auth/get-provider.ts).
  */
 
-const STORAGE_KEY = "healthify_mock_session_v1";
+const STORAGE_KEY = "healthy_mock_session_v1";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function unauthenticatedError(): ApiError {
@@ -32,14 +32,14 @@ function randomSegment(length: number): string {
   return out;
 }
 
-function generateHealthifyId(): string {
-  return `HFY-${randomSegment(4)}-${randomSegment(4)}`;
+function generateHealthyId(): string {
+  return `HLT-${randomSegment(4)}-${randomSegment(4)}`;
 }
 
 function buildDemoUser(identifier: Identifier): User {
   const isEmail = emailPattern.test(identifier);
   return {
-    healthifyId: generateHealthifyId(),
+    healthyId: generateHealthyId(),
     name: "Aarav Sharma",
     dateOfBirth: "1990-04-12",
     sex: "male",

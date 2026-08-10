@@ -31,7 +31,7 @@ export default function DashboardPage() {
       </div>
 
       <IdentityCard
-        healthifyId={user?.healthifyId ?? "—"}
+        healthyId={user?.healthyId ?? "—"}
         name={user?.name ?? null}
         attentionCount={attentionCount}
       />

@@ -1,4 +1,4 @@
-# Healthify — Architecture (Phase 1 scope)
+# Healthy — Architecture (Phase 1 scope)
 
 Full product vision lives in `docs/SPEC.md` (the original 171-section master prompt). This
 document describes what we are actually building right now and how it fits the eventual
@@ -27,7 +27,7 @@ separate deployable services later if scale requires it (§9 of the spec: data s
 ## Phase 1 (this build)
 
 - User registration/login via **OTP only** (no password required, matches §10)
-- Healthify ID generation (§11) — random, non-sequential, doesn't leak phone/email/DB id
+- Healthy ID generation (§11) — random, non-sequential, doesn't leak phone/email/DB id
 - Health profile (subset of §13 fields — non-sensitive ones first)
 - Session management: short-lived access token + rotating refresh, httponly secure cookies
 - Immutable audit log (append-only, §54/§55) for every auth event
@@ -54,7 +54,7 @@ against the real provider's actual contract, not simplified for the mock's conve
 POST /api/v1/auth/register {identifier: phone|email}
   → create pending user, generate OTP challenge (hashed, Redis+DB), send via OTPProvider
 POST /api/v1/auth/verify-otp {identifier, code}
-  → verify hash, rate-limit checked, create user + healthify_id + health_profile (tx)
+  → verify hash, rate-limit checked, create user + healthy_id + health_profile (tx)
   → issue session (access + refresh), write audit_logs row
 POST /api/v1/auth/login {identifier} → same OTP challenge flow for existing users
 GET  /users/me → requires valid session, returns profile scoped to the authenticated user only

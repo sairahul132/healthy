@@ -30,7 +30,7 @@ export function ShareLinkPanel({
       <div className="rounded-2xl border border-[var(--status-green)]/25 bg-[var(--status-green-tint)] px-5 py-4">
         <p className="text-sm font-semibold text-[var(--status-green)]">Secure link created</p>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Save this now — for their protection, Healthify can&apos;t show it to you again.
+          Save this now — for their protection, Healthy can&apos;t show it to you again.
         </p>
       </div>
 

@@ -12,12 +12,12 @@ from app.middleware.request_context import RequestContextMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
-logger = logging.getLogger("healthify.api")
+logger = logging.getLogger("healthy.api")
 
 settings = get_settings()
 
 app = FastAPI(
-    title="Healthify API",
+    title="Healthy API",
     version="0.1.0",
     # Phase 1 scope: auth + profile + sharing. See docs/ARCHITECTURE.md.
 )

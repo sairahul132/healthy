@@ -32,8 +32,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4">
         <ErrorState
-          title="Healthify can't be reached"
-          description="We couldn't connect to the Healthify API. Check that the backend is running, then try again."
+          title="Healthy can't be reached"
+          description="We couldn't connect to the Healthy API. Check that the backend is running, then try again."
           action={
             <Button size="sm" onClick={() => refresh()}>
               Retry

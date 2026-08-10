@@ -77,9 +77,9 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id')
     )
-    op.create_table('healthify_ids',
+    op.create_table('healthy_ids',
     sa.Column('user_id', app.db.types.GUID(), nullable=False),
-    sa.Column('healthify_id', sa.String(length=14), nullable=False),
+    sa.Column('healthy_id', sa.String(length=14), nullable=False),
     sa.Column('id', app.db.types.GUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
@@ -87,7 +87,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id')
     )
-    op.create_index(op.f('ix_healthify_ids_healthify_id'), 'healthify_ids', ['healthify_id'], unique=True)
+    op.create_index(op.f('ix_healthy_ids_healthy_id'), 'healthy_ids', ['healthy_id'], unique=True)
     op.create_table('sharing_sessions',
     sa.Column('patient_user_id', app.db.types.GUID(), nullable=False),
     sa.Column('token_hash', sa.String(), nullable=False),
@@ -197,8 +197,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_sharing_sessions_recipient_identifier_hash'), table_name='sharing_sessions')
     op.drop_index(op.f('ix_sharing_sessions_patient_user_id'), table_name='sharing_sessions')
     op.drop_table('sharing_sessions')
-    op.drop_index(op.f('ix_healthify_ids_healthify_id'), table_name='healthify_ids')
-    op.drop_table('healthify_ids')
+    op.drop_index(op.f('ix_healthy_ids_healthy_id'), table_name='healthy_ids')
+    op.drop_table('healthy_ids')
     op.drop_table('health_profiles')
     op.drop_index(op.f('ix_devices_user_id'), table_name='devices')
     op.drop_table('devices')

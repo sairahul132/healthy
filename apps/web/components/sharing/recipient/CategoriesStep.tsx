@@ -46,10 +46,10 @@ export function CategoriesStep({ token, accessToken }: { token: string; accessTo
           {data ? (
             <>
               <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-text-faint)]">
-                Healthify ID
+                Healthy ID
               </p>
               <p className="font-display mt-1 text-xl font-medium text-[var(--color-text)]">
-                {data.healthifyId}
+                {data.healthyId}
               </p>
               <p className="mt-1 text-xs text-[var(--color-text-faint)]">
                 Access expires {formatDateTime(data.expiresAt)}

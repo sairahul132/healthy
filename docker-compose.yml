@@ -1,18 +1,18 @@
-name: healthify
+name: healthy
 
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: healthify
-      POSTGRES_PASSWORD: healthify_dev_only
-      POSTGRES_DB: healthify
+      POSTGRES_USER: healthy
+      POSTGRES_PASSWORD: healthy_dev_only
+      POSTGRES_DB: healthy
     ports:
       - "5432:5432"
     volumes:
-      - healthify_postgres_data:/var/lib/postgresql/data
+      - healthy_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthify -d healthify"]
+      test: ["CMD-SHELL", "pg_isready -U healthy -d healthy"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -34,13 +34,13 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: healthify_dev
-      MINIO_ROOT_PASSWORD: healthify_dev_only
+      MINIO_ROOT_USER: healthy_dev
+      MINIO_ROOT_PASSWORD: healthy_dev_only
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - healthify_minio_data:/data
+      - healthy_minio_data:/data
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 5s
@@ -67,5 +67,5 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
-  healthify_postgres_data:
-  healthify_minio_data:
+  healthy_postgres_data:
+  healthy_minio_data:

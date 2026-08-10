@@ -10,7 +10,7 @@ from app.db.types import GUID, JSONEncodedDict
 
 
 class AuditLog(UUIDPrimaryKeyMixin, Base):
-    """Append-only (§54/§55). The `healthify_audit_writer` DB role used by the API has
+    """Append-only (§54/§55). The `healthy_audit_writer` DB role used by the API has
     GRANT INSERT, SELECT only — no UPDATE/DELETE — see alembic migration 0001.
     `row_hash` chains from `prev_hash` so any out-of-band tampering breaks the chain.
     """

@@ -4,12 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
-from app.db.models import HealthifyId, HealthProfile, User, UserIdentity
+from app.db.models import HealthProfile, HealthyId, User, UserIdentity
 from app.db.models.user_identity import IdentityType
 
 
 class UserRepository:
-    """Covers the `users` aggregate: User + UserIdentity + HealthifyId + HealthProfile.
+    """Covers the `users` aggregate: User + UserIdentity + HealthyId + HealthProfile.
     These are created together in one transaction (see AuthService.complete_registration)
     so they're read/written through a single repository rather than four.
     """
@@ -33,16 +33,16 @@ class UserRepository:
         stmt = select(UserIdentity).where(UserIdentity.user_id == user_id)
         return list((await self._db.execute(stmt)).scalars().all())
 
-    async def get_healthify_id(self, user_id: uuid.UUID) -> HealthifyId | None:
-        stmt = select(HealthifyId).where(HealthifyId.user_id == user_id)
+    async def get_healthy_id(self, user_id: uuid.UUID) -> HealthyId | None:
+        stmt = select(HealthyId).where(HealthyId.user_id == user_id)
         return (await self._db.execute(stmt)).scalar_one_or_none()
 
     async def get_health_profile(self, user_id: uuid.UUID) -> HealthProfile | None:
         stmt = select(HealthProfile).where(HealthProfile.user_id == user_id)
         return (await self._db.execute(stmt)).scalar_one_or_none()
 
-    async def healthify_id_exists(self, healthify_id: str) -> bool:
-        stmt = select(HealthifyId.id).where(HealthifyId.healthify_id == healthify_id)
+    async def healthy_id_exists(self, healthy_id: str) -> bool:
+        stmt = select(HealthyId.id).where(HealthyId.healthy_id == healthy_id)
         return (await self._db.execute(stmt)).scalar_one_or_none() is not None
 
     def add(self, instance: Base) -> None:  # generic add for the aggregate's models

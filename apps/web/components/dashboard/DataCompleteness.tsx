@@ -2,7 +2,7 @@ import type { HealthCategoryId } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
 
 /**
- * Honest "what Healthify actually knows" summary (docs/SPEC.md §147) — this
+ * Honest "what Healthy actually knows" summary (docs/SPEC.md §147) — this
  * exists specifically to stop users from assuming the vault reflects their
  * whole health history just because a dashboard exists.
  */
@@ -10,7 +10,7 @@ export function DataCompleteness({ knownCategories }: { knownCategories: HealthC
   return (
     <div>
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-faint)]">
-        Healthify knows about
+        Healthy knows about
       </p>
       {knownCategories.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -33,7 +33,7 @@ export function DataCompleteness({ knownCategories }: { knownCategories: HealthC
         </p>
       )}
       <p className="mt-3 text-xs text-[var(--color-text-faint)]">
-        This reflects only what you&apos;ve uploaded. Healthify doesn&apos;t know about medical
+        This reflects only what you&apos;ve uploaded. Healthy doesn&apos;t know about medical
         history you haven&apos;t added.
       </p>
     </div>

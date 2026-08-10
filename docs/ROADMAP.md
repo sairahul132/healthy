@@ -1,4 +1,4 @@
-# Healthify — Implementation roadmap
+# Healthy — Implementation roadmap
 
 Phase order follows §149 of the master spec. Each phase ends with a check-in before the next
 one starts — we don't move forward silently.
@@ -8,7 +8,7 @@ one starts — we don't move forward silently.
   - [ ] Backend foundation (FastAPI layered skeleton)
   - [ ] Postgres + Alembic (Phase 1 schema per `docs/DATABASE.md`)
   - [ ] OTP-based auth (register, verify, login, session, refresh, logout)
-  - [ ] Healthify ID generation
+  - [ ] Healthy ID generation
   - [ ] Health profile (basic fields)
   - [ ] Object storage wiring (MinIO locally, S3-compatible interface)
   - [ ] Envelope encryption for PII fields
@@ -33,7 +33,7 @@ one starts — we don't move forward silently.
 - [ ] **Phase 6 — Prescriptions & medicines**
 
 - [ ] **Phase 7 — AI features**
-  Provider abstraction first, then explanation/comparison/doctor-summary/Ask Healthify, all
+  Provider abstraction first, then explanation/comparison/doctor-summary/Ask Healthy, all
   scoped per-user with prompt-injection defenses for document content (§153/§154).
 
 - [ ] **Phase 8 — Emergency profile, family profiles, ABDM/FHIR/lab integrations**

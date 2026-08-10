@@ -2,7 +2,7 @@
  * Shared API contract types.
  *
  * These mirror the REST contract described in docs/ARCHITECTURE.md and the
- * Healthify master spec. They are hand-written for now; once apps/api ships
+ * Healthy master spec. They are hand-written for now; once apps/api ships
  * its OpenAPI schema, this file should be replaced by a generated client
  * (packages/types in the monorepo plan) so frontend and backend can't drift.
  */
@@ -10,7 +10,7 @@
 export type Identifier = string; // phone (E.164) or email
 
 export interface User {
-  healthifyId: string; // e.g. "HFY-7K29-AX84" — never the internal UUID
+  healthyId: string; // e.g. "HLT-7K29-AX84" — never the internal UUID
   name: string | null;
   dateOfBirth: string | null; // ISO date
   sex: "male" | "female" | "other" | "unspecified" | null;
@@ -170,7 +170,7 @@ export interface AccessRequest {
 }
 
 export interface SharePreview {
-  healthifyId: string | null;
+  healthyId: string | null;
   status: SharingSessionStatus;
 }
 
@@ -185,7 +185,7 @@ export interface ShareCategoryStatus {
 }
 
 export interface ShareCategories {
-  healthifyId: string;
+  healthyId: string;
   categories: ShareCategoryStatus[];
   expiresAt: string;
   dataNote: string;

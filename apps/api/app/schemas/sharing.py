@@ -75,7 +75,7 @@ class AccessRequestResponse(CamelModel):
 
 
 class SharePreviewResponse(CamelModel):
-    healthify_id: str | None
+    healthy_id: str | None
     status: str  # active | expired | revoked
 
 
@@ -113,7 +113,7 @@ class ShareCategoryStatus(CamelModel):
 
 
 class ShareCategoriesResponse(CamelModel):
-    healthify_id: str
+    healthy_id: str
     categories: list[ShareCategoryStatus]
     expires_at: datetime
     data_note: str

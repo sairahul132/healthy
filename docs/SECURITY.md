@@ -1,4 +1,4 @@
-# Healthify — Security model (Phase 1 scope)
+# Healthy — Security model (Phase 1 scope)
 
 Full threat model (§152) gets its own doc once sharing/doctor-portal land — those are where
 most of the interesting threats live (IDOR, token guessing, cross-user leakage). This covers

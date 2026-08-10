@@ -22,7 +22,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Healthify — Your health data. Your vault. Your permission.",
+  title: "Healthy — Your health data. Your vault. Your permission.",
   description: "A privacy-first personal health record vault.",
 };
 

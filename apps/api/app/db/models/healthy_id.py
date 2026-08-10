@@ -8,8 +8,8 @@ from app.db.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import GUID
 
 
-class HealthifyId(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    __tablename__ = "healthify_ids"
+class HealthyId(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "healthy_ids"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         GUID(),
@@ -17,4 +17,4 @@ class HealthifyId(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=False,
         unique=True,
     )
-    healthify_id: Mapped[str] = mapped_column(String(14), nullable=False, unique=True, index=True)
+    healthy_id: Mapped[str] = mapped_column(String(14), nullable=False, unique=True, index=True)

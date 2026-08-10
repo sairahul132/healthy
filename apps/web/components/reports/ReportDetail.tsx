@@ -78,7 +78,7 @@ export function ReportDetail({ reportId }: { reportId: string }) {
                 className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand)]"
               />
               <p className="text-sm text-[var(--color-text-muted)]">
-                Healthify is processing this report. This page updates automatically.
+                Healthy is processing this report. This page updates automatically.
               </p>
             </div>
           ) : results && results.length === 0 ? (

@@ -1,11 +1,11 @@
 import { Logomark } from "@/components/layout/Logo";
 
 export function IdentityCard({
-  healthifyId,
+  healthyId,
   name,
   attentionCount,
 }: {
-  healthifyId: string;
+  healthyId: string;
   name: string | null;
   attentionCount: number;
 }) {
@@ -31,10 +31,10 @@ export function IdentityCard({
             </span>
           </div>
           <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-brand-foreground)]/60">
-            Healthify ID
+            Healthy ID
           </p>
           <p className="font-display mt-1 text-2xl font-medium tracking-wide text-[var(--color-brand-foreground)]">
-            {healthifyId}
+            {healthyId}
           </p>
           {name ? (
             <p className="mt-1 text-sm text-[var(--color-brand-foreground)]/75">{name}</p>

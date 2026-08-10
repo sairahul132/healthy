@@ -45,7 +45,7 @@ from app.schemas.sharing import (
 
 OTP_RESEND_COOLDOWN_SECONDS = 30
 DATA_NOTE = (
-    "Category access is granted, but Healthify's report upload/OCR pipeline "
+    "Category access is granted, but Healthy's report upload/OCR pipeline "
     "(Phase 2) isn't live yet, so there's no report content to show here yet."
 )
 
@@ -226,11 +226,11 @@ class SharingService:
     async def get_preview(self, token: str) -> SharePreviewResponse:
         session = await self._get_active_session_or_error(token)
         status = _session_status(session)
-        healthify_id = None
+        healthy_id = None
         if status == "active":
-            healthify_id_row = await self._users.get_healthify_id(session.patient_user_id)
-            healthify_id = healthify_id_row.healthify_id if healthify_id_row else None
-        return SharePreviewResponse(healthify_id=healthify_id, status=status)
+            healthy_id_row = await self._users.get_healthy_id(session.patient_user_id)
+            healthy_id = healthy_id_row.healthy_id if healthy_id_row else None
+        return SharePreviewResponse(healthy_id=healthy_id, status=status)
 
     async def request_recipient_otp(self, token: str, identifier: str) -> int:
         settings = get_settings()
@@ -343,7 +343,7 @@ class SharingService:
     async def get_categories(self, session: SharingSession) -> ShareCategoriesResponse:
         scopes = await self._sharing.list_scopes(session.id)
         authorized = {s.category for s in scopes}
-        healthify_id_row = await self._users.get_healthify_id(session.patient_user_id)
+        healthy_id_row = await self._users.get_healthy_id(session.patient_user_id)
 
         await self._audit.record(
             actor_user_id=None,
@@ -355,7 +355,7 @@ class SharingService:
         await self._db.commit()
 
         return ShareCategoriesResponse(
-            healthify_id=healthify_id_row.healthify_id if healthify_id_row else "",
+            healthy_id=healthy_id_row.healthy_id if healthy_id_row else "",
             categories=[
                 ShareCategoryStatus(id=cat, authorized=cat in authorized)
                 for cat in HEALTH_CATEGORY_IDS

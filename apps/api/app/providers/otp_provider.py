@@ -8,7 +8,7 @@ from typing import Protocol
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("healthify.otp")
+logger = logging.getLogger("healthy.otp")
 
 
 class OtpProvider(Protocol):

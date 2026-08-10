@@ -40,7 +40,7 @@ function refreshSession(): Promise<boolean> {
 }
 
 /**
- * Thin fetch wrapper for the Healthify API.
+ * Thin fetch wrapper for the Healthy API.
  *
  * Session tokens are never handled here for the patient session: the
  * backend issues short-lived access + rotating refresh tokens as httpOnly
