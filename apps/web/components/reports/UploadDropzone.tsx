@@ -18,11 +18,7 @@ export function UploadDropzone() {
     if (!file) return;
     setError(null);
     try {
-      const report = await uploadMutation.mutateAsync({
-        name: file.name,
-        sizeBytes: file.size,
-        mimeType: file.type,
-      });
+      const report = await uploadMutation.mutateAsync(file);
       router.push(`/reports/${report.id}`);
     } catch (err) {
       setError(
@@ -69,11 +65,13 @@ export function UploadDropzone() {
         >
           Browse files
         </Button>
-        <p className="text-xs text-[var(--color-text-faint)]">PDF, JPG, or PNG · up to 20 MB</p>
+        <p className="text-xs text-[var(--color-text-faint)]">
+          PDF, JPG, PNG, TXT, or CSV · up to 20 MB
+        </p>
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
+          accept=".pdf,.jpg,.jpeg,.png,.txt,.csv"
           className="sr-only"
           onChange={(event) => void handleFiles(event.target.files)}
         />
@@ -84,8 +82,8 @@ export function UploadDropzone() {
         </p>
       ) : null}
       <p className="mt-3 text-xs text-[var(--color-text-faint)]">
-        This demo generates a synthetic report and simulates processing — no file contents are
-        actually read yet. apps/api&apos;s real upload/OCR pipeline is not built (see docs/ROADMAP.md).
+        Scanned images and image-only PDFs can&apos;t be read automatically yet — a text-based PDF,
+        TXT, or CSV export works best.
       </p>
     </div>
   );

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.v1.deps import get_authenticated_share_session, get_sharing_service
 from app.db.models import SharingSession
+from app.schemas.reports import LabResultResponse
 from app.schemas.sharing import (
     CreateAccessRequestRequest,
     CreateAccessRequestResponse,
@@ -11,6 +12,7 @@ from app.schemas.sharing import (
     ShareOtpRequest,
     ShareOtpVerifyRequest,
     SharePreviewResponse,
+    ShareStatusResponse,
 )
 from app.services.sharing_service import SharingService
 
@@ -51,6 +53,23 @@ async def get_categories(
     service: SharingService = Depends(get_sharing_service),
 ) -> ShareCategoriesResponse:
     return await service.get_categories(session)
+
+
+@router.get("/{token}/status", response_model=ShareStatusResponse)
+async def get_status(
+    session: SharingSession = Depends(get_authenticated_share_session),
+    service: SharingService = Depends(get_sharing_service),
+) -> ShareStatusResponse:
+    return await service.get_status(session)
+
+
+@router.get("/{token}/categories/{category}/results", response_model=list[LabResultResponse])
+async def get_category_results(
+    category: str,
+    session: SharingSession = Depends(get_authenticated_share_session),
+    service: SharingService = Depends(get_sharing_service),
+) -> list[LabResultResponse]:
+    return await service.get_category_results(session, category)
 
 
 @router.post("/{token}/requests", response_model=CreateAccessRequestResponse, status_code=201)

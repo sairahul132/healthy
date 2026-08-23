@@ -8,7 +8,20 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 const SESSION_COOKIE_NAME = "hfy_refresh";
 
-const PROTECTED_PATHS = ["/dashboard", "/profile", "/reports", "/timeline", "/share"];
+const PROTECTED_PATHS = [
+  "/dashboard",
+  "/profile",
+  "/reports",
+  "/timeline",
+  "/share",
+  "/health",
+  "/search",
+  "/doctor",
+  "/medicines",
+  "/ask",
+  "/doctor-summary",
+  "/permissions",
+];
 
 /**
  * This is an optimistic UX redirect only, not an authorization boundary —
@@ -44,5 +57,12 @@ export const config = {
     "/reports/:path*",
     "/timeline/:path*",
     "/share/:path*",
+    "/health/:path*",
+    "/search/:path*",
+    "/doctor/:path*",
+    "/medicines/:path*",
+    "/ask/:path*",
+    "/doctor-summary/:path*",
+    "/permissions/:path*",
   ],
 };

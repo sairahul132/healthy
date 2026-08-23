@@ -54,24 +54,13 @@ function refreshSession(): Promise<boolean> {
  * /auth/refresh once and retries the original request — callers don't see
  * the expiry unless the refresh token itself is also gone.
  */
-export async function apiFetch<T>(
+async function handleResponse<T>(
+  response: Response,
+  requestId: string,
   path: string,
-  options: RequestOptions = {},
+  options: RequestOptions,
+  retry: (nextOptions: RequestOptions) => Promise<T>,
 ): Promise<T> {
-  const requestId = newRequestId();
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: options.method ?? "GET",
-    credentials: "include",
-    signal: options.signal,
-    headers: {
-      "Content-Type": "application/json",
-      "X-Request-Id": requestId,
-      ...options.headers,
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
-
   if (
     response.status === 401 &&
     !options.skipAuthRetry &&
@@ -80,7 +69,7 @@ export async function apiFetch<T>(
   ) {
     const refreshed = await refreshSession();
     if (refreshed) {
-      return apiFetch<T>(path, { ...options, skipAuthRetry: true });
+      return retry({ ...options, skipAuthRetry: true });
     }
   }
 
@@ -110,4 +99,51 @@ export async function apiFetch<T>(
   }
 
   return parsed as T;
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  const requestId = newRequestId();
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: options.method ?? "GET",
+    credentials: "include",
+    signal: options.signal,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Request-Id": requestId,
+      ...options.headers,
+    },
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+  });
+
+  return handleResponse<T>(response, requestId, path, options, (next) => apiFetch<T>(path, next));
+}
+
+/**
+ * Multipart file upload — separate from apiFetch because that always
+ * JSON-stringifies the body and forces Content-Type: application/json,
+ * neither of which works for a file. Shares the same credentials/401-retry/
+ * error-parsing behavior.
+ */
+export async function apiUpload<T>(
+  path: string,
+  formData: FormData,
+  options: Pick<RequestOptions, "signal" | "skipAuthRetry"> = {},
+): Promise<T> {
+  const requestId = newRequestId();
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    credentials: "include",
+    signal: options.signal,
+    headers: { "X-Request-Id": requestId },
+    body: formData,
+  });
+
+  return handleResponse<T>(response, requestId, path, options, (next) =>
+    apiUpload<T>(path, formData, next),
+  );
 }

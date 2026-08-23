@@ -5,7 +5,7 @@ import {
   REPORT_TEMPLATES,
   type CanonicalTest,
 } from "@/lib/mock/canonical-tests";
-import type { ReportsProvider, UploadInput } from "@/lib/reports/provider";
+import type { ReportsProvider } from "@/lib/reports/provider";
 import { ReportValidationError } from "@/lib/reports/provider";
 
 /**
@@ -217,7 +217,7 @@ const PROCESSING_SEQUENCE: ReportProcessingStatus[] = [
   "COMPLETED",
 ];
 
-function validateUpload(file: UploadInput) {
+function validateUpload(file: File) {
   const lower = file.name.toLowerCase();
   const hasAllowedExtension = ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext));
   if (!hasAllowedExtension) {
@@ -225,10 +225,10 @@ function validateUpload(file: UploadInput) {
       "Unsupported file type. Upload a PDF, JPG, or PNG report.",
     );
   }
-  if (file.sizeBytes > MAX_SIZE_BYTES) {
+  if (file.size > MAX_SIZE_BYTES) {
     throw new ReportValidationError("File is too large. The limit is 20 MB.");
   }
-  if (file.sizeBytes === 0) {
+  if (file.size === 0) {
     throw new ReportValidationError("That file appears to be empty.");
   }
   // Real validation must also check magic bytes / MIME sniffing server-side
@@ -278,7 +278,7 @@ export class MockReportsProvider implements ReportsProvider {
     );
   }
 
-  async uploadReport(file: UploadInput): Promise<LabReport> {
+  async uploadReport(file: File): Promise<LabReport> {
     this.ensureHydrated();
     validateUpload(file);
 

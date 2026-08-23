@@ -29,24 +29,30 @@ from app.core.security import (
 from app.core.time import ensure_utc, utcnow
 from app.db.models import AccessRequest, SharingSession, SharingSessionScope
 from app.db.models.access_request import AccessRequestStatus
+from app.providers.notification_provider import NotificationProvider
 from app.providers.otp_provider import OtpProvider
 from app.providers.rate_limiter import RateLimiter
 from app.repositories.audit_repository import AuditRepository
+from app.repositories.doctor_repository import DoctorRepository
 from app.repositories.otp_repository import OtpRepository
+from app.repositories.reports_repository import ReportsRepository
 from app.repositories.sharing_repository import SharingRepository, is_session_active
 from app.repositories.user_repository import UserRepository
+from app.schemas.reports import LabResultResponse
 from app.schemas.sharing import (
     AccessRequestResponse,
     ShareCategoriesResponse,
     ShareCategoryStatus,
     SharePreviewResponse,
     SharingSessionResponse,
+    ShareStatusResponse,
 )
+from app.services.report_presenters import result_to_response
 
 OTP_RESEND_COOLDOWN_SECONDS = 30
 DATA_NOTE = (
-    "Category access is granted, but Healthy's report upload/OCR pipeline "
-    "(Phase 2) isn't live yet, so there's no report content to show here yet."
+    "Category access grants visibility into extracted lab results only — "
+    "not the original uploaded document."
 )
 
 
@@ -60,15 +66,23 @@ def _session_status(session: SharingSession) -> str:
 
 class SharingService:
     def __init__(
-        self, db: AsyncSession, *, otp_provider: OtpProvider, rate_limiter: RateLimiter
+        self,
+        db: AsyncSession,
+        *,
+        otp_provider: OtpProvider,
+        rate_limiter: RateLimiter,
+        notification_provider: NotificationProvider,
     ) -> None:
         self._db = db
         self._otp_provider = otp_provider
         self._rate_limiter = rate_limiter
+        self._notification_provider = notification_provider
         self._sharing = SharingRepository(db)
         self._otps = OtpRepository(db)
         self._audit = AuditRepository(db)
         self._users = UserRepository(db)
+        self._reports = ReportsRepository(db)
+        self._doctors = DoctorRepository(db)
 
     # ---------- Patient side ----------
 
@@ -297,6 +311,7 @@ class SharingService:
             raise UnauthorizedError("Incorrect code.")
 
         challenge.consumed_at = datetime.now(UTC)
+        await self._link_verified_doctor(session, identity_hash)
 
         await self._audit.record(
             actor_user_id=None,
@@ -311,6 +326,19 @@ class SharingService:
             sharing_session_id=str(session.id), recipient_identifier_hash=identity_hash
         )
         return access_token, settings.share_access_token_ttl_minutes
+
+    async def _link_verified_doctor(self, session: SharingSession, identity_hash: str) -> None:
+        """First time a recipient OTP-verifies with an identifier matching a
+        VERIFIED doctor account, remember it on the session — lets that
+        doctor's persistent dashboard (app/services/doctor_service.py) find
+        this session on return visits without needing the original link
+        again. This never grants access on its own: the doctor still had to
+        possess the link and pass OTP once, same as any other recipient."""
+        if session.doctor_user_id is not None:
+            return
+        doctor = await self._doctors.get_verified_by_identifier_hash(identity_hash)
+        if doctor is not None:
+            session.doctor_user_id = doctor.user_id
 
     async def _record_share_auth_failure(self, session_id: uuid.UUID, reason: str) -> None:
         await self._audit.record(
@@ -364,6 +392,41 @@ class SharingService:
             data_note=DATA_NOTE,
         )
 
+    async def get_status(self, session: SharingSession) -> ShareStatusResponse:
+        """Cheap, unaudited read of just which categories are currently
+        authorized — for the recipient page's background poll (detects a
+        patient approving a pending request) without writing a SHARE_VIEWED
+        row on every poll tick the way get_categories does."""
+        scopes = await self._sharing.list_scopes(session.id)
+        return ShareStatusResponse(category_ids=[s.category for s in scopes])
+
+    async def get_category_results(
+        self, session: SharingSession, category: str
+    ) -> list[LabResultResponse]:
+        """The actual data behind an "Available" category (§45/§46) — only
+        reachable once `get_authenticated_share_session` has already proven
+        the caller completed recipient OTP verification for this exact
+        session. The backend enforces the category grant itself rather than
+        trusting the frontend to only ask for authorized ones (§67)."""
+        if not await self._sharing.scope_exists(session.id, category):
+            raise ForbiddenError("This category hasn't been shared with you.")
+
+        results = await self._reports.list_results_for_user(
+            session.patient_user_id, category=category
+        )
+
+        await self._audit.record(
+            actor_user_id=None,
+            event_type=audit_events.SHARE_VIEWED,
+            outcome="success",
+            resource_type="sharing_session",
+            resource_id=str(session.id),
+            metadata={"category": category},
+        )
+        await self._db.commit()
+
+        return [result_to_response(r) for r in results]
+
     async def create_access_request(
         self, session: SharingSession, *, category: str, reason: str, requested_duration_hours: int
     ) -> AccessRequest:
@@ -396,4 +459,21 @@ class SharingService:
             metadata={"category": category, "session_id": str(session.id)},
         )
         await self._db.commit()
+        await self._notify_patient_of_access_request(session, category)
         return request
+
+    async def _notify_patient_of_access_request(
+        self, session: SharingSession, category: str
+    ) -> None:
+        identities = await self._users.list_identities(session.patient_user_id)
+        if not identities:
+            return
+        identifier = decrypt_field(identities[0].identity_value_encrypted)
+        await self._notification_provider.send(
+            identifier=identifier,
+            subject="New access request on your Healthy share",
+            message=(
+                f"Someone you shared health data with has requested access to your "
+                f"{category} category. Open Healthy to approve or decline."
+            ),
+        )

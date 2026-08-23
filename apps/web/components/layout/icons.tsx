@@ -9,7 +9,8 @@ export type IconName =
   | "share"
   | "permissions"
   | "assistant"
-  | "profile";
+  | "profile"
+  | "search";
 
 const PATHS: Record<IconName, string> = {
   home: "M3 10.5 12 3l9 7.5M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5",
@@ -21,6 +22,7 @@ const PATHS: Record<IconName, string> = {
   permissions: "M12 3 4.5 6v6c0 4.6 3.2 8.4 7.5 9 4.3-.6 7.5-4.4 7.5-9V6L12 3Zm-2.5 9 2 2 4-4",
   assistant: "M4 5h16v11H8l-4 4V5Zm4 4h8M8 12.5h5",
   profile: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm9 2-4.35-4.35",
 };
 
 export function Icon({ name, ...props }: { name: IconName } & SVGProps<SVGSVGElement>) {

@@ -138,6 +138,39 @@ export interface TimelineEvent {
   relatedReportId: string | null;
 }
 
+export interface HealthCategoryDetail {
+  id: HealthCategoryId;
+  label: string;
+  icon: string;
+  latestResults: LabResult[];
+}
+
+export interface TrendPoint {
+  reportId: string;
+  value: number;
+  unit: string;
+  collectionDate: string | null;
+  status: ClinicalStatus;
+}
+
+export interface TestTrend {
+  canonicalTestName: string;
+  canonicalCode: string;
+  category: HealthCategoryId;
+  unit: string;
+  points: TrendPoint[];
+}
+
+export type SearchResultKind = "report" | "result";
+
+export interface SearchResult {
+  kind: SearchResultKind;
+  id: string;
+  title: string;
+  subtitle: string;
+  relatedReportId: string;
+}
+
 // --- Sharing (docs/SPEC.md §42-57) — real backend, no mock provider ---
 
 export type SharingSessionStatus = "active" | "expired" | "revoked";
@@ -191,12 +224,127 @@ export interface ShareCategories {
   dataNote: string;
 }
 
+/** Minimal, cheap-to-poll shape — see lib/api/sharing.ts's getShareStatus. */
+export interface ShareStatus {
+  categoryIds: HealthCategoryId[];
+}
+
 export interface ApiErrorBody {
   error: {
     code: string;
     message: string;
     requestId: string;
   };
+}
+
+// --- Doctor portal (docs/SPEC.md §40/§41) ---
+
+export type DoctorVerificationStatus = "pending" | "verified" | "rejected";
+
+export interface DoctorProfile {
+  id: string;
+  fullName: string;
+  registrationNumber: string;
+  organization: string;
+  specialty: string | null;
+  verificationStatus: DoctorVerificationStatus;
+  verifiedAt: string | null;
+}
+
+export interface DoctorPatientSession {
+  sessionId: string;
+  healthyId: string;
+  categoryIds: HealthCategoryId[];
+  status: SharingSessionStatus;
+  createdAt: string;
+  expiresAt: string;
+}
+
+// --- Prescriptions & medicines (docs/SPEC.md §38/§39) ---
+
+export interface Prescription {
+  id: string;
+  fileName: string;
+  status: ReportProcessingStatus;
+  failureReason: string | null;
+  doctorName: string | null;
+  prescribedDate: string | null;
+  itemCount: number;
+  uploadedAt: string;
+}
+
+export interface PrescriptionItem {
+  id: string;
+  prescriptionId: string;
+  medicineName: string;
+  dosage: string | null;
+  frequency: string | null;
+  duration: string | null;
+  extractionConfidence: number;
+  corrected: boolean;
+}
+
+export interface Medicine {
+  id: string;
+  name: string;
+  strength: string | null;
+  dosage: string | null;
+  frequency: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  prescribingDoctor: string | null;
+  reason: string | null;
+  active: boolean;
+}
+
+// --- Ask Healthy (AI) — docs/ROADMAP.md Phase 7 ---
+
+export interface ExplainResult {
+  resultId: string;
+  explanation: string;
+  generatedAt: string;
+}
+
+export interface ReportComparison {
+  reportId: string;
+  comparedToReportId: string;
+  narrative: string;
+  generatedAt: string;
+}
+
+export interface DoctorSummary {
+  narrative: string;
+  windowStart: string;
+  windowEnd: string;
+  reportCount: number;
+  generatedAt: string;
+}
+
+export interface AiConversation {
+  id: string;
+  title: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AiMessageRole = "USER" | "ASSISTANT";
+
+export interface AiMessage {
+  id: string;
+  conversationId: string;
+  role: AiMessageRole;
+  content: string;
+  createdAt: string;
+}
+
+// --- Permissions (roles) — docs/DATABASE.md RBAC/ABAC (§49) ---
+
+export interface PermissionRole {
+  id: string;
+  name: string;
+  categoryIds: HealthCategoryId[];
+  defaultDurationHours: number;
+  createdAt: string;
 }
 
 export class ApiError extends Error {

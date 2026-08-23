@@ -5,26 +5,7 @@ from pydantic import Field, field_validator
 from app.core.health_categories import is_valid_category
 from app.schemas.auth import validate_identifier
 from app.schemas.base import CamelModel
-
-MIN_DURATION_HOURS = 1
-MAX_DURATION_HOURS = 24 * 30  # 30 days
-
-
-def _validate_categories(value: list[str]) -> list[str]:
-    if not value:
-        raise ValueError("Select at least one category to share.")
-    invalid = [c for c in value if not is_valid_category(c)]
-    if invalid:
-        raise ValueError(f"Unknown category: {', '.join(invalid)}")
-    return list(dict.fromkeys(value))  # de-dupe, preserve order
-
-
-def _validate_duration(value: int) -> int:
-    if not (MIN_DURATION_HOURS <= value <= MAX_DURATION_HOURS):
-        raise ValueError(
-            f"Duration must be between {MIN_DURATION_HOURS} and {MAX_DURATION_HOURS} hours."
-        )
-    return value
+from app.schemas.validation import validate_category_ids, validate_duration_hours
 
 
 class CreateSharingSessionRequest(CamelModel):
@@ -35,7 +16,7 @@ class CreateSharingSessionRequest(CamelModel):
     @field_validator("category_ids")
     @classmethod
     def _categories(cls, v: list[str]) -> list[str]:
-        return _validate_categories(v)
+        return validate_category_ids(v)
 
     @field_validator("recipient_identifier")
     @classmethod
@@ -45,7 +26,7 @@ class CreateSharingSessionRequest(CamelModel):
     @field_validator("duration_hours")
     @classmethod
     def _duration(cls, v: int) -> int:
-        return _validate_duration(v)
+        return validate_duration_hours(v)
 
 
 class SharingSessionResponse(CamelModel):
@@ -119,6 +100,15 @@ class ShareCategoriesResponse(CamelModel):
     data_note: str
 
 
+class ShareStatusResponse(CamelModel):
+    """Minimal, unaudited shape for polling — see
+    SharingService.get_status: unlike get_categories, reading this does NOT
+    write a SHARE_VIEWED audit row, since a background poll checking for a
+    newly-approved category isn't a patient-meaningful "view" of their data."""
+
+    category_ids: list[str]
+
+
 class CreateAccessRequestRequest(CamelModel):
     category: str
     reason: str = Field(min_length=1, max_length=500)
@@ -134,7 +124,7 @@ class CreateAccessRequestRequest(CamelModel):
     @field_validator("requested_duration_hours")
     @classmethod
     def _duration(cls, v: int) -> int:
-        return _validate_duration(v)
+        return validate_duration_hours(v)
 
 
 class CreateAccessRequestResponse(CamelModel):

@@ -3,9 +3,11 @@ import type {
   AccessRequest,
   HealthCategoryId,
   Identifier,
+  LabResult,
   ShareAccessToken,
   ShareCategories,
   SharePreview,
+  ShareStatus,
   SharingSession,
 } from "./types";
 
@@ -71,6 +73,26 @@ function bearer(accessToken: string): Record<string, string> {
 
 export function getShareCategories(token: string, accessToken: string): Promise<ShareCategories> {
   return apiFetch<ShareCategories>(`/share/${token}/categories`, {
+    headers: bearer(accessToken),
+  });
+}
+
+/** Cheap, unaudited poll target — see app/services/sharing_service.py's
+ * get_status. Use this to detect a newly-approved category live; only
+ * refetch getShareCategories (which the backend does audit as a real view)
+ * when something has actually changed. */
+export function getShareStatus(token: string, accessToken: string): Promise<ShareStatus> {
+  return apiFetch<ShareStatus>(`/share/${token}/status`, {
+    headers: bearer(accessToken),
+  });
+}
+
+export function getShareCategoryResults(
+  token: string,
+  accessToken: string,
+  category: HealthCategoryId,
+): Promise<LabResult[]> {
+  return apiFetch<LabResult[]>(`/share/${token}/categories/${category}/results`, {
     headers: bearer(accessToken),
   });
 }

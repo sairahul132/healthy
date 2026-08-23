@@ -18,3 +18,13 @@ class Base(DeclarativeBase):
 async def get_db() -> AsyncGenerator[AsyncSession]:
     async with async_session_factory() as session:
         yield session
+
+
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """For code that needs to open its own session outside a request's
+    lifetime — e.g. a FastAPI BackgroundTask, which runs after get_db's
+    request-scoped session has already closed. Exposed as an overridable
+    dependency (not a bare import of async_session_factory) so tests can
+    point it at the same in-memory test engine as get_db (see
+    tests/conftest.py's client fixture)."""
+    return async_session_factory

@@ -6,15 +6,13 @@ import * as sharingApi from "@/lib/api/sharing";
 import { ApiError } from "@/lib/api/types";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { LoadingState } from "@/components/ui/States";
-import { IdentifyStep } from "./IdentifyStep";
-import { OtpStep } from "./OtpStep";
+import { VerifyStep } from "./VerifyStep";
 import { CategoriesStep } from "./CategoriesStep";
 
-type Step = "identify" | "otp" | "categories";
+type Step = "verify" | "categories";
 
 export function RecipientFlow({ token }: { token: string }) {
-  const [step, setStep] = useState<Step>("identify");
-  const [identifier, setIdentifier] = useState("");
+  const [step, setStep] = useState<Step>("verify");
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const preview = useQuery({
@@ -57,35 +55,16 @@ export function RecipientFlow({ token }: { token: string }) {
     return <CategoriesStep token={token} accessToken={accessToken} />;
   }
 
-  if (step === "otp") {
-    return (
-      <AuthShell
-        title="Enter your code"
-        description={`We sent a 6-digit code to ${identifier}.`}
-      >
-        <OtpStep
-          token={token}
-          identifier={identifier}
-          onVerified={(newAccessToken) => {
-            setAccessToken(newAccessToken);
-            setStep("categories");
-          }}
-          onBack={() => setStep("identify")}
-        />
-      </AuthShell>
-    );
-  }
-
   return (
     <AuthShell
       title="Protected Health Record"
       description={`Healthy ID: ${preview.data.healthyId ?? "—"}`}
     >
-      <IdentifyStep
+      <VerifyStep
         token={token}
-        onRequested={(enteredIdentifier) => {
-          setIdentifier(enteredIdentifier);
-          setStep("otp");
+        onVerified={(newAccessToken) => {
+          setAccessToken(newAccessToken);
+          setStep("categories");
         }}
       />
     </AuthShell>

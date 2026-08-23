@@ -1,8 +1,17 @@
+import io
+
 from httpx import AsyncClient
 
-from tests.conftest import RecordingOtpProvider, register_and_verify, unique_identifier
+from tests.conftest import (
+    RecordingNotificationProvider,
+    RecordingOtpProvider,
+    register_and_verify,
+    unique_identifier,
+)
 
 RECIPIENT_IDENTIFIER = "doctor@example.com"
+
+CBC_TEXT = "Hemoglobin        13.5   g/dL   (13.0 - 17.0)\n"
 
 
 async def _create_share(
@@ -94,6 +103,46 @@ async def test_recipient_sees_only_granted_categories(
     assert resp.status_code == 200
     authorized = {c["id"] for c in resp.json()["categories"] if c["authorized"]}
     assert authorized == {"blood", "heart"}
+
+
+async def test_recipient_sees_real_results_for_granted_category_only(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    """Phase 4 finish-up: a granted category must actually return the
+    patient's extracted results, and an ungranted one must still be
+    blocked server-side (§45/§46/§67) even with a valid recipient session."""
+    patient_identifier = unique_identifier("patient")
+    await register_and_verify(client, otp_provider, patient_identifier)
+
+    upload = await client.post(
+        "/api/v1/reports/upload",
+        files={"file": ("cbc.txt", io.BytesIO(CBC_TEXT.encode()), "text/plain")},
+    )
+    assert upload.status_code == 201, upload.text
+
+    create_resp = await client.post(
+        "/api/v1/sharing/sessions",
+        json={
+            "categoryIds": ["blood"],
+            "recipientIdentifier": RECIPIENT_IDENTIFIER,
+            "durationHours": 24,
+        },
+    )
+    session = create_resp.json()
+    token = _extract_token(session["shareUrl"])
+    access_token = await _authenticate_recipient(client, otp_provider, token)
+    auth_header = {"Authorization": f"Bearer {access_token}"}
+
+    granted = await client.get(
+        f"/api/v1/share/{token}/categories/blood/results", headers=auth_header
+    )
+    assert granted.status_code == 200, granted.text
+    assert any(r["canonicalTestName"] == "Hemoglobin" for r in granted.json())
+
+    blocked = await client.get(
+        f"/api/v1/share/{token}/categories/kidney/results", headers=auth_header
+    )
+    assert blocked.status_code == 403
 
 
 async def test_full_access_request_lifecycle(
@@ -220,3 +269,81 @@ async def test_invalid_category_is_rejected_at_creation(
         },
     )
     assert resp.status_code == 422
+
+
+async def test_access_request_notifies_the_patient(
+    client: AsyncClient,
+    otp_provider: RecordingOtpProvider,
+    notification_provider: RecordingNotificationProvider,
+):
+    patient_identifier = unique_identifier("patient")
+    await register_and_verify(client, otp_provider, patient_identifier)
+
+    create_resp = await client.post(
+        "/api/v1/sharing/sessions",
+        json={
+            "categoryIds": ["blood"],
+            "recipientIdentifier": RECIPIENT_IDENTIFIER,
+            "durationHours": 24,
+        },
+    )
+    token = _extract_token(create_resp.json()["shareUrl"])
+    access_token = await _authenticate_recipient(client, otp_provider, token)
+
+    assert notification_provider.sent == []  # nothing sent just for creating/verifying a share
+
+    resp = await client.post(
+        f"/api/v1/share/{token}/requests",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"category": "kidney", "reason": "renal follow-up", "requestedDurationHours": 48},
+    )
+    assert resp.status_code == 201, resp.text
+
+    assert len(notification_provider.sent) == 1
+    sent = notification_provider.sent[0]
+    assert sent["identifier"] == patient_identifier
+    assert "kidney" in sent["message"]
+
+
+async def test_status_reflects_approval_without_extra_share_viewed_audit_noise(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    """The recipient page polls /status in the background to detect an
+    approval live; unlike /categories, that poll must not itself keep
+    writing SHARE_VIEWED rows (§55 audit log should mean something)."""
+    patient_identifier = unique_identifier("patient")
+    await register_and_verify(client, otp_provider, patient_identifier)
+
+    create_resp = await client.post(
+        "/api/v1/sharing/sessions",
+        json={
+            "categoryIds": ["blood"],
+            "recipientIdentifier": RECIPIENT_IDENTIFIER,
+            "durationHours": 24,
+        },
+    )
+    token = _extract_token(create_resp.json()["shareUrl"])
+    access_token = await _authenticate_recipient(client, otp_provider, token)
+    auth_header = {"Authorization": f"Bearer {access_token}"}
+
+    status_resp = await client.get(f"/api/v1/share/{token}/status", headers=auth_header)
+    assert status_resp.status_code == 200, status_resp.text
+    assert status_resp.json()["categoryIds"] == ["blood"]
+
+    # Poll several times, as the frontend would — the response must stay
+    # correct and cheap (no dependency on audit state at all).
+    for _ in range(3):
+        again = await client.get(f"/api/v1/share/{token}/status", headers=auth_header)
+        assert again.json()["categoryIds"] == ["blood"]
+
+    req_resp = await client.post(
+        f"/api/v1/share/{token}/requests",
+        headers=auth_header,
+        json={"category": "kidney", "reason": "renal follow-up", "requestedDurationHours": 48},
+    )
+    request_id = req_resp.json()["id"]
+
+    await client.post(f"/api/v1/sharing/requests/{request_id}/approve")
+
+    after_resp = await client.get(f"/api/v1/share/{token}/status", headers=auth_header)
+    assert set(after_resp.json()["categoryIds"]) == {"blood", "kidney"}

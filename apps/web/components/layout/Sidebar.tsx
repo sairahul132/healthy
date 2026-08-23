@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAccessRequests } from "@/lib/sharing/hooks";
 import { cn } from "@/lib/utils/cn";
 import { Icon } from "./icons";
 import { NAV_ITEMS } from "./nav-items";
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { data: pendingRequests } = useAccessRequests(true);
+  const pendingCount = pendingRequests?.length ?? 0;
 
   return (
     <nav aria-label="Primary" className={cn("flex flex-col gap-0.5 p-3", className)}>
@@ -50,6 +53,11 @@ export function Sidebar({ className }: { className?: string }) {
               )}
             />
             {item.label}
+            {item.href === "/share" && pendingCount > 0 ? (
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-danger)] px-1.5 text-[10px] font-semibold text-white">
+                {pendingCount}
+              </span>
+            ) : null}
           </Link>
         );
       })}

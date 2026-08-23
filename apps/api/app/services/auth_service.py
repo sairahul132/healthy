@@ -207,9 +207,7 @@ class AuthService:
         session.refresh_token_hash = hash_secret(new_refresh_raw)
         session.expires_at = datetime.now(UTC) + timedelta(days=settings.refresh_token_ttl_days)
 
-        access_token = create_access_token(
-            user_id=str(session.user_id), session_id=str(session.id)
-        )
+        access_token = create_access_token(user_id=str(session.user_id), session_id=str(session.id))
         await self._db.commit()
 
         return access_token, f"{session.id}{REFRESH_COOKIE_SEPARATOR}{new_refresh_raw}"
@@ -270,9 +268,7 @@ class AuthService:
             created_at=user.created_at,
         )
 
-    async def update_profile(
-        self, user_id: uuid.UUID, data: UpdateProfileRequest
-    ) -> UserResponse:
+    async def update_profile(self, user_id: uuid.UUID, data: UpdateProfileRequest) -> UserResponse:
         profile = await self._users.get_health_profile(user_id)
         if profile is None:  # pragma: no cover - every user gets one at registration
             raise UnauthorizedError("Account no longer exists.")

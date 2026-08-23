@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     storage_access_key: str = ""
     storage_secret_key: str = ""
     storage_region: str = "us-east-1"
+    storage_local_dir: str = "./storage"
+
+    virus_scan_provider: str = "mock"
+
+    ai_provider: str = "mock"
+
+    notification_provider: str = "mock"
 
     cors_allow_origins: str = "http://localhost:3000"
 

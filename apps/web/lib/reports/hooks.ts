@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getReportsProvider } from "./get-provider";
-import type { UploadInput } from "./provider";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED"]);
 
@@ -52,7 +51,7 @@ export function useTimelineEvents() {
 export function useUploadReport() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (file: UploadInput) => getReportsProvider().uploadReport(file),
+    mutationFn: (file: File) => getReportsProvider().uploadReport(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reportsKeys.list });
       queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });

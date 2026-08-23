@@ -1,13 +1,70 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useReport, useReportResults } from "@/lib/reports/hooks";
+import { useCompareReport } from "@/lib/ai/hooks";
+import { ApiError } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { ProcessingStatus } from "./ProcessingStatus";
 import { ResultRow } from "./ResultRow";
+
+function CompareWithPreviousReport({ reportId }: { reportId: string }) {
+  const compare = useCompareReport();
+  const [noPrevious, setNoPrevious] = useState(false);
+
+  if (compare.isSuccess) {
+    return (
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Compared to previous report</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="whitespace-pre-wrap text-sm text-[var(--color-text)]">
+            {compare.data.narrative}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (noPrevious) {
+    return (
+      <p className="mt-3 text-sm text-[var(--color-text-muted)]">
+        This is your earliest report for these tests — nothing to compare yet.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <Button
+        variant="secondary"
+        size="sm"
+        isLoading={compare.isPending}
+        onClick={() =>
+          compare.mutate(
+            { reportId },
+            {
+              onError: (err) => {
+                if (err instanceof ApiError && err.status === 404) setNoPrevious(true);
+              },
+            },
+          )
+        }
+      >
+        Compare with previous report
+      </Button>
+      {compare.isError && !noPrevious ? (
+        <p className="mt-2 text-xs text-[var(--color-danger)]">Couldn&apos;t generate a comparison.</p>
+      ) : null}
+    </div>
+  );
+}
 
 export function ReportDetail({ reportId }: { reportId: string }) {
   const { data: report, isLoading, isError } = useReport(reportId);
@@ -94,6 +151,10 @@ export function ReportDetail({ reportId }: { reportId: string }) {
           )}
         </CardContent>
       </Card>
+
+      {report.status === "COMPLETED" && results && results.length > 0 ? (
+        <CompareWithPreviousReport reportId={report.id} />
+      ) : null}
     </div>
   );
 }

@@ -26,3 +26,13 @@ class SharingSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     recipient_identifier_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Set the first time a recipient completes OTP verification (§43/§44)
+    # with an identifier matching a VERIFIED doctor account (see
+    # SharingService._link_verified_doctor). The raw share token still
+    # isn't recoverable from a DB read — this only lets that doctor's own
+    # persistent dashboard find sessions they already proved they own,
+    # never bypasses the original link+OTP requirement on first access.
+    doctor_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )

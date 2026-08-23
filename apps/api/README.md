@@ -1,10 +1,14 @@
 # Healthy — API
 
-FastAPI backend. Phase 1 scope (see [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)):
-OTP auth, health profile, and patient-controlled sharing (§42-57). Reports/
-OCR (§76) are Phase 2 and not implemented — `apps/web`'s Reports/Timeline
-screens run entirely on a client-side mock for that reason (see
-`apps/web/lib/mock/`).
+FastAPI backend. Covers Phase 1 (see [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)):
+OTP auth, health profile, and patient-controlled sharing (§42-57); Phase 2:
+report upload/processing pipeline, lab-result extraction, unit
+normalization, health categories, and the deterministic clinical status
+engine (§15/§16/§18-30/§76); Phase 3: health-category views, trends,
+timeline, and search (§31/§37/§62/§145); Phase 4: sharing now serves real
+report results for a granted category, not just a boolean flag; Phase 5:
+a doctor portal on top of the same OTP-auth accounts (§40/§41); and Phase
+6: prescription upload/OCR and medicine management (§38/§39).
 
 ## Local development (no Docker/Postgres required)
 
@@ -60,13 +64,23 @@ Interactive API docs: http://localhost:8000/docs
 pytest -v
 ```
 
-17 tests covering the full auth flow (register → OTP → session → refresh →
-logout) and the sharing lifecycle end-to-end: create a share, reject a
+37 tests: the full auth flow (register → OTP → session → refresh →
+logout); the sharing lifecycle end-to-end (create a share, reject a
 recipient with the wrong identifier, OTP-verify the right one, request
-access to an ungranted category, patient declines (still blocked) then
-approves (now visible), revoke (immediately blocked again), and
-cross-patient isolation (patient B can't touch patient A's sessions).
-Uses an in-memory SQLite DB per test run — see `tests/conftest.py`.
+access to an ungranted category, patient declines/approves, revoke,
+cross-patient isolation, and — now that reports are real — that a granted
+category actually returns results while an ungranted one still 403s); the
+report pipeline (upload → process → extract → categorize → status,
+EICAR/malware rejection, unrecognized documents failing cleanly, trend
+continuity across reports, category/timeline/search endpoints, and
+cross-user report isolation — §99's critical security test applied to
+reports); the doctor portal (registration starts pending, an unverified
+doctor is blocked from the patient list, a verified doctor sees a linked
+patient's granted results and is blocked from ungranted ones, and one
+doctor can't reach another doctor's linked session); and prescriptions/
+medicines (extraction, correction preserving the original value,
+cross-user isolation, manual medicine CRUD, timeline integration). Uses an
+in-memory SQLite DB per test run — see `tests/conftest.py`.
 
 ## Code quality
 
@@ -82,10 +96,44 @@ Real, tested, and running:
 - `/users/me` (GET/PATCH)
 - `/sharing/sessions` (create/list/revoke), `/sharing/requests` (list/approve/decline)
 - `/share/{token}` and its sub-routes — the recipient-facing side of sharing
+- `/reports/upload`, `/reports`, `/reports/{id}`, `/reports/{id}/results` —
+  real upload → malware-scan → text-extraction → deterministic lab-value
+  parsing → unit normalization → categorization → clinical-status pipeline,
+  running as a FastAPI background task (`docs/ROADMAP.md` Phase 2)
+- `/health/categories`, `/health/categories/{id}`, `/health/trends` — health
+  category browsing and time-series trends per test (Phase 3)
+- `/timeline`, `/search` — chronological events and cross-report search (Phase 3)
+- `/share/{token}/categories/{category}/results` — a granted category now
+  serves the real extracted results in it, still enforced server-side per
+  request (Phase 4)
+- `/doctors/register`, `/doctors/me`, `/doctors/patients`,
+  `/doctors/patients/{sessionId}/categories(/{category}/results)` — doctor
+  registration + a persistent dashboard of patients who've shared with the
+  doctor's verified identifier (Phase 5)
+- `/prescriptions/upload`, `/prescriptions`, `/prescriptions/{id}`,
+  `/prescriptions/{id}/items`, `PATCH .../items/{itemId}` — prescription
+  OCR/extraction with a correction workflow (Phase 6)
+- `/medicines` (POST/GET), `PATCH /medicines/{id}` — manual medicine
+  management (Phase 6)
 
-Deliberately not implemented (Phase 2+, see `docs/ROADMAP.md`): report
-upload/OCR, prescriptions, medicines, doctor portal, admin console, AI
-features. The sharing feature grants access at the **health category**
-level only — there's no report content on the backend yet to actually
-serve once granted, and `ShareCategoriesResponse.dataNote` says so
-explicitly rather than the API fabricating placeholder data.
+Two providers are real-but-limited rather than faked — see the root
+[`README.md`](../../README.md#whats-real-vs-simplified-for-local-dev) for
+why (no system package manager in this sandbox, no OCR/AV engine
+installable): `virus_scan_provider.py` is a clearly-labeled mock (still
+rejects the real EICAR test file), and `ocr_provider.py` does genuine text
+extraction for PDF/TXT/CSV but can't OCR scanned images — that's a config
+change away from a real engine, not a rewrite, same as `OTP_PROVIDER=mock`.
+Prescriptions reuse the same two providers, so the same limitation applies
+there too.
+
+**Doctor verification is a real but manual workflow**, not an API a doctor
+can self-approve through (§131): `scripts/verify_doctor.py <identifier>` is
+the operator action that flips a registered doctor to `verified` — there's
+no admin console yet to do this through a UI.
+
+Deliberately not implemented (see `docs/ROADMAP.md` for the exact
+per-phase checklist): a formal `docs/THREAT_MODEL.md` and dedicated IDOR
+test suite beyond what's already in the test files (§99/§100/§152);
+finer-grained sharing access levels beyond category (§50/§51 — specific
+test, original document); medication reminders (§39, needs a notification
+system that doesn't exist); admin console; AI features.

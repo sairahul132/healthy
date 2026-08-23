@@ -1,17 +1,14 @@
-import { MockReportsProvider } from "@/lib/mock/mock-reports-provider";
+import { httpReportsProvider } from "./http-reports-provider";
 import type { ReportsProvider } from "./provider";
+// import { MockReportsProvider } from "@/lib/mock/mock-reports-provider";
 
 /**
- * Single seam between UI code and report storage/processing. Once apps/api
- * exposes /reports, /reports/upload, etc., replace this with an
- * HttpReportsProvider that calls apiFetch — no other file should need to
- * change (docs/SPEC.md §137/§138 provider-abstraction pattern).
+ * Single seam between UI code and report storage/processing. apps/api now
+ * has real /reports, /reports/upload, and /timeline routes, so this
+ * defaults to the HTTP-backed provider — same pattern as
+ * lib/auth/get-provider.ts. `MockReportsProvider` still exists for offline
+ * frontend-only preview; swap the import above if you need that.
  */
-let instance: ReportsProvider | null = null;
-
 export function getReportsProvider(): ReportsProvider {
-  if (!instance) {
-    instance = new MockReportsProvider();
-  }
-  return instance;
+  return httpReportsProvider;
 }

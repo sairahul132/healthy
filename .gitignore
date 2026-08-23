@@ -29,6 +29,9 @@ out/
 # Local data
 *.sqlite3
 *.db
+otp_log.txt
+notifications_log.txt
+apps/api/storage/
 
 # Unrelated nested repo — not part of this project
 /Healthify/

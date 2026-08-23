@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "@/lib/auth/session-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/States";
@@ -20,6 +21,20 @@ export default function ProfilePage() {
           <CardTitle>Personal details</CardTitle>
         </CardHeader>
         <CardContent>{user ? <ProfileForm user={user} /> : <LoadingState />}</CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardContent className="flex items-center justify-between pt-6">
+          <div>
+            <p className="text-sm font-medium text-[var(--color-text)]">Are you a doctor?</p>
+            <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+              Register your professional details to view patient-shared results.
+            </p>
+          </div>
+          <Link href="/doctor" className="text-sm font-medium text-[var(--color-brand)] hover:underline">
+            Doctor dashboard →
+          </Link>
+        </CardContent>
       </Card>
     </div>
   );

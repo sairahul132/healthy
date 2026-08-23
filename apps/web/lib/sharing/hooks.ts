@@ -40,6 +40,9 @@ export function useAccessRequests(pendingOnly = true) {
   return useQuery({
     queryKey: sharingKeys.requests(pendingOnly),
     queryFn: () => sharingApi.listAccessRequests(pendingOnly),
+    // Light polling so a new request surfaces (Share page list, sidebar
+    // badge) without the patient needing to manually refresh.
+    refetchInterval: 30_000,
   });
 }
 

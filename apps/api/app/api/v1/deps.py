@@ -9,9 +9,20 @@ from app.core.errors import UnauthorizedError
 from app.core.security import decode_access_token
 from app.db.base import get_db
 from app.db.models import SharingSession
+from app.providers.ai_provider import AiProvider, get_ai_provider
+from app.providers.notification_provider import NotificationProvider, get_notification_provider
+from app.providers.ocr_provider import OcrProvider, get_ocr_provider
 from app.providers.otp_provider import OtpProvider, get_otp_provider
 from app.providers.rate_limiter import RateLimiter, get_rate_limiter
+from app.providers.storage_provider import StorageProvider, get_storage_provider
+from app.providers.virus_scan_provider import VirusScanProvider, get_virus_scan_provider
+from app.services.ai_service import AiService
 from app.services.auth_service import AuthService
+from app.services.doctor_service import DoctorService
+from app.services.medicines_service import MedicinesService
+from app.services.permissions_service import PermissionsService
+from app.services.prescriptions_service import PrescriptionsService
+from app.services.reports_service import ReportsService
 from app.services.sharing_service import SharingService
 
 ACCESS_COOKIE_NAME = "hfy_access"
@@ -56,8 +67,52 @@ def get_sharing_service(
     db: AsyncSession = Depends(get_db),
     otp_provider: OtpProvider = Depends(get_otp_provider),
     rate_limiter: RateLimiter = Depends(get_rate_limiter),
+    notification_provider: NotificationProvider = Depends(get_notification_provider),
 ) -> SharingService:
-    return SharingService(db, otp_provider=otp_provider, rate_limiter=rate_limiter)
+    return SharingService(
+        db,
+        otp_provider=otp_provider,
+        rate_limiter=rate_limiter,
+        notification_provider=notification_provider,
+    )
+
+
+def get_reports_service(
+    db: AsyncSession = Depends(get_db),
+    storage: StorageProvider = Depends(get_storage_provider),
+    virus_scanner: VirusScanProvider = Depends(get_virus_scan_provider),
+    ocr: OcrProvider = Depends(get_ocr_provider),
+) -> ReportsService:
+    return ReportsService(db, storage=storage, virus_scanner=virus_scanner, ocr=ocr)
+
+
+def get_doctor_service(db: AsyncSession = Depends(get_db)) -> DoctorService:
+    return DoctorService(db)
+
+
+def get_prescriptions_service(
+    db: AsyncSession = Depends(get_db),
+    storage: StorageProvider = Depends(get_storage_provider),
+    virus_scanner: VirusScanProvider = Depends(get_virus_scan_provider),
+    ocr: OcrProvider = Depends(get_ocr_provider),
+) -> PrescriptionsService:
+    return PrescriptionsService(db, storage=storage, virus_scanner=virus_scanner, ocr=ocr)
+
+
+def get_medicines_service(db: AsyncSession = Depends(get_db)) -> MedicinesService:
+    return MedicinesService(db)
+
+
+def get_permissions_service(db: AsyncSession = Depends(get_db)) -> PermissionsService:
+    return PermissionsService(db)
+
+
+def get_ai_service(
+    db: AsyncSession = Depends(get_db),
+    ai: AiProvider = Depends(get_ai_provider),
+    rate_limiter: RateLimiter = Depends(get_rate_limiter),
+) -> AiService:
+    return AiService(db, ai=ai, rate_limiter=rate_limiter)
 
 
 async def get_authenticated_share_session(

@@ -17,9 +17,7 @@ class OtpRepository:
         self._db.add(challenge)
         return challenge
 
-    async def get_latest_active(
-        self, identity_value_hash: str
-    ) -> OtpChallenge | None:
+    async def get_latest_active(self, identity_value_hash: str) -> OtpChallenge | None:
         stmt = (
             select(OtpChallenge)
             .where(

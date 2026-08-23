@@ -12,11 +12,12 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/dashboard", icon: "home", enabled: true },
   { label: "Reports", href: "/reports", icon: "reports", enabled: true },
-  { label: "Health", href: "/health", icon: "health", enabled: false },
+  { label: "Health", href: "/health", icon: "health", enabled: true },
   { label: "Timeline", href: "/timeline", icon: "timeline", enabled: true },
-  { label: "Medicines", href: "/medicines", icon: "medicines", enabled: false },
+  { label: "Search", href: "/search", icon: "search", enabled: true },
+  { label: "Medicines", href: "/medicines", icon: "medicines", enabled: true },
   { label: "Share", href: "/share", icon: "share", enabled: true },
-  { label: "Permissions", href: "/permissions", icon: "permissions", enabled: false },
-  { label: "Ask Healthy", href: "/ask", icon: "assistant", enabled: false },
+  { label: "Permissions", href: "/permissions", icon: "permissions", enabled: true },
+  { label: "Ask Healthy", href: "/ask", icon: "assistant", enabled: true },
   { label: "Profile", href: "/profile", icon: "profile", enabled: true },
 ];

@@ -12,11 +12,17 @@ from httpx import ASGITransport, AsyncClient  # noqa: E402
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 
-from app.db.base import Base, get_db  # noqa: E402
+from app.db.base import Base, get_db, get_session_factory  # noqa: E402
 from app.db.models import *  # noqa: E402,F401,F403  (populate Base.metadata)
 from app.main import app  # noqa: E402
+from app.providers.ai_provider import get_ai_provider  # noqa: E402
+from app.providers.notification_provider import get_notification_provider  # noqa: E402
 from app.providers.otp_provider import get_otp_provider  # noqa: E402
 from app.providers.rate_limiter import InMemoryRateLimiter, get_rate_limiter  # noqa: E402
+from app.providers.storage_provider import (  # noqa: E402
+    LocalFilesystemStorageProvider,
+    get_storage_provider,
+)
 
 
 class RecordingOtpProvider:
@@ -28,6 +34,34 @@ class RecordingOtpProvider:
 
     async def send(self, *, identifier: str, code: str) -> None:
         self.sent[identifier] = code
+
+
+class RecordingNotificationProvider:
+    """Test double: captures the last notification sent instead of logging
+    it, so tests can assert on it directly."""
+
+    def __init__(self) -> None:
+        self.sent: list[dict[str, str]] = []
+
+    async def send(self, *, identifier: str, subject: str, message: str) -> None:
+        self.sent.append({"identifier": identifier, "subject": subject, "message": message})
+
+
+class RecordingAiProvider:
+    """Test double: captures the last system_prompt/messages it was called
+    with (so tests can assert on prompt-injection wrapping) and returns a
+    deterministic canned reply instead of calling a real model."""
+
+    def __init__(self) -> None:
+        self.last_system_prompt: str | None = None
+        self.last_messages: list[dict[str, str]] | None = None
+        self.call_count = 0
+
+    async def generate(self, *, system_prompt: str, messages: list[dict[str, str]]) -> str:
+        self.call_count += 1
+        self.last_system_prompt = system_prompt
+        self.last_messages = messages
+        return "canned test reply"
 
 
 @pytest_asyncio.fixture
@@ -49,7 +83,19 @@ async def otp_provider() -> RecordingOtpProvider:
 
 
 @pytest_asyncio.fixture
-async def client(test_engine, otp_provider) -> AsyncGenerator[AsyncClient]:
+async def ai_provider() -> RecordingAiProvider:
+    return RecordingAiProvider()
+
+
+@pytest_asyncio.fixture
+async def notification_provider() -> RecordingNotificationProvider:
+    return RecordingNotificationProvider()
+
+
+@pytest_asyncio.fixture
+async def client(
+    test_engine, otp_provider, ai_provider, notification_provider, tmp_path
+) -> AsyncGenerator[AsyncClient]:
     session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
 
     async def override_get_db():
@@ -57,10 +103,18 @@ async def client(test_engine, otp_provider) -> AsyncGenerator[AsyncClient]:
             yield session
 
     rate_limiter = InMemoryRateLimiter()
+    storage = LocalFilesystemStorageProvider(tmp_path / "storage")
 
     app.dependency_overrides[get_db] = override_get_db
+    # BackgroundTasks (report processing) open their own session after the
+    # request-scoped one has closed — must resolve to the same test engine,
+    # not the real one, or the background task silently writes nowhere.
+    app.dependency_overrides[get_session_factory] = lambda: session_factory
     app.dependency_overrides[get_otp_provider] = lambda: otp_provider
+    app.dependency_overrides[get_ai_provider] = lambda: ai_provider
+    app.dependency_overrides[get_notification_provider] = lambda: notification_provider
     app.dependency_overrides[get_rate_limiter] = lambda: rate_limiter
+    app.dependency_overrides[get_storage_provider] = lambda: storage
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

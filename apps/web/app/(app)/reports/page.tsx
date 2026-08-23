@@ -18,9 +18,16 @@ export default function ReportsPage() {
             Every lab report you&apos;ve uploaded, with its extracted results.
           </p>
         </div>
-        <Link href="/reports/upload">
-          <Button size="sm">Upload report</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/doctor-summary">
+            <Button size="sm" variant="secondary">
+              Doctor visit summary
+            </Button>
+          </Link>
+          <Link href="/reports/upload">
+            <Button size="sm">Upload report</Button>
+          </Link>
+        </div>
       </div>
 
       {isLoading ? <LoadingState label="Loading your reports…" /> : null}
