@@ -49,6 +49,23 @@ stub that fails.
 own console/log — `MOCK OTP for <identifier>: <code>` — instead of sending
 SMS/email. Check the terminal running `uvicorn`, not the browser.
 
+### Real SMS OTP
+
+Create a Twilio account, verify a destination number on a trial account (or
+use a purchased Twilio number), then configure the API host with:
+
+```text
+ENVIRONMENT=production
+OTP_PROVIDER=twilio
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_FROM_NUMBER=+15551234567
+```
+
+The login identifier must be an E.164 phone number such as `+14155552671`.
+Never commit these secrets. Twilio SMS is paid after trial credit; there is no
+reliable permanently free SMS provider.
+
 ## Verify it's working
 
 ```bash

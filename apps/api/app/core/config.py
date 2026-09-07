@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     otp_provider: str = "mock"
     otp_ttl_minutes: int = 5
     otp_max_attempts: int = 5
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_from_number: str = ""
 
     storage_provider: str = "s3_compatible"
     storage_endpoint_url: str | None = None

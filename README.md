@@ -77,6 +77,24 @@ places:
 Use any phone number or email as the identifier — it doesn't need to be
 real.
 
+## Production hosting with real SMS
+
+Netlify can host `apps/web`, but it does not run this FastAPI service. A
+simple free-tier arrangement is:
+
+- **Frontend:** Netlify, with `NEXT_PUBLIC_API_BASE_URL` set to the public API URL.
+- **API:** Render or Railway, using the `apps/api/Dockerfile` and port `8000`.
+- **Database:** Neon or Supabase Postgres; set `DATABASE_URL` to its async URL.
+- **SMS:** Twilio; set `OTP_PROVIDER=twilio` and the three `TWILIO_*` secrets.
+- **Files:** S3-compatible storage such as Cloudflare R2; configure the existing
+  `STORAGE_*` variables instead of using local disk.
+
+Set `ENVIRONMENT=production`, strong `JWT_SIGNING_KEY` and
+`FIELD_ENCRYPTION_KEY`, `CORS_ALLOW_ORIGINS` to the Netlify URL, and
+`SHARE_LINK_BASE_URL` to the Netlify URL. Run `alembic upgrade head` once
+against the hosted database before opening the site. Free hosting may sleep;
+Twilio itself is not permanently free, and trial accounts restrict recipients.
+
 ## Verifying a doctor account in local dev
 
 There's no admin console yet, so doctor verification (§131) is a real
