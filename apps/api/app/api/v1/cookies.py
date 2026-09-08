@@ -12,13 +12,14 @@ def set_session_cookies(
     # this MUST be True (the default posture) anywhere reachable over the
     # network (§106).
     secure = settings.is_production
+    samesite = "none" if settings.is_production else "lax"
     response.set_cookie(
         ACCESS_COOKIE_NAME,
         access_token,
         max_age=settings.access_token_ttl_minutes * 60,
         httponly=True,
         secure=secure,
-        samesite="lax",
+        samesite=samesite,
         path="/",
     )
     response.set_cookie(
@@ -27,7 +28,7 @@ def set_session_cookies(
         max_age=settings.refresh_token_ttl_days * 86400,
         httponly=True,
         secure=secure,
-        samesite="lax",
+        samesite=samesite,
         path="/",
     )
 

@@ -1,5 +1,7 @@
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +12,26 @@ class Settings(BaseSettings):
 
     database_url: str
     redis_url: str
+
+    @field_validator("database_url")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        """Accept provider URLs while configuring SQLAlchemy's async driver."""
+        if not value.startswith(("postgres://", "postgresql://")):
+            return value
+
+        parsed = urlsplit(value)
+        query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        if query.get("sslmode") == "require":
+            query.pop("sslmode")
+            query["ssl"] = "require"
+
+        return urlunsplit(
+            parsed._replace(
+                scheme="postgresql+asyncpg",
+                query=urlencode(query),
+            )
+        )
 
     jwt_signing_key: str
     field_encryption_key: str
