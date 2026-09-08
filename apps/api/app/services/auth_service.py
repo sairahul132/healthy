@@ -56,6 +56,8 @@ class AuthService:
         which identifiers already have an account.
         """
         settings = get_settings()
+        if settings.otp_bypass_enabled and settings.is_production:
+            raise RuntimeError("OTP bypass cannot be enabled in production.")
         identity_hash = hmac_lookup_hash(identifier)
 
         allowed = await self._rate_limiter.allow(
@@ -80,7 +82,12 @@ class AuthService:
         )
         await self._db.commit()
 
-        await self._otp_provider.send(identifier=identifier, code=code)
+        use_static_test_account = (
+            settings.otp_static_test_accounts_enabled
+            and settings.is_static_login_number(identifier)
+        )
+        if not settings.otp_bypass_enabled and not use_static_test_account:
+            await self._otp_provider.send(identifier=identifier, code=code)
         return OTP_RESEND_COOLDOWN_SECONDS
 
     async def verify_otp(self, identifier: str, code: str) -> tuple[User, str, str]:
@@ -89,7 +96,26 @@ class AuthService:
         identity_hash = hmac_lookup_hash(identifier)
 
         challenge = await self._otps.get_latest_active(identity_hash)
-        if challenge is None:
+        use_static_test_account = (
+            settings.otp_static_test_accounts_enabled
+            and settings.is_static_login_number(identifier)
+        )
+        if use_static_test_account:
+            if code != settings.otp_static_login_code:
+                raise UnauthorizedError("Incorrect code.")
+            if challenge is not None:
+                challenge.consumed_at = datetime.now(UTC)
+        elif settings.otp_bypass_enabled:
+            if settings.is_production:
+                raise RuntimeError("OTP bypass cannot be enabled in production.")
+            if (
+                not settings.is_static_login_number(identifier)
+                or code != settings.otp_static_login_code
+            ):
+                raise UnauthorizedError("Incorrect code.")
+            if challenge is not None:
+                challenge.consumed_at = datetime.now(UTC)
+        elif challenge is None:
             await self._audit.record(
                 actor_user_id=None,
                 event_type=audit_events.LOGIN_FAILURE,
@@ -99,11 +125,21 @@ class AuthService:
             await self._db.commit()
             raise UnauthorizedError("That code has expired. Request a new one.")
 
-        if challenge.attempt_count >= settings.otp_max_attempts:
+        if (
+            not settings.otp_bypass_enabled
+            and not use_static_test_account
+            and challenge is not None
+            and challenge.attempt_count >= settings.otp_max_attempts
+        ):
             await self._db.commit()
             raise RateLimitedError("Too many attempts. Request a new code.")
 
-        if not verify_secret(code, challenge.otp_code_hash):
+        if (
+            not settings.otp_bypass_enabled
+            and not use_static_test_account
+            and challenge is not None
+            and not verify_secret(code, challenge.otp_code_hash)
+        ):
             challenge.attempt_count += 1
             await self._audit.record(
                 actor_user_id=None,
@@ -114,7 +150,12 @@ class AuthService:
             await self._db.commit()
             raise UnauthorizedError("Incorrect code.")
 
-        challenge.consumed_at = datetime.now(UTC)
+        if (
+            not settings.otp_bypass_enabled
+            and not use_static_test_account
+            and challenge is not None
+        ):
+            challenge.consumed_at = datetime.now(UTC)
 
         identity_type = classify_identifier(identifier)
         identity = await self._users.find_identity_by_hash(identity_type, identity_hash)

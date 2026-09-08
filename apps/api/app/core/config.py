@@ -17,11 +17,19 @@ class Settings(BaseSettings):
     refresh_token_ttl_days: int = 30
 
     otp_provider: str = "mock"
+    otp_bypass_enabled: bool = False
+    otp_static_test_accounts_enabled: bool = False
     otp_ttl_minutes: int = 5
     otp_max_attempts: int = 5
+    otp_static_login_numbers: str = "9876543210,1234567890"
+    otp_static_login_code: str = "123456"
+    otp_static_share_numbers: str = "9999988888,4444455555"
+    otp_static_share_code: str = "098765"
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_from_number: str = ""
+    gmail_address: str = ""
+    gmail_app_password: str = ""
 
     storage_provider: str = "s3_compatible"
     storage_endpoint_url: str | None = None
@@ -49,6 +57,18 @@ class Settings(BaseSettings):
     @property
     def cors_allow_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_allow_origins.split(",") if origin.strip()]
+
+    @staticmethod
+    def _phone_without_plus(identifier: str) -> str:
+        return identifier.strip().removeprefix("+")
+
+    def is_static_login_number(self, identifier: str) -> bool:
+        numbers = {number.strip() for number in self.otp_static_login_numbers.split(",")}
+        return self._phone_without_plus(identifier) in numbers
+
+    def is_static_share_number(self, identifier: str) -> bool:
+        numbers = {number.strip() for number in self.otp_static_share_numbers.split(",")}
+        return self._phone_without_plus(identifier) in numbers
 
 
 @lru_cache

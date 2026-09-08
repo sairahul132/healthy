@@ -3,10 +3,13 @@ a real SMS/email provider once credentials exist — nothing outside
 `get_otp_provider` should need to change.
 """
 
+import asyncio
 import logging
 import re
+import smtplib
 from base64 import b64encode
 from datetime import UTC, datetime
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Protocol
 
@@ -65,6 +68,38 @@ class TwilioSmsOtpProvider:
             raise RuntimeError("Could not send verification code.")
 
 
+class GmailEmailOtpProvider:
+    """Send one-time codes through Gmail SMTP using an App Password."""
+
+    def __init__(self, *, address: str, app_password: str) -> None:
+        self._address = address
+        self._app_password = app_password
+
+    async def send(self, *, identifier: str, code: str) -> None:
+        if "@" not in identifier:
+            raise ValidationAppError("Gmail OTP requires an email address.")
+
+        message = EmailMessage()
+        message["From"] = self._address
+        message["To"] = identifier
+        message["Subject"] = "Your Healthy verification code"
+        message.set_content(
+            f"Your Healthy verification code is {code}. It expires in 5 minutes."
+        )
+
+        def send_message() -> None:
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as smtp:
+                smtp.starttls()
+                smtp.login(self._address, self._app_password)
+                smtp.send_message(message)
+
+        try:
+            await asyncio.to_thread(send_message)
+        except (OSError, smtplib.SMTPException) as exc:
+            logger.error("Gmail rejected OTP delivery: %s", type(exc).__name__)
+            raise RuntimeError("Could not send verification code.") from exc
+
+
 def get_otp_provider() -> OtpProvider:
     settings = get_settings()
     if settings.otp_provider == "mock":
@@ -87,5 +122,20 @@ def get_otp_provider() -> OtpProvider:
             account_sid=settings.twilio_account_sid,
             auth_token=settings.twilio_auth_token,
             from_number=settings.twilio_from_number,
+        )
+    if settings.otp_provider == "gmail":
+        missing = [
+            name
+            for name, value in {
+                "GMAIL_ADDRESS": settings.gmail_address,
+                "GMAIL_APP_PASSWORD": settings.gmail_app_password,
+            }.items()
+            if not value
+        ]
+        if missing:
+            raise RuntimeError(f"Missing Gmail configuration: {', '.join(missing)}")
+        return GmailEmailOtpProvider(
+            address=settings.gmail_address,
+            app_password=settings.gmail_app_password,
         )
     raise NotImplementedError(f"OTP provider '{settings.otp_provider}' is not implemented.")

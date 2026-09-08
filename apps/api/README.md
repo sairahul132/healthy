@@ -39,6 +39,16 @@ OTP_PROVIDER=mock
 CORS_ALLOW_ORIGINS=http://localhost:3000
 ```
 
+For the hosted deployment, use the Neon pooled PostgreSQL URL with the
+`postgresql+asyncpg://` scheme:
+
+```env
+DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require
+```
+
+Run `alembic upgrade head` once after setting this variable to create the
+tables in Neon.
+
 `REDIS_URL` is required by `Settings` but never actually connected to —
 rate limiting falls back to an in-memory limiter when Redis isn't
 configured for real (`app/providers/rate_limiter.py`). Same pattern as
@@ -48,6 +58,24 @@ stub that fails.
 **Where OTP codes go:** `OTP_PROVIDER=mock` logs codes to this server's
 own console/log — `MOCK OTP for <identifier>: <code>` — instead of sending
 SMS/email. Check the terminal running `uvicorn`, not the browser.
+
+### Local UI testing without OTP delivery
+
+The local `apps/api/.env` enables a development-only static OTP mode. Use
+these values in the web UI:
+
+```text
+Login numbers: 9876543210, 1234567890
+Login OTP:     123456
+
+Share numbers: 9999988888, 4444455555
+Share OTP:     098765
+```
+
+The first successful login creates the account in the local database. To test
+sharing, create a share using one of the share numbers, then enter that exact
+number in the recipient flow with `098765`. This mode is rejected when
+`ENVIRONMENT=production` and is disabled in the committed `.env.example`.
 
 ### Real SMS OTP
 
@@ -65,6 +93,23 @@ TWILIO_FROM_NUMBER=+15551234567
 The login identifier must be an E.164 phone number such as `+14155552671`.
 Never commit these secrets. Twilio SMS is paid after trial credit; there is no
 reliable permanently free SMS provider.
+
+### Gmail email OTP
+
+For low-volume deployments, Gmail SMTP can send OTPs to email addresses. Turn
+on two-step verification for the Gmail account, create a Google App Password,
+and configure:
+
+```text
+ENVIRONMENT=production
+OTP_PROVIDER=gmail
+GMAIL_ADDRESS=your-app@gmail.com
+GMAIL_APP_PASSWORD=abcdefghijklmnop
+```
+
+Use an App Password, never the regular Gmail password. Gmail is suitable for
+small-volume testing and launch traffic, not bulk email; phone numbers still
+require `OTP_PROVIDER=twilio` or another SMS provider.
 
 ## Verify it's working
 

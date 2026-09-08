@@ -44,8 +44,8 @@ from app.schemas.sharing import (
     ShareCategoriesResponse,
     ShareCategoryStatus,
     SharePreviewResponse,
-    SharingSessionResponse,
     ShareStatusResponse,
+    SharingSessionResponse,
 )
 from app.services.report_presenters import result_to_response
 
@@ -248,6 +248,8 @@ class SharingService:
 
     async def request_recipient_otp(self, token: str, identifier: str) -> int:
         settings = get_settings()
+        if settings.otp_bypass_enabled and settings.is_production:
+            raise RuntimeError("OTP bypass cannot be enabled in production.")
         session = await self._get_active_session_or_error(token)
         if not is_session_active(session):
             raise NotFoundError("This share link has expired or was revoked.")
@@ -281,7 +283,12 @@ class SharingService:
         )
         await self._db.commit()
 
-        await self._otp_provider.send(identifier=identifier, code=code)
+        use_static_test_recipient = (
+            settings.otp_static_test_accounts_enabled
+            and settings.is_static_share_number(identifier)
+        )
+        if not settings.otp_bypass_enabled and not use_static_test_recipient:
+            await self._otp_provider.send(identifier=identifier, code=code)
         return OTP_RESEND_COOLDOWN_SECONDS
 
     async def verify_recipient_otp(self, token: str, identifier: str, code: str) -> tuple[str, int]:
@@ -291,6 +298,39 @@ class SharingService:
             raise NotFoundError("This share link has expired or was revoked.")
 
         identity_hash = hmac_lookup_hash(identifier)
+        use_static_test_recipient = (
+            settings.otp_static_test_accounts_enabled
+            and settings.is_static_share_number(identifier)
+        )
+        if use_static_test_recipient:
+            if identity_hash != session.recipient_identifier_hash:
+                raise ForbiddenError("This share isn't associated with that identifier.")
+            if code != settings.otp_static_share_code:
+                raise UnauthorizedError("Incorrect code.")
+            await self._link_verified_doctor(session, identity_hash)
+            await self._db.commit()
+            access_token = create_share_access_token(
+                sharing_session_id=str(session.id), recipient_identifier_hash=identity_hash
+            )
+            return access_token, settings.share_access_token_ttl_minutes
+
+        if settings.otp_bypass_enabled:
+            if settings.is_production:
+                raise RuntimeError("OTP bypass cannot be enabled in production.")
+            if identity_hash != session.recipient_identifier_hash:
+                raise ForbiddenError("This share isn't associated with that identifier.")
+            if (
+                not settings.is_static_share_number(identifier)
+                or code != settings.otp_static_share_code
+            ):
+                raise UnauthorizedError("Incorrect code.")
+            await self._link_verified_doctor(session, identity_hash)
+            await self._db.commit()
+            access_token = create_share_access_token(
+                sharing_session_id=str(session.id), recipient_identifier_hash=identity_hash
+            )
+            return access_token, settings.share_access_token_ttl_minutes
+
         challenge = await self._otps.get_latest_active(identity_hash)
 
         if (

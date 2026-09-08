@@ -35,3 +35,4 @@ apps/api/storage/
 
 # Unrelated nested repo — not part of this project
 /Healthify/
+.neon

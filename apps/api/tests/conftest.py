@@ -6,6 +6,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("JWT_SIGNING_KEY", "test-signing-key-0000000000000000000000000000")
 os.environ.setdefault("FIELD_ENCRYPTION_KEY", "test-field-key-00000000000000000000000000000")
+os.environ["OTP_BYPASS_ENABLED"] = "false"
 
 import pytest_asyncio  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
