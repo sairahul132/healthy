@@ -42,6 +42,13 @@ class MockOtpProvider:
             f.write(f"{timestamp}\t{identifier}\t{code}\n")
 
 
+class DisabledOtpProvider:
+    """Block OTP delivery for non-test identifiers in static test mode."""
+
+    async def send(self, *, identifier: str, code: str) -> None:
+        raise RuntimeError("A real OTP provider is required for this identifier.")
+
+
 class TwilioSmsOtpProvider:
     """Send one-time codes through Twilio's SMS API."""
 
@@ -103,8 +110,10 @@ class GmailEmailOtpProvider:
 def get_otp_provider() -> OtpProvider:
     settings = get_settings()
     if settings.otp_provider == "mock":
-        if settings.is_production:
+        if settings.is_production and not settings.otp_static_test_accounts_enabled:
             raise RuntimeError("OTP_PROVIDER=mock must not be used in production.")
+        if settings.is_production:
+            return DisabledOtpProvider()
         return MockOtpProvider()
     if settings.otp_provider == "twilio":
         missing = [
