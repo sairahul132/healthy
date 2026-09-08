@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
         parsed = urlsplit(value)
         query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        query.pop("channel_binding", None)
         if query.get("sslmode") == "require":
             query.pop("sslmode")
             query["ssl"] = "require"
