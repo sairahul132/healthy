@@ -3,3 +3,12 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  NEXT_PUBLIC_API_BASE_URL = "/api/v1"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://healthy-0zgp.onrender.com/api/:splat"
+  status = 200
+  force = true
+
