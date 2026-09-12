@@ -88,13 +88,13 @@ export const mockAuthProvider: AuthProvider = {
   async register(identifier: Identifier): Promise<OtpChallenge> {
     await delay(400);
     pendingIdentifier = identifier;
-    return { identifier, retryAfterSeconds: 30 };
+    return { identifier, retryAfterSeconds: 30, expiresInSeconds: 60 };
   },
 
   async login(identifier: Identifier): Promise<OtpChallenge> {
     await delay(400);
     pendingIdentifier = identifier;
-    return { identifier, retryAfterSeconds: 30 };
+    return { identifier, retryAfterSeconds: 30, expiresInSeconds: 60 };
   },
 
   async verifyOtp(identifier: Identifier): Promise<Session> {

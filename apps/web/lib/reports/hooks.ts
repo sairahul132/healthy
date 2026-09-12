@@ -24,6 +24,20 @@ export function useReports() {
   });
 }
 
+/** Whether the signed-in user has uploaded at least one report — the gate
+ * most other pages depend on before they show real content (see
+ * components/reports/RequireReports.tsx). */
+export function useHasReports() {
+  const { data, isLoading, isError, refetch } = useReports();
+  return {
+    hasReports: (data?.length ?? 0) > 0,
+    isLoading,
+    isError,
+    refetch,
+    reports: data,
+  };
+}
+
 export function useReport(reportId: string) {
   return useQuery({
     queryKey: reportsKeys.detail(reportId),

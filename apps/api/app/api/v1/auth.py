@@ -22,16 +22,20 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def register(
     body: IdentifierRequest, service: AuthService = Depends(get_auth_service)
 ) -> OtpChallengeResponse:
-    retry_after = await service.request_otp(body.identifier)
-    return OtpChallengeResponse(identifier=body.identifier, retry_after_seconds=retry_after)
+    retry_after, expires_in = await service.request_register_otp(body.identifier)
+    return OtpChallengeResponse(
+        identifier=body.identifier, retry_after_seconds=retry_after, expires_in_seconds=expires_in
+    )
 
 
 @router.post("/login", response_model=OtpChallengeResponse)
 async def login(
     body: IdentifierRequest, service: AuthService = Depends(get_auth_service)
 ) -> OtpChallengeResponse:
-    retry_after = await service.request_otp(body.identifier)
-    return OtpChallengeResponse(identifier=body.identifier, retry_after_seconds=retry_after)
+    retry_after, expires_in = await service.request_login_otp(body.identifier)
+    return OtpChallengeResponse(
+        identifier=body.identifier, retry_after_seconds=retry_after, expires_in_seconds=expires_in
+    )
 
 
 @router.post("/verify-otp", response_model=SessionResponse)

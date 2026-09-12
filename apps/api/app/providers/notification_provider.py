@@ -38,7 +38,7 @@ class MockNotificationProvider:
 def get_notification_provider() -> NotificationProvider:
     settings = get_settings()
     if settings.notification_provider == "mock":
-        if settings.is_production:
+        if settings.is_production and not settings.allow_mock_providers:
             raise RuntimeError("NOTIFICATION_PROVIDER=mock must not be used in production.")
         return MockNotificationProvider()
     raise NotImplementedError(

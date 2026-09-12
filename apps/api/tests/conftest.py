@@ -139,5 +139,19 @@ async def register_and_verify(
     return resp.json()
 
 
+async def login_and_verify(
+    client: AsyncClient, otp_provider: RecordingOtpProvider, identifier: str
+) -> dict:
+    """OTP login for an identifier that already has an account — pairs with
+    register_and_verify for re-authenticating in a later part of a test."""
+    await client.post("/api/v1/auth/login", json={"identifier": identifier})
+    code = otp_provider.sent[identifier]
+    resp = await client.post(
+        "/api/v1/auth/verify-otp", json={"identifier": identifier, "code": code}
+    )
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
 def unique_identifier(prefix: str = "user") -> str:
     return f"{prefix}-{uuid.uuid4().hex[:10]}@example.com"

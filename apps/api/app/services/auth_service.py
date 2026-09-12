@@ -4,8 +4,14 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import audit_events
-from app.core.config import get_settings
-from app.core.errors import RateLimitedError, UnauthorizedError, ValidationAppError
+from app.core.config import Settings, get_settings
+from app.core.errors import (
+    ConflictError,
+    NotFoundError,
+    RateLimitedError,
+    UnauthorizedError,
+    ValidationAppError,
+)
 from app.core.security import (
     create_access_token,
     decrypt_field,
@@ -49,16 +55,62 @@ class AuthService:
         self._sessions = SessionRepository(db)
         self._audit = AuditRepository(db)
 
-    async def request_otp(self, identifier: str) -> int:
-        """Shared by /auth/register and /auth/login — which one applies is
-        decided at verify time (see verify_otp), not here, so requesting a
-        code behaves identically either way and can't be used to enumerate
-        which identifiers already have an account.
-        """
+    async def request_register_otp(self, identifier: str) -> tuple[int, int]:
+        """Issues a signup code — rejects identifiers that already have an
+        account so the user isn't left waiting on a code that can never
+        verify into a new account."""
         settings = get_settings()
+        identity_hash = hmac_lookup_hash(identifier)
+        if not self._is_static_test_account(identifier, settings):
+            identity_type = classify_identifier(identifier)
+            existing = await self._users.find_identity_by_hash(identity_type, identity_hash)
+            if existing is not None:
+                await self._audit.record(
+                    actor_user_id=None,
+                    event_type=audit_events.REGISTER_FAILURE,
+                    outcome="failure",
+                    metadata={"reason": "already_registered", "identifier_hash": identity_hash},
+                )
+                await self._db.commit()
+                noun = "email address" if identity_type == IdentityType.EMAIL else "mobile number"
+                raise ConflictError(f"An account with this {noun} already exists. Log in instead.")
+
+        return await self._issue_otp(identifier, identity_hash, settings)
+
+    async def request_login_otp(self, identifier: str) -> tuple[int, int]:
+        """Issues a login code — rejects identifiers with no account so the
+        user isn't left waiting on a code for an account that doesn't exist."""
+        settings = get_settings()
+        identity_hash = hmac_lookup_hash(identifier)
+        if not self._is_static_test_account(identifier, settings):
+            identity_type = classify_identifier(identifier)
+            existing = await self._users.find_identity_by_hash(identity_type, identity_hash)
+            if existing is None:
+                await self._audit.record(
+                    actor_user_id=None,
+                    event_type=audit_events.LOGIN_FAILURE,
+                    outcome="failure",
+                    metadata={"reason": "not_registered", "identifier_hash": identity_hash},
+                )
+                await self._db.commit()
+                noun = "email address" if identity_type == IdentityType.EMAIL else "mobile number"
+                raise NotFoundError(f"No account found for this {noun}. Create one to get started.")
+
+        return await self._issue_otp(identifier, identity_hash, settings)
+
+    @staticmethod
+    def _is_static_test_account(identifier: str, settings: Settings) -> bool:
+        return settings.otp_static_test_accounts_enabled and settings.is_static_login_number(
+            identifier
+        )
+
+    async def _issue_otp(
+        self, identifier: str, identity_hash: str, settings: Settings
+    ) -> tuple[int, int]:
+        """Shared code-generation path for both register and login, once the
+        caller has already decided the request is allowed to proceed."""
         if settings.otp_bypass_enabled and settings.is_production:
             raise RuntimeError("OTP bypass cannot be enabled in production.")
-        identity_hash = hmac_lookup_hash(identifier)
 
         allowed = await self._rate_limiter.allow(
             f"otp_request:{identity_hash}", limit=5, window_seconds=3600
@@ -67,10 +119,11 @@ class AuthService:
             raise RateLimitedError("Too many code requests. Try again later.")
 
         code = generate_otp_code()
+        ttl_minutes = settings.patient_otp_ttl_minutes
         self._otps.create(
             identity_value_hash=identity_hash,
             otp_code_hash=hash_secret(code),
-            expires_at=datetime.now(UTC) + timedelta(minutes=settings.otp_ttl_minutes),
+            expires_at=datetime.now(UTC) + timedelta(minutes=ttl_minutes),
             context="patient_auth",
         )
         await self._audit.record(
@@ -82,13 +135,10 @@ class AuthService:
         )
         await self._db.commit()
 
-        use_static_test_account = (
-            settings.otp_static_test_accounts_enabled
-            and settings.is_static_login_number(identifier)
-        )
+        use_static_test_account = self._is_static_test_account(identifier, settings)
         if not settings.otp_bypass_enabled and not use_static_test_account:
             await self._otp_provider.send(identifier=identifier, code=code)
-        return OTP_RESEND_COOLDOWN_SECONDS
+        return OTP_RESEND_COOLDOWN_SECONDS, ttl_minutes * 60
 
     async def verify_otp(self, identifier: str, code: str) -> tuple[User, str, str]:
         """Returns (user, access_token, refresh_cookie_value)."""
@@ -141,6 +191,7 @@ class AuthService:
             and not verify_secret(code, challenge.otp_code_hash)
         ):
             challenge.attempt_count += 1
+            remaining = max(settings.otp_max_attempts - challenge.attempt_count, 0)
             await self._audit.record(
                 actor_user_id=None,
                 event_type=audit_events.LOGIN_FAILURE,
@@ -148,7 +199,10 @@ class AuthService:
                 metadata={"reason": "bad_code"},
             )
             await self._db.commit()
-            raise UnauthorizedError("Incorrect code.")
+            if remaining <= 0:
+                raise UnauthorizedError("Incorrect code. Too many attempts — request a new code.")
+            attempt_word = "attempt" if remaining == 1 else "attempts"
+            raise UnauthorizedError(f"Incorrect code. {remaining} {attempt_word} left.")
 
         if (
             not settings.otp_bypass_enabled

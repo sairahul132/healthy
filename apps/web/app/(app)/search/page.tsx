@@ -5,25 +5,21 @@ import { useState } from "react";
 import { useSearch } from "@/lib/search/hooks";
 import { Card } from "@/components/ui/Card";
 import { EmptyState, LoadingState } from "@/components/ui/States";
+import { RequireReports } from "@/components/reports/RequireReports";
 
-export default function SearchPage() {
+function SearchBox() {
   const [query, setQuery] = useState("");
   const { data: results, isLoading, isFetching } = useSearch(query);
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">Search</h1>
-      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-        Find a test, result, or report across your whole vault (docs/SPEC.md §62).
-      </p>
-
+    <>
       <input
         autoFocus
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search for “cholesterol”, “hemoglobin”, a report name…"
-        className="mt-6 w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-brand)]"
+        className="w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-brand)]"
       />
 
       <div className="mt-6">
@@ -51,6 +47,23 @@ export default function SearchPage() {
             ))}
           </div>
         ) : null}
+      </div>
+    </>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <div>
+      <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">Search</h1>
+      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+        Find a test, result, or report across your whole vault (docs/SPEC.md §62).
+      </p>
+
+      <div className="mt-6">
+        <RequireReports description="Please upload reports to search your vault.">
+          <SearchBox />
+        </RequireReports>
       </div>
     </div>
   );

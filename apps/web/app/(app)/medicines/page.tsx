@@ -5,6 +5,7 @@ import { AddMedicineForm } from "@/components/medicines/AddMedicineForm";
 import { MedicineList } from "@/components/medicines/MedicineList";
 import { PrescriptionUpload } from "@/components/prescriptions/PrescriptionUpload";
 import { PrescriptionList } from "@/components/prescriptions/PrescriptionList";
+import { RequireReports } from "@/components/reports/RequireReports";
 
 export default function MedicinesPage() {
   return (
@@ -14,24 +15,28 @@ export default function MedicinesPage() {
         Your current medicines, and prescriptions you&apos;ve uploaded (docs/SPEC.md §38/§39).
       </p>
 
-      <Card className="mt-7">
-        <CardHeader>
-          <CardTitle>Add a medicine</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AddMedicineForm />
-        </CardContent>
-      </Card>
+      <div className="mt-7">
+        <RequireReports description="Please upload reports to manage medicines and prescriptions.">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add a medicine</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AddMedicineForm />
+            </CardContent>
+          </Card>
 
-      <div className="mt-6">
-        <MedicineList />
-      </div>
+          <div className="mt-6">
+            <MedicineList />
+          </div>
 
-      <div className="mt-10 mb-4 flex items-center justify-between">
-        <h2 className="font-display text-lg font-medium text-[var(--color-text)]">Prescriptions</h2>
-        <PrescriptionUpload />
+          <div className="mt-10 mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-medium text-[var(--color-text)]">Prescriptions</h2>
+            <PrescriptionUpload />
+          </div>
+          <PrescriptionList />
+        </RequireReports>
       </div>
-      <PrescriptionList />
     </div>
   );
 }

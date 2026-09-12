@@ -4,10 +4,42 @@ import { useTimelineEvents } from "@/lib/reports/hooks";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { TimelineItem } from "@/components/timeline/TimelineItem";
+import { RequireReports } from "@/components/reports/RequireReports";
 
-export default function TimelinePage() {
+function TimelineEvents() {
   const { data: events, isLoading, isError, refetch } = useTimelineEvents();
 
+  return (
+    <>
+      {isLoading ? <LoadingState label="Loading your timeline…" /> : null}
+      {isError ? (
+        <ErrorState
+          description="We couldn't load your timeline."
+          action={
+            <Button size="sm" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+      {events && events.length === 0 ? (
+        <EmptyState
+          title="Nothing here yet"
+          description="Upload a report or log an event to start building your health timeline."
+        />
+      ) : null}
+      {events && events.length > 0 ? (
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-5 shadow-sm">
+          {events.map((event, index) => (
+            <TimelineItem key={event.id} event={event} isLast={index === events.length - 1} />
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export default function TimelinePage() {
   return (
     <div>
       <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">Timeline</h1>
@@ -16,30 +48,9 @@ export default function TimelinePage() {
       </p>
 
       <div className="mt-7">
-        {isLoading ? <LoadingState label="Loading your timeline…" /> : null}
-        {isError ? (
-          <ErrorState
-            description="We couldn't load your timeline."
-            action={
-              <Button size="sm" onClick={() => refetch()}>
-                Retry
-              </Button>
-            }
-          />
-        ) : null}
-        {events && events.length === 0 ? (
-          <EmptyState
-            title="Nothing here yet"
-            description="Upload a report or log an event to start building your health timeline."
-          />
-        ) : null}
-        {events && events.length > 0 ? (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-5 shadow-sm">
-            {events.map((event, index) => (
-              <TimelineItem key={event.id} event={event} isLast={index === events.length - 1} />
-            ))}
-          </div>
-        ) : null}
+        <RequireReports description="Please upload reports to build your health timeline.">
+          <TimelineEvents />
+        </RequireReports>
       </div>
     </div>
   );

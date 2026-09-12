@@ -7,7 +7,12 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.core.security import hmac_lookup_hash
 from app.db.models import DoctorProfile
 from app.db.models.doctor_profile import DoctorVerificationStatus
-from tests.conftest import RecordingOtpProvider, register_and_verify, unique_identifier
+from tests.conftest import (
+    RecordingOtpProvider,
+    login_and_verify,
+    register_and_verify,
+    unique_identifier,
+)
 
 CBC_TEXT = "Hemoglobin        13.5   g/dL   (13.0 - 17.0)\n"
 
@@ -109,7 +114,7 @@ async def test_verified_doctor_sees_linked_patient_and_authorized_results(
     assert verify.status_code == 200, verify.text
 
     # Doctor logs back in with their own persistent session and checks the dashboard.
-    await register_and_verify(client, otp_provider, doctor_identifier)
+    await login_and_verify(client, otp_provider, doctor_identifier)
     patients = await client.get("/api/v1/doctors/patients")
     assert patients.status_code == 200, patients.text
     assert len(patients.json()) == 1
@@ -159,10 +164,10 @@ async def test_doctor_cannot_see_another_doctors_patient_session(
         f"/api/v1/share/{token}/otp/verify", json={"identifier": doctor_a, "code": code}
     )
 
-    await register_and_verify(client, otp_provider, doctor_a)
+    await login_and_verify(client, otp_provider, doctor_a)
     session_id = (await client.get("/api/v1/doctors/patients")).json()[0]["sessionId"]
     await client.post("/api/v1/auth/logout")
 
-    await register_and_verify(client, otp_provider, doctor_b)
+    await login_and_verify(client, otp_provider, doctor_b)
     resp = await client.get(f"/api/v1/doctors/patients/{session_id}/categories")
     assert resp.status_code == 404

@@ -5,6 +5,8 @@ export interface OtpChallenge {
   identifier: Identifier;
   /** Seconds until the caller may request another OTP for this identifier. */
   retryAfterSeconds: number;
+  /** Seconds until this code expires. */
+  expiresInSeconds: number;
 }
 
 export function register(identifier: Identifier): Promise<OtpChallenge> {

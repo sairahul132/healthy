@@ -29,6 +29,7 @@ class IdentifierRequest(CamelModel):
 class OtpChallengeResponse(CamelModel):
     identifier: str
     retry_after_seconds: int
+    expires_in_seconds: int
 
 
 class VerifyOtpRequest(CamelModel):

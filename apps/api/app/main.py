@@ -39,6 +39,14 @@ def _request_id(request: Request) -> str:
 
 @app.exception_handler(AppError)
 async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
+    logger.warning(
+        "Application error method=%s path=%s status=%s code=%s request_id=%s",
+        request.method,
+        request.url.path,
+        exc.status_code,
+        exc.code,
+        _request_id(request),
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -51,6 +59,13 @@ async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
 async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
     first_error = exc.errors()[0] if exc.errors() else {}
     message = first_error.get("msg", "Invalid request.")
+    logger.warning(
+        "Request validation error method=%s path=%s status=%s request_id=%s",
+        request.method,
+        request.url.path,
+        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        _request_id(request),
+    )
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -67,7 +82,12 @@ async def handle_validation_error(request: Request, exc: RequestValidationError)
 async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
     # §103: never leak stack traces / internals to the client — but log the
     # real thing server-side, tagged with the same request id the client sees.
-    logger.exception("Unhandled error [request_id=%s]", _request_id(request))
+    logger.exception(
+        "Unhandled error method=%s path=%s request_id=%s",
+        request.method,
+        request.url.path,
+        _request_id(request),
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

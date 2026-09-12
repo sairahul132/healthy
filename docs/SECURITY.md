@@ -6,10 +6,16 @@ what Phase 1 actually implements.
 
 ## Authentication
 
-- OTP-only, no password required. OTP codes: 6 digits, argon2-hashed at rest, 5-minute
-  expiry, max 5 verification attempts per challenge (then the challenge is invalidated).
+- OTP-only, no password required. OTP codes: 6 digits, argon2-hashed at rest, max 5
+  verification attempts per challenge (then the challenge is invalidated). Expiry: 1 minute
+  for patient login/signup codes, 5 minutes for share-recipient codes.
 - Rate limits (Redis, sliding window): OTP requests — 3 per identifier per 10 min, 10 per IP
   per hour. OTP verification — 5 attempts per challenge, then must request a new OTP.
+- `/auth/register` and `/auth/login` each check whether the identifier already has an
+  account and reject with a specific message (already-registered / not-registered) rather
+  than issuing a code either way — a deliberate UX-over-enumeration-resistance trade-off;
+  the OTP-request rate limit above is what keeps this from being usable to mass-probe
+  identifiers.
 - Sessions: short-lived access token (15 min, JWT, holds only `user_id` + `session_id` — no
   PII, no health data per §136) + rotating refresh token (30 days, opaque random value,
   hashed in DB, httponly/secure/samesite=strict cookie). Refresh rotates on every use;

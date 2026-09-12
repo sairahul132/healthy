@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = "development"
+    allow_mock_providers: bool = False
 
     database_url: str
     redis_url: str
@@ -43,6 +44,7 @@ class Settings(BaseSettings):
     otp_bypass_enabled: bool = False
     otp_static_test_accounts_enabled: bool = False
     otp_ttl_minutes: int = 5
+    patient_otp_ttl_minutes: int = 1
     otp_max_attempts: int = 5
     otp_static_login_numbers: str = "9876543210,1234567890"
     otp_static_login_code: str = "123456"
@@ -85,13 +87,23 @@ class Settings(BaseSettings):
     def _phone_without_plus(identifier: str) -> str:
         return identifier.strip().removeprefix("+")
 
+    @staticmethod
+    def _matches_static_number(identifier: str, configured: str) -> bool:
+        """Equality, or a suffix match so a bare configured number (e.g.
+        "9876543210") still matches once a country code is prepended (e.g.
+        the login form's "+919876543210"), regardless of which of the two
+        shapes a given caller sends (§ patient auth vs. share-recipient
+        forms currently differ here)."""
+        value = Settings._phone_without_plus(identifier)
+        return value == configured or value.endswith(configured)
+
     def is_static_login_number(self, identifier: str) -> bool:
         numbers = {number.strip() for number in self.otp_static_login_numbers.split(",")}
-        return self._phone_without_plus(identifier) in numbers
+        return any(self._matches_static_number(identifier, number) for number in numbers)
 
     def is_static_share_number(self, identifier: str) -> bool:
         numbers = {number.strip() for number in self.otp_static_share_numbers.split(",")}
-        return self._phone_without_plus(identifier) in numbers
+        return any(self._matches_static_number(identifier, number) for number in numbers)
 
 
 @lru_cache

@@ -43,7 +43,7 @@ class MockAiProvider:
 def get_ai_provider() -> AiProvider:
     settings = get_settings()
     if settings.ai_provider == "mock":
-        if settings.is_production:
+        if settings.is_production and not settings.allow_mock_providers:
             raise RuntimeError("AI_PROVIDER=mock must not be used in production.")
         return MockAiProvider()
     raise NotImplementedError(f"AI provider '{settings.ai_provider}' is not implemented.")

@@ -41,6 +41,37 @@ async def test_wrong_code_is_rejected(client: AsyncClient, otp_provider: Recordi
         "/api/v1/auth/verify-otp", json={"identifier": identifier, "code": "000000"}
     )
     assert resp.status_code == 401
+    assert "4 attempts left" in resp.json()["error"]["message"]
+
+
+async def test_login_rejects_unregistered_identifier(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    identifier = unique_identifier()
+    resp = await client.post("/api/v1/auth/login", json={"identifier": identifier})
+    assert resp.status_code == 404
+    assert identifier not in otp_provider.sent
+    assert "No account found" in resp.json()["error"]["message"]
+
+
+async def test_register_rejects_existing_identifier(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    identifier = unique_identifier()
+    await register_and_verify(client, otp_provider, identifier)
+
+    resp = await client.post("/api/v1/auth/register", json={"identifier": identifier})
+    assert resp.status_code == 409
+    assert "already exists" in resp.json()["error"]["message"]
+
+
+async def test_otp_challenge_reports_expiry_window(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    identifier = unique_identifier()
+    resp = await client.post("/api/v1/auth/register", json={"identifier": identifier})
+    assert resp.status_code == 200
+    assert resp.json()["expiresInSeconds"] == 60
 
 
 async def test_me_requires_authentication(client: AsyncClient):

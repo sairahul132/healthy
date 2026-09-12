@@ -44,7 +44,7 @@ class MockVirusScanProvider:
 def get_virus_scan_provider() -> VirusScanProvider:
     settings = get_settings()
     if settings.virus_scan_provider == "mock":
-        if settings.is_production:
+        if settings.is_production and not settings.allow_mock_providers:
             raise RuntimeError("VIRUS_SCAN_PROVIDER=mock must not be used in production.")
         return MockVirusScanProvider()
     raise NotImplementedError(

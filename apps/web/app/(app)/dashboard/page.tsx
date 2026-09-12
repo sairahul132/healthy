@@ -36,7 +36,7 @@ export default function DashboardPage() {
         attentionCount={attentionCount}
       />
 
-      <QuickActions />
+      <QuickActions hasReports={(reports?.length ?? 0) > 0} />
 
       <Card>
         <CardHeader>

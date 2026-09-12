@@ -9,6 +9,7 @@ import { ApiError } from "@/lib/api/types";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { identifierFormSchema, type IdentifierFormValues } from "@/lib/validation/auth";
+import { encodeIdentifierForUrl } from "@/lib/utils/identifier";
 
 export function IdentifierForm({ mode }: { mode: "register" | "login" }) {
   const router = useRouter();
@@ -27,8 +28,13 @@ export function IdentifierForm({ mode }: { mode: "register" | "login" }) {
       mode === "register"
         ? getAuthProvider().register(values.identifier)
         : getAuthProvider().login(values.identifier),
-    onSuccess: (_, values) => {
-      const params = new URLSearchParams({ mode, identifier: values.identifier });
+    onSuccess: (challenge, values) => {
+      const params = new URLSearchParams({
+        mode,
+        identifier: encodeIdentifierForUrl(values.identifier),
+        expiresIn: String(challenge.expiresInSeconds),
+        retryAfter: String(challenge.retryAfterSeconds),
+      });
       router.push(`/verify?${params.toString()}`);
     },
     onError: (error) => {
@@ -51,6 +57,17 @@ export function IdentifierForm({ mode }: { mode: "register" | "login" }) {
         placeholder="+91 98765 43210 or you@example.com"
         autoComplete="username"
         error={errors.identifier?.message}
+        icon={
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="8.2" r="3.4" stroke="currentColor" strokeWidth="1.6" />
+            <path
+              d="M5 19.2c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        }
         {...registerField("identifier")}
       />
       <Button type="submit" isLoading={mutation.isPending} className="w-full">

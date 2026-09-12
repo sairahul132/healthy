@@ -1,13 +1,35 @@
 import { cn } from "@/lib/utils/cn";
 
-export function Logomark({ className }: { className?: string }) {
+export function Logomark({
+  className,
+  inverted,
+}: {
+  className?: string;
+  /** Outlined instead of filled, for placement on a brand-colored
+   * background (e.g. the auth split panel) where the filled square would
+   * blend into the background instead of reading as a mark. */
+  inverted?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 32 32"
       className={cn("shrink-0", className)}
       aria-hidden="true"
     >
-      <rect x="0.5" y="0.5" width="31" height="31" rx="9.5" fill="var(--color-brand)" />
+      {inverted ? (
+        <rect
+          x="1"
+          y="1"
+          width="30"
+          height="30"
+          rx="9"
+          fill="none"
+          stroke="var(--color-brand-foreground)"
+          strokeWidth="1.4"
+        />
+      ) : (
+        <rect x="0.5" y="0.5" width="31" height="31" rx="9.5" fill="var(--color-brand)" />
+      )}
       <path
         d="M11 9v14M21 9v14M11 16h10"
         stroke="var(--color-brand-foreground)"

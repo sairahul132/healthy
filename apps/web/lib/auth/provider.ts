@@ -4,6 +4,9 @@ import type { Identifier, Session, User } from "@/lib/api/types";
 export interface OtpChallenge {
   identifier: Identifier;
   retryAfterSeconds: number;
+  /** Seconds until this code stops being acceptable — drives the countdown
+   * shown on the verify screen. */
+  expiresInSeconds: number;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { RoleForm } from "@/components/permissions/RoleForm";
 import { RoleList } from "@/components/permissions/RoleList";
+import { RequireReports } from "@/components/reports/RequireReports";
 
 export default function PermissionsPage() {
   return (
@@ -13,21 +14,25 @@ export default function PermissionsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create a role</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RoleForm />
-        </CardContent>
-      </Card>
+      <RequireReports description="Please upload reports to set up sharing roles.">
+        <div className="flex flex-col gap-7">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create a role</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RoleForm />
+            </CardContent>
+          </Card>
 
-      <div>
-        <h2 className="mb-3.5 font-display text-base font-medium text-[var(--color-text)]">
-          Your roles
-        </h2>
-        <RoleList />
-      </div>
+          <div>
+            <h2 className="mb-3.5 font-display text-base font-medium text-[var(--color-text)]">
+              Your roles
+            </h2>
+            <RoleList />
+          </div>
+        </div>
+      </RequireReports>
     </div>
   );
 }
