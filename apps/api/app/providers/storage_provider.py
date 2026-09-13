@@ -1,8 +1,12 @@
-"""Object storage provider abstraction (docs/SPEC.md §6/§58/§109). Swap
-`LocalFilesystemStorageProvider` for the S3-compatible one by setting
-STORAGE_PROVIDER=s3_compatible — both implement the same interface, so
-nothing outside `get_storage_provider` needs to change (§138 pattern, same
-shape as app/providers/otp_provider.py).
+"""Object storage provider abstraction (docs/SPEC.md §6/§58/§109). Three
+interchangeable implementations, selected by STORAGE_PROVIDER: `local`
+(filesystem — dev only, and not durable on hosts with an ephemeral disk),
+`s3_compatible` (S3/R2/MinIO/etc — real production storage), and
+`database` (Postgres — no separate object-storage account/credentials,
+for deployments that want to run on nothing but the Postgres they already
+have). All three implement the same interface, so nothing outside
+`get_storage_provider` needs to change (§138 pattern, same shape as
+app/providers/otp_provider.py).
 
 Keys are randomized (never derived from filename/user-guessable data,
 §109), storage is private (no public bucket, no direct URL is ever handed
@@ -14,7 +18,12 @@ import uuid
 from pathlib import Path
 from typing import Protocol
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from app.core.config import get_settings
+from app.db.base import get_session_factory
+from app.db.models.stored_object import StoredObject
 
 
 class StorageProvider(Protocol):
@@ -86,7 +95,36 @@ class S3CompatibleStorageProvider:
         return response["Body"].read()
 
 
+class DatabaseStorageProvider:
+    """Real storage backed by Postgres instead of a filesystem/S3 bucket —
+    for a deployment that wants to use only the free/open-source Postgres
+    it already has, with no separate object-storage account or
+    credentials to manage. A provider instance is a long-lived singleton
+    (not request-scoped), so — like `_run_processing` in
+    app/api/v1/reports.py — it opens its own short-lived session per call
+    rather than reusing one tied to a request."""
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+
+    async def put(self, key: str, data: bytes, *, content_type: str) -> None:
+        async with self._session_factory() as db:
+            db.add(
+                StoredObject(key=key, data=data, content_type=content_type, size_bytes=len(data))
+            )
+            await db.commit()
+
+    async def get(self, key: str) -> bytes:
+        async with self._session_factory() as db:
+            result = await db.execute(select(StoredObject.data).where(StoredObject.key == key))
+            row = result.scalar_one_or_none()
+            if row is None:
+                raise FileNotFoundError(f"No stored object for key '{key}'.")
+            return row
+
+
 _local_instance: StorageProvider | None = None
+_database_instance: StorageProvider | None = None
 
 
 def get_storage_provider() -> StorageProvider:
@@ -104,4 +142,9 @@ def get_storage_provider() -> StorageProvider:
             secret_key=settings.storage_secret_key,
             region=settings.storage_region,
         )
+    if settings.storage_provider == "database":
+        global _database_instance
+        if _database_instance is None:
+            _database_instance = DatabaseStorageProvider(get_session_factory())
+        return _database_instance
     raise NotImplementedError(f"Storage provider '{settings.storage_provider}' is not implemented.")

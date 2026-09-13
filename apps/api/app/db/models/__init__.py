@@ -14,6 +14,7 @@ from app.db.models.prescription import Prescription, PrescriptionItem
 from app.db.models.session import Session
 from app.db.models.sharing_scope import SharingSessionScope
 from app.db.models.sharing_session import SharingSession
+from app.db.models.stored_object import StoredObject
 from app.db.models.timeline_event import TimelineEvent, TimelineEventType
 from app.db.models.user import User
 from app.db.models.user_identity import UserIdentity
@@ -42,6 +43,7 @@ __all__ = [
     "Session",
     "SharingSession",
     "SharingSessionScope",
+    "StoredObject",
     "TimelineEvent",
     "TimelineEventType",
     "User",
