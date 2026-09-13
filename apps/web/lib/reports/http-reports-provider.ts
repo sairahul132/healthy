@@ -9,5 +9,6 @@ export const httpReportsProvider: ReportsProvider = {
   getReport: reportsApi.getReport,
   getResults: reportsApi.getResults,
   uploadReport: reportsApi.uploadReport,
+  downloadReportFile: reportsApi.downloadReportFile,
   listTimelineEvents: reportsApi.listTimelineEvents,
 };

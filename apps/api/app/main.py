@@ -30,6 +30,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Content-Disposition isn't on the CORS-safelisted response headers, so
+    # without this a cross-origin fetch() (local dev: web on :3000, api on
+    # :8000) can't read the filename on GET /reports/{id}/file — same-origin
+    # requests (the netlify.toml redirect in prod) were never affected.
+    expose_headers=["Content-Disposition"],
 )
 
 

@@ -1,17 +1,227 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
-import { useReport, useReportResults } from "@/lib/reports/hooks";
-import { useCompareReport } from "@/lib/ai/hooks";
+import type { ClinicalDirection, HealthCategoryId, LabResult } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
+import { useDownloadReportFile, useReport, useReportResults } from "@/lib/reports/hooks";
+import { useCompareReport } from "@/lib/ai/hooks";
+import { computeTrend } from "@/lib/health/status-engine";
 import { getCategory } from "@/lib/health/categories";
+import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
-import { ProcessingStatus } from "./ProcessingStatus";
-import { ResultRow } from "./ResultRow";
+import { ExplainPanel } from "@/components/ai/ExplainPanel";
+import { ShareReportDialog } from "@/components/sharing/ShareReportDialog";
+
+type Tone = "success" | "warning" | "critical" | "neutral";
+
+const TONE_PILL: Record<Tone, string> = {
+  success: "bg-[var(--status-green-tint)] text-[var(--status-green)]",
+  warning: "bg-[var(--status-yellow-tint)] text-[var(--status-yellow)]",
+  critical: "bg-[var(--status-red-tint)] text-[var(--status-red)]",
+  neutral: "bg-[var(--status-neutral-tint)] text-[var(--status-neutral)]",
+};
+
+const TONE_TRACK: Record<Tone, string> = {
+  success: "bg-[var(--status-green-tint)]",
+  warning: "bg-[var(--status-yellow-tint)]",
+  critical: "bg-[var(--status-red-tint)]",
+  neutral: "bg-[var(--status-neutral-tint)]",
+};
+
+const TONE_DOT: Record<Tone, string> = {
+  success: "bg-[var(--status-green)]",
+  warning: "bg-[var(--status-yellow)]",
+  critical: "bg-[var(--status-red)]",
+  neutral: "bg-[var(--status-neutral)]",
+};
+
+function toneFor(direction: ClinicalDirection): Tone {
+  switch (direction) {
+    case "NORMAL":
+      return "success";
+    case "LOW":
+    case "HIGH":
+      return "warning";
+    case "CRITICAL_LOW":
+    case "CRITICAL_HIGH":
+      return "critical";
+    default:
+      return "neutral";
+  }
+}
+
+function StatusPill({ result }: { result: LabResult }) {
+  const tone = toneFor(result.status.direction);
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+        TONE_PILL[tone],
+      )}
+    >
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+      {result.status.label}
+    </span>
+  );
+}
+
+function VisualRange({ result }: { result: LabResult }) {
+  const { referenceLow: low, referenceHigh: high, value } = result;
+  if (low === null || high === null || low >= high) {
+    return <p className="text-xs text-[var(--color-text-faint)]">{result.referenceText || "No reference range"}</p>;
+  }
+  const rawPct = ((value - low) / (high - low)) * 100;
+  const pct = Math.min(Math.max(rawPct, -12), 112);
+  const tone = toneFor(result.status.direction);
+
+  return (
+    <div className="w-full min-w-[150px]">
+      <div className={cn("relative mt-4.5 h-1.5 rounded-full", TONE_TRACK[tone])}>
+        <span
+          className="absolute -top-4 -translate-x-1/2 text-[10.5px] font-bold text-[var(--color-text)] tabular-nums"
+          style={{ left: `${pct}%` }}
+        >
+          {value}
+        </span>
+        <span
+          className={cn(
+            "absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--color-surface)] shadow-sm",
+            TONE_DOT[tone],
+          )}
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-[var(--color-text-faint)] tabular-nums">
+        <span>{low}</span>
+        <span>{high}</span>
+      </div>
+    </div>
+  );
+}
+
+function ResultsTable({ results }: { results: LabResult[] }) {
+  const [explainingId, setExplainingId] = useState<string | null>(null);
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[720px] border-collapse">
+        <thead>
+          <tr>
+            {["Test Name", "Result", "Reference Range", "Visual Range", "Status", "Previous", "Action"].map(
+              (heading) => (
+                <th
+                  key={heading}
+                  className="border-b border-[var(--color-border)] px-5 py-3 text-left text-[11px] font-semibold tracking-wide text-[var(--color-text-faint)] uppercase whitespace-nowrap"
+                >
+                  {heading}
+                </th>
+              ),
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {results.map((result) => {
+            const trend = computeTrend(result.value, result.previousValue);
+            return (
+              <Fragment key={result.id}>
+                <tr className="border-b border-[var(--color-border)] last:border-b-0">
+                  <td className="px-5 py-4 align-middle">
+                    <p className="text-sm font-semibold text-[var(--color-text)]">{result.testName}</p>
+                    {result.canonicalTestName !== result.testName ? (
+                      <p className="mt-0.5 text-[11px] text-[var(--color-text-faint)]">
+                        {result.canonicalTestName}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-5 py-4 align-middle text-sm font-semibold whitespace-nowrap text-[var(--color-text)] tabular-nums">
+                    {result.value} {result.unit}
+                  </td>
+                  <td className="px-5 py-4 align-middle text-sm whitespace-nowrap text-[var(--color-text-muted)] tabular-nums">
+                    {result.referenceLow !== null && result.referenceHigh !== null
+                      ? `${result.referenceLow} – ${result.referenceHigh} ${result.unit}`
+                      : result.referenceText || "—"}
+                  </td>
+                  <td className="px-5 py-4 align-middle">
+                    <VisualRange result={result} />
+                  </td>
+                  <td className="px-5 py-4 align-middle">
+                    <StatusPill result={result} />
+                  </td>
+                  <td className="px-5 py-4 align-middle text-xs text-[var(--color-text-faint)]">
+                    {trend
+                      ? `${result.previousValue} ${result.unit} (${trend.direction === "up" ? "↑" : trend.direction === "down" ? "↓" : "→"})`
+                      : "No previous result"}
+                  </td>
+                  <td className="px-5 py-4 align-middle">
+                    <button
+                      type="button"
+                      onClick={() => setExplainingId(explainingId === result.id ? null : result.id)}
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-brand)] hover:gap-1.5"
+                    >
+                      {explainingId === result.id ? "Hide" : "Explain"}
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+                {explainingId === result.id ? (
+                  <tr>
+                    <td colSpan={7} className="bg-[var(--color-surface-muted)] px-5 py-3">
+                      <ExplainPanel resultId={result.id} />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ResultGroup({
+  categoryId,
+  results,
+  defaultOpen,
+}: {
+  categoryId: HealthCategoryId;
+  results: LabResult[];
+  defaultOpen: boolean;
+}) {
+  const category = getCategory(categoryId);
+  return (
+    <details
+      open={defaultOpen}
+      className="group overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[var(--color-surface-muted)] px-5.5 py-4">
+        <span className="flex items-center gap-3 text-[15px] font-semibold text-[var(--color-text)]">
+          <span aria-hidden="true">{category.icon}</span>
+          {category.label}
+          <span className="font-normal text-[var(--color-text-faint)]">({results.length})</span>
+        </span>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="shrink-0 text-[var(--color-text-faint)] transition-transform group-open:rotate-180"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+      <ResultsTable results={results} />
+    </details>
+  );
+}
 
 function CompareWithPreviousReport({ reportId }: { reportId: string }) {
   const compare = useCompareReport();
@@ -19,14 +229,12 @@ function CompareWithPreviousReport({ reportId }: { reportId: string }) {
 
   if (compare.isSuccess) {
     return (
-      <Card className="mt-4">
+      <Card>
         <CardHeader>
           <CardTitle>Compared to previous report</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-wrap text-sm text-[var(--color-text)]">
-            {compare.data.narrative}
-          </p>
+          <p className="whitespace-pre-wrap text-sm text-[var(--color-text)]">{compare.data.narrative}</p>
         </CardContent>
       </Card>
     );
@@ -34,14 +242,14 @@ function CompareWithPreviousReport({ reportId }: { reportId: string }) {
 
   if (noPrevious) {
     return (
-      <p className="mt-3 text-sm text-[var(--color-text-muted)]">
+      <p className="text-sm text-[var(--color-text-muted)]">
         This is your earliest report for these tests — nothing to compare yet.
       </p>
     );
   }
 
   return (
-    <div className="mt-3">
+    <div>
       <Button
         variant="secondary"
         size="sm"
@@ -66,9 +274,62 @@ function CompareWithPreviousReport({ reportId }: { reportId: string }) {
   );
 }
 
+const ATTENTION_DIRECTIONS: ClinicalDirection[] = ["CRITICAL_HIGH", "CRITICAL_LOW", "HIGH", "LOW"];
+
 export function ReportDetail({ reportId }: { reportId: string }) {
   const { data: report, isLoading, isError } = useReport(reportId);
   const { data: results } = useReportResults(reportId, report?.status === "COMPLETED");
+  const downloadMutation = useDownloadReportFile();
+  const [activeCategory, setActiveCategory] = useState<HealthCategoryId | "all">("all");
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<HealthCategoryId, number>();
+    for (const result of results ?? []) {
+      counts.set(result.category, (counts.get(result.category) ?? 0) + 1);
+    }
+    return counts;
+  }, [results]);
+
+  const filteredResults = useMemo(() => {
+    if (!results) return [];
+    return activeCategory === "all" ? results : results.filter((r) => r.category === activeCategory);
+  }, [results, activeCategory]);
+
+  const groups = useMemo(() => {
+    const byCategory = new Map<HealthCategoryId, LabResult[]>();
+    for (const result of filteredResults) {
+      const list = byCategory.get(result.category) ?? [];
+      list.push(result);
+      byCategory.set(result.category, list);
+    }
+    return Array.from(byCategory.entries());
+  }, [filteredResults]);
+
+  const summary = useMemo(() => {
+    const total = results?.length ?? 0;
+    const inRange = results?.filter((r) => r.status.direction === "NORMAL").length ?? 0;
+    const attention = results?.filter((r) => ATTENTION_DIRECTIONS.includes(r.status.direction)).length ?? 0;
+    const notAvailable = results?.filter((r) => r.status.direction === "UNKNOWN").length ?? 0;
+    return { total, inRange, attention, notAvailable };
+  }, [results]);
+
+  const attentionResults = useMemo(
+    () =>
+      [...(results ?? [])]
+        .filter((r) => ATTENTION_DIRECTIONS.includes(r.status.direction))
+        .sort((a, b) => {
+          const rank = (d: ClinicalDirection) => (d.startsWith("CRITICAL") ? 0 : 1);
+          return rank(a.status.direction) - rank(b.status.direction);
+        })
+        .slice(0, 4),
+    [results],
+  );
+
+  const trendResults = useMemo(
+    () => (results ?? []).filter((r) => r.previousValue !== null).slice(0, 4),
+    [results],
+  );
 
   if (isLoading) return <LoadingState label="Loading report…" />;
   if (isError || !report) {
@@ -80,80 +341,311 @@ export function ReportDetail({ reportId }: { reportId: string }) {
     );
   }
 
+  const statusTone: Tone =
+    report.status === "COMPLETED" ? "success" : report.status === "FAILED" ? "critical" : "warning";
+  const statusLabel =
+    report.status === "COMPLETED" ? "Processed" : report.status === "FAILED" ? "Failed" : "Processing…";
+
   return (
-    <div>
-      <Link href="/reports" className="text-sm text-[var(--color-text-muted)] hover:underline">
-        ← Back to reports
+    <div className="flex flex-col gap-6">
+      <Link href="/reports" className="w-fit text-sm text-[var(--color-text-muted)] hover:underline">
+        ← Back to Reports
       </Link>
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">{report.fileName}</h1>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-[28px] font-medium text-[var(--color-text)]">
+              {report.fileName}
+            </h1>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap",
+                TONE_PILL[statusTone],
+              )}
+            >
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+              {statusLabel}
+            </span>
+          </div>
+          <p className="text-sm text-[var(--color-text-muted)]">
             {formatDate(report.collectionDate)}
-            {report.labName ? ` · ${report.labName}` : ""} · Uploaded{" "}
-            {formatDateTime(report.uploadedAt)}
+            {report.labName ? ` · ${report.labName}` : ""} · Uploaded {formatDateTime(report.uploadedAt)}
           </p>
         </div>
-        <ProcessingStatus status={report.status} failureReason={report.failureReason} />
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            isLoading={downloadMutation.isPending}
+            onClick={() => downloadMutation.mutate(reportId)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M12 3v12m0 0-4-4m4 4 4-4" />
+              <path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
+            </svg>
+            Download
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setIsShareOpen(true)}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="18" cy="5" r="2.3" />
+              <circle cx="6" cy="12" r="2.3" />
+              <circle cx="18" cy="19" r="2.3" />
+              <path d="m8.2 10.7 7.6-4.5M8.2 13.3l7.6 4.5" />
+            </svg>
+            Share
+          </Button>
+        </div>
       </div>
 
-      {report.categories.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {report.categories.map((categoryId) => {
-            const category = getCategory(categoryId);
-            return (
-              <span
-                key={categoryId}
-                className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]"
-              >
-                <span aria-hidden="true">{category.icon}</span>
-                {category.label}
-              </span>
-            );
-          })}
+      {downloadMutation.isError ? (
+        <p role="alert" className="text-sm text-[var(--color-danger)]">
+          Couldn&apos;t download this file. Please try again.
+        </p>
+      ) : null}
+
+      {report.status === "COMPLETED" && results && results.length > 0 ? (
+        <>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setActiveCategory("all")}
+              className={cn(
+                "shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                activeCategory === "all"
+                  ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
+                  : "border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)]",
+              )}
+            >
+              All <span className="opacity-70">{results.length}</span>
+            </button>
+            {report.categories.map((categoryId) => {
+              const category = getCategory(categoryId);
+              const count = categoryCounts.get(categoryId) ?? 0;
+              return (
+                <button
+                  key={categoryId}
+                  type="button"
+                  onClick={() => setActiveCategory(categoryId)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                    activeCategory === categoryId
+                      ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
+                      : "border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)]",
+                  )}
+                >
+                  <span aria-hidden="true">{category.icon}</span>
+                  {category.label} <span className="opacity-70">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <Card className="p-7">
+            <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <h2 className="font-display text-2xl font-medium text-[var(--color-text)]">Health Summary</h2>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                  {summary.attention > 0
+                    ? `Most of your results are within reference ranges. ${summary.attention} result${summary.attention === 1 ? "" : "s"} may need your attention.`
+                    : "All of your results are within reference ranges."}
+                </p>
+                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl bg-[var(--status-green-tint)] p-4">
+                    <p className="font-display text-[26px] font-semibold text-[var(--status-green)]">
+                      {summary.inRange}
+                    </p>
+                    <p className="mt-1 text-[13px] font-semibold text-[var(--status-green)]">In range</p>
+                    <p className="text-[11.5px] text-[var(--color-text-muted)]">
+                      {summary.total > 0 ? Math.round((summary.inRange / summary.total) * 100) : 0}% of results
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-[var(--status-yellow-tint)] p-4">
+                    <p className="font-display text-[26px] font-semibold text-[var(--status-yellow)]">
+                      {summary.attention}
+                    </p>
+                    <p className="mt-1 text-[13px] font-semibold text-[var(--status-yellow)]">Need attention</p>
+                    <p className="text-[11.5px] text-[var(--color-text-muted)]">
+                      {summary.total > 0 ? Math.round((summary.attention / summary.total) * 100) : 0}% of results
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-[var(--color-surface-muted)] p-4">
+                    <p className="font-display text-[26px] font-semibold text-[var(--color-text)]">
+                      {summary.notAvailable}
+                    </p>
+                    <p className="mt-1 text-[13px] font-semibold text-[var(--color-text)]">Not available</p>
+                    <p className="text-[11.5px] text-[var(--color-text-muted)]">
+                      {summary.total > 0 ? Math.round((summary.notAvailable / summary.total) * 100) : 0}% of results
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-[var(--color-brand-tint)] p-4">
+                    <p className="font-display text-[26px] font-semibold text-[var(--color-brand)]">
+                      {summary.total}
+                    </p>
+                    <p className="mt-1 text-[13px] font-semibold text-[var(--color-brand)]">Total results</p>
+                    <p className="text-[11.5px] text-[var(--color-text-muted)]">Analysed from this report</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
+            <div id="results" className="flex flex-col gap-4">
+              <h2 className="font-display text-xl font-medium text-[var(--color-text)]">Results</h2>
+              {groups.map(([categoryId, categoryResults], index) => (
+                <ResultGroup
+                  key={categoryId}
+                  categoryId={categoryId}
+                  results={categoryResults}
+                  defaultOpen={index === 0}
+                />
+              ))}
+              <CompareWithPreviousReport reportId={report.id} />
+            </div>
+
+            <aside className="flex flex-col gap-4">
+              {attentionResults.length > 0 ? (
+                <Card className="border-transparent bg-[var(--status-red-tint)] p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-red)" strokeWidth="1.9">
+                      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+                    </svg>
+                    <h3 className="text-[15px] font-bold text-[var(--status-red)]">Attention Required</h3>
+                  </div>
+                  <div className="flex flex-col">
+                    {attentionResults.map((result) => (
+                      <div
+                        key={result.id}
+                        className="flex items-center justify-between gap-3 border-t border-[var(--status-red)]/15 py-2.5 first:border-t-0"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[var(--status-red)]">
+                            {result.testName}
+                          </p>
+                          <p className="text-xs text-[var(--color-text-muted)]">
+                            {result.value} {result.unit}
+                          </p>
+                        </div>
+                        <StatusPill result={result} />
+                      </div>
+                    ))}
+                  </div>
+                  {summary.attention > attentionResults.length ? (
+                    <a
+                      href="#results"
+                      className="mt-3 block rounded-lg bg-[var(--color-surface)] px-3 py-2 text-center text-xs font-semibold text-[var(--status-red)]"
+                    >
+                      View all {summary.attention} in results →
+                    </a>
+                  ) : null}
+                </Card>
+              ) : null}
+
+              {trendResults.length > 0 ? (
+                <Card className="p-5">
+                  <h3 className="mb-3 flex items-center gap-2 text-[15px] font-bold text-[var(--color-text)]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.9">
+                      <path d="M3 17 9 11l4 4 8-9" />
+                      <path d="M15 6h6v6" />
+                    </svg>
+                    Trends from Previous Reports
+                  </h3>
+                  <div className="flex flex-col">
+                    {trendResults.map((result) => {
+                      const trend = computeTrend(result.value, result.previousValue);
+                      const tone = toneFor(result.status.direction);
+                      return (
+                        <div
+                          key={result.id}
+                          className="flex items-center justify-between gap-3 border-t border-[var(--color-border)] py-3 first:border-t-0"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[var(--color-text)]">
+                              {result.testName}
+                            </p>
+                            <p className="text-[11.5px] text-[var(--color-text-faint)] tabular-nums">
+                              {result.previousValue} → {result.value} {result.unit}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <svg width="46" height="20" viewBox="0 0 46 20" fill="none">
+                              <polyline
+                                points={`4,${trend?.direction === "up" ? 16 : trend?.direction === "down" ? 4 : 10} 42,${trend?.direction === "up" ? 4 : trend?.direction === "down" ? 16 : 10}`}
+                                stroke="var(--color-text-faint)"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
+                              <circle
+                                cx="42"
+                                cy={trend?.direction === "up" ? 4 : trend?.direction === "down" ? 16 : 10}
+                                r="2.6"
+                                className={cn(tone === "success" ? "fill-[var(--status-green)]" : tone === "critical" ? "fill-[var(--status-red)]" : "fill-[var(--status-yellow)]")}
+                              />
+                            </svg>
+                            <p className="text-[11px] font-medium text-[var(--color-text-muted)]">
+                              {trend?.direction === "up" ? "Increased" : trend?.direction === "down" ? "Decreased" : "No change"}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              ) : null}
+
+              <Card className="p-5">
+                <h3 className="mb-2 flex items-center gap-2 text-[15px] font-bold text-[var(--color-text)]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.9">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5a8.4 8.4 0 1 1 16.9-3Z" />
+                  </svg>
+                  Have questions?
+                </h3>
+                <p className="mb-4 text-[13px] leading-relaxed text-[var(--color-text-muted)]">
+                  Get simple, easy-to-understand explanations of your results from Ask Healthy.
+                </p>
+                <Link href="/ask">
+                  <Button size="sm" className="w-full">
+                    Ask Healthy
+                  </Button>
+                </Link>
+              </Card>
+            </aside>
+          </div>
+        </>
+      ) : null}
+
+      {report.status === "FAILED" ? (
+        <ErrorState
+          title="Processing failed"
+          description={report.failureReason ?? "We couldn't extract structured results from this document."}
+        />
+      ) : null}
+
+      {report.status !== "COMPLETED" && report.status !== "FAILED" ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] py-14 text-center">
+          <span
+            aria-hidden="true"
+            className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand)]"
+          />
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Healthy is processing this report. This page updates automatically.
+          </p>
         </div>
       ) : null}
 
-      <Card className="mt-7">
-        <CardHeader>
-          <CardTitle>Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {report.status === "FAILED" ? (
-            <ErrorState
-              title="Processing failed"
-              description={
-                report.failureReason ??
-                "We couldn't extract structured results from this document."
-              }
-            />
-          ) : report.status !== "COMPLETED" ? (
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <span
-                aria-hidden="true"
-                className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand)]"
-              />
-              <p className="text-sm text-[var(--color-text-muted)]">
-                Healthy is processing this report. This page updates automatically.
-              </p>
-            </div>
-          ) : results && results.length === 0 ? (
-            <EmptyState title="No results extracted" description="This report had no readable test values." />
-          ) : results ? (
-            <div>
-              {results.map((result) => (
-                <ResultRow key={result.id} result={result} />
-              ))}
-            </div>
-          ) : (
-            <LoadingState label="Loading results…" />
-          )}
-        </CardContent>
-      </Card>
+      {report.status === "COMPLETED" && results && results.length === 0 ? (
+        <EmptyState title="No results extracted" description="This report had no readable test values." />
+      ) : null}
 
-      {report.status === "COMPLETED" && results && results.length > 0 ? (
-        <CompareWithPreviousReport reportId={report.id} />
+      {isShareOpen ? (
+        <ShareReportDialog
+          reportName={report.fileName}
+          categoryIds={report.categories}
+          onClose={() => setIsShareOpen(false)}
+        />
       ) : null}
     </div>
   );

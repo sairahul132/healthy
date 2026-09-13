@@ -147,3 +147,62 @@ export async function apiUpload<T>(
     apiUpload<T>(path, formData, next),
   );
 }
+
+function filenameFromContentDisposition(header: string | null, fallback: string): string {
+  const match = header ? /filename="?([^";]+)"?/i.exec(header) : null;
+  return match?.[1] ?? fallback;
+}
+
+/**
+ * Binary download — separate from apiFetch because the response body is a
+ * file, not JSON. Shares the same credentials/401-retry behavior; errors
+ * are parsed as JSON the same way apiFetch does, since the API still
+ * returns its standard error envelope for a failed download (e.g. 404).
+ */
+export async function apiDownload(
+  path: string,
+  options: Pick<RequestOptions, "skipAuthRetry"> = {},
+): Promise<{ blob: Blob; filename: string }> {
+  const requestId = newRequestId();
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "X-Request-Id": requestId },
+  });
+
+  if (
+    response.status === 401 &&
+    !options.skipAuthRetry &&
+    (await refreshSession())
+  ) {
+    return apiDownload(path, { skipAuthRetry: true });
+  }
+
+  if (!response.ok) {
+    let parsed: unknown;
+    try {
+      parsed = await response.json();
+    } catch {
+      parsed = null;
+    }
+    const body: ApiErrorBody =
+      parsed && typeof parsed === "object" && "error" in parsed
+        ? (parsed as ApiErrorBody)
+        : {
+            error: {
+              code: "UNKNOWN_ERROR",
+              message: "Something went wrong. Please try again.",
+              requestId,
+            },
+          };
+    throw new ApiError(response.status, body);
+  }
+
+  const blob = await response.blob();
+  const filename = filenameFromContentDisposition(
+    response.headers.get("Content-Disposition"),
+    "download",
+  );
+  return { blob, filename };
+}

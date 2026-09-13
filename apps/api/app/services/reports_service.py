@@ -327,6 +327,28 @@ class ReportsService:
         await self._db.commit()
         return report_to_response(report, categories)
 
+    async def get_report_file(
+        self, user_id: uuid.UUID, report_id: uuid.UUID
+    ) -> tuple[bytes, str, str]:
+        """Returns (data, mime_type, filename) for the original uploaded
+        document — the "Download" action (§58). Same ownership check as
+        get_report; reads through the storage provider so this works
+        identically regardless of STORAGE_PROVIDER (local/s3/database)."""
+        report = await self._reports.get_report_by_id(report_id)
+        if report is None or report.user_id != user_id:
+            raise NotFoundError("Report not found.")
+        data = await self._storage.get(report.storage_key)
+        await self._audit.record(
+            actor_user_id=user_id,
+            event_type=audit_events.REPORT_FILE_DOWNLOADED,
+            outcome="success",
+            resource_type="lab_report",
+            resource_id=str(report.id),
+            metadata={},
+        )
+        await self._db.commit()
+        return data, report.mime_type, report.file_name
+
     async def get_results(
         self, user_id: uuid.UUID, report_id: uuid.UUID
     ) -> list[LabResultResponse]:

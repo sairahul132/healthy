@@ -2,47 +2,47 @@
 
 /*
  * Design tokens for the Healthy UI: a private, premium health vault —
- * warm neutrals instead of clinical gray, a deep teal + muted gold accent
- * instead of a generic SaaS blue, soft ambient shadows instead of hard
- * black ones. Status colors (§29/§84) are never the sole signal — every
- * consumer pairs them with text + an icon.
+ * warm ivory instead of clinical gray, a deep forest green + muted gold
+ * accent instead of a generic SaaS blue, soft ambient shadows instead of
+ * hard black ones. Status colors (§29/§84) are never the sole signal —
+ * every consumer pairs them with text + an icon.
  */
 :root {
-  --color-bg: #f8f6f0;
+  --color-bg: #f7f4ea;
   --color-surface: #ffffff;
-  --color-surface-muted: #f1eee6;
-  --color-border: #dde3df;
-  --color-border-strong: #c7d0ca;
-  --color-text: #18201e;
-  --color-text-muted: #66716d;
-  --color-text-faint: #9aa39d;
+  --color-surface-muted: #edf1e6;
+  --color-border: #e2ddcb;
+  --color-border-strong: #d4cdb4;
+  --color-text: #24291f;
+  --color-text-muted: #5c6350;
+  --color-text-faint: #8b9080;
 
-  --color-brand: #164d47;
-  --color-brand-hover: #0f302c;
-  --color-brand-foreground: #f8f6f0;
-  --color-brand-tint: #e7eeec;
+  --color-brand: #1e4a34;
+  --color-brand-hover: #163726;
+  --color-brand-foreground: #f6f5ec;
+  --color-brand-tint: #e2ecdf;
 
-  --color-accent: #c99a3a;
-  --color-accent-tint: #f8efdc;
+  --color-accent: #a9752b;
+  --color-accent-tint: #fbf1dc;
   --color-accent-foreground: #ffffff;
 
-  --color-danger: #a13c30;
-  --color-danger-tint: #fbece9;
+  --color-danger: #b14a3f;
+  --color-danger-tint: #f9e9e5;
 
-  --status-green: #2f6f4f;
-  --status-green-tint: #e7f2ea;
-  --status-yellow: #96741c;
-  --status-yellow-tint: #fbf3dd;
-  --status-orange: #ab5f28;
-  --status-orange-tint: #fcede0;
-  --status-red: #a13c30;
-  --status-red-tint: #fbece9;
-  --status-neutral: #63665e;
-  --status-neutral-tint: #f0eee6;
+  --status-green: #3d8a5c;
+  --status-green-tint: #e4f3e6;
+  --status-yellow: #a9752b;
+  --status-yellow-tint: #fbf1dc;
+  --status-orange: #a05b25;
+  --status-orange-tint: #fbead9;
+  --status-red: #b14a3f;
+  --status-red-tint: #f9e9e5;
+  --status-neutral: #696f61;
+  --status-neutral-tint: #edf1e6;
 
-  --focus-ring: #164d47;
+  --focus-ring: #1e4a34;
 
-  --shadow-color: 30 26 15;
+  --shadow-color: 30 40 25;
   --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.05);
   --shadow-md: 0 2px 8px rgb(var(--shadow-color) / 0.06), 0 1px 2px rgb(var(--shadow-color) / 0.04);
   --shadow-lg: 0 16px 40px -12px rgb(var(--shadow-color) / 0.16), 0 4px 12px rgb(var(--shadow-color) / 0.05);
@@ -50,39 +50,39 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #14140f;
-    --color-surface: #1b1b15;
-    --color-surface-muted: #21211a;
-    --color-border: #322f24;
-    --color-border-strong: #423e2f;
-    --color-text: #f1efe6;
-    --color-text-muted: #b3b0a1;
-    --color-text-faint: #7d7a6d;
+    --color-bg: #14170f;
+    --color-surface: #1b1f16;
+    --color-surface-muted: #1f2519;
+    --color-border: #2c3325;
+    --color-border-strong: #3a4330;
+    --color-text: #ece9dc;
+    --color-text-muted: #b3b6a2;
+    --color-text-faint: #7f8570;
 
-    --color-brand: #6cbcab;
-    --color-brand-hover: #86cdbe;
-    --color-brand-foreground: #0d1a17;
-    --color-brand-tint: #1a2b27;
+    --color-brand: #63a884;
+    --color-brand-hover: #7fbb9a;
+    --color-brand-foreground: #0f1b13;
+    --color-brand-tint: #223327;
 
-    --color-accent: #d9ac6e;
-    --color-accent-tint: #2c2417;
+    --color-accent: #d6a154;
+    --color-accent-tint: #362a12;
     --color-accent-foreground: #1c1409;
 
-    --color-danger: #e39184;
-    --color-danger-tint: #2e1a16;
+    --color-danger: #d98277;
+    --color-danger-tint: #3a221e;
 
-    --status-green: #7ac29e;
-    --status-green-tint: #17281f;
-    --status-yellow: #e0bd63;
-    --status-yellow-tint: #2c260f;
-    --status-orange: #e0a06a;
-    --status-orange-tint: #2e2213;
-    --status-red: #e39184;
-    --status-red-tint: #2e1a16;
-    --status-neutral: #b3b0a1;
-    --status-neutral-tint: #21211a;
+    --status-green: #6bbb8d;
+    --status-green-tint: #1c3427;
+    --status-yellow: #d6a154;
+    --status-yellow-tint: #362a12;
+    --status-orange: #d99a5c;
+    --status-orange-tint: #362913;
+    --status-red: #d98277;
+    --status-red-tint: #3a221e;
+    --status-neutral: #b3b6a2;
+    --status-neutral-tint: #1f2519;
 
-    --focus-ring: #6cbcab;
+    --focus-ring: #63a884;
 
     --shadow-color: 0 0 0;
     --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.3);

@@ -271,6 +271,13 @@ export class MockReportsProvider implements ReportsProvider {
     return this.state.resultsByReport[reportId] ?? [];
   }
 
+  async downloadReportFile(reportId: string): Promise<{ blob: Blob; filename: string }> {
+    this.ensureHydrated();
+    const report = this.state.reports.find((r) => r.id === reportId);
+    const filename = report?.fileName ?? "report.txt";
+    return { blob: new Blob([`Mock content for ${filename}`], { type: "text/plain" }), filename };
+  }
+
   async listTimelineEvents(): Promise<TimelineEvent[]> {
     this.ensureHydrated();
     return [...this.state.timelineEvents].sort(

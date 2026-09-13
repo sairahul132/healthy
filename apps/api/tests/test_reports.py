@@ -100,6 +100,20 @@ async def test_document_with_no_recognizable_values_fails_cleanly(
     assert detail.json()["status"] == "FAILED"
 
 
+async def test_download_report_file_returns_original_bytes(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    await register_and_verify(client, otp_provider, unique_identifier("patient"))
+    resp = await _upload(client, filename="cbc.txt", content=CBC_TEXT.encode())
+    report_id = resp.json()["id"]
+
+    download = await client.get(f"/api/v1/reports/{report_id}/file")
+    assert download.status_code == 200, download.text
+    assert download.content == CBC_TEXT.encode()
+    assert download.headers["content-type"].startswith("text/plain")
+    assert 'filename="cbc.txt"' in download.headers["content-disposition"]
+
+
 async def test_user_cannot_access_another_users_report(
     client: AsyncClient, otp_provider: RecordingOtpProvider
 ):
@@ -118,6 +132,9 @@ async def test_user_cannot_access_another_users_report(
 
     results = await client.get(f"/api/v1/reports/{report_id}/results")
     assert results.status_code == 404
+
+    file_download = await client.get(f"/api/v1/reports/{report_id}/file")
+    assert file_download.status_code == 404
 
     listing = await client.get("/api/v1/reports")
     assert listing.status_code == 200

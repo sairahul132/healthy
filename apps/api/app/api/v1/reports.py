@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Response, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.v1.deps import CurrentIdentity, get_current_identity, get_reports_service
@@ -81,3 +81,18 @@ async def get_report_results(
     service: ReportsService = Depends(get_reports_service),
 ) -> list[LabResultResponse]:
     return await service.get_results(identity.user_id, report_id)
+
+
+@router.get("/{report_id}/file")
+async def download_report_file(
+    report_id: uuid.UUID,
+    identity: CurrentIdentity = Depends(get_current_identity),
+    service: ReportsService = Depends(get_reports_service),
+) -> Response:
+    data, mime_type, filename = await service.get_report_file(identity.user_id, report_id)
+    safe_filename = filename.replace('"', "")
+    return Response(
+        content=data,
+        media_type=mime_type,
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'},
+    )

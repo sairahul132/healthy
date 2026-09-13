@@ -57,3 +57,18 @@ export function Logo({ className }: { className?: string }) {
     </span>
   );
 }
+
+/** Sidebar variant with the "A Healthier You" tagline beneath the wordmark. */
+export function LogoBlock({ className }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <Logomark className="h-8 w-8" />
+      <span className="flex flex-col leading-none">
+        <Wordmark />
+        <span className="mt-1 text-[11px] tracking-wide text-[var(--color-text-faint)]">
+          A Healthier You
+        </span>
+      </span>
+    </span>
+  );
+}

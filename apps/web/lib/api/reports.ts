@@ -1,4 +1,4 @@
-import { apiFetch, apiUpload } from "./client";
+import { apiDownload, apiFetch, apiUpload } from "./client";
 import type {
   HealthCategory,
   HealthCategoryDetail,
@@ -25,6 +25,10 @@ export function uploadReport(file: File): Promise<LabReport> {
   const formData = new FormData();
   formData.append("file", file, file.name);
   return apiUpload<LabReport>("/reports/upload", formData);
+}
+
+export function downloadReportFile(id: string): Promise<{ blob: Blob; filename: string }> {
+  return apiDownload(`/reports/${id}/file`);
 }
 
 export function listTimelineEvents(): Promise<TimelineEvent[]> {
