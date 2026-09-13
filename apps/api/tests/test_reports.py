@@ -3,7 +3,12 @@ import io
 from httpx import AsyncClient
 
 from app.providers.virus_scan_provider import EICAR_SIGNATURE
-from tests.conftest import RecordingOtpProvider, register_and_verify, unique_identifier
+from tests.conftest import (
+    RecordingOtpProvider,
+    login_and_verify,
+    register_and_verify,
+    unique_identifier,
+)
 
 CBC_TEXT = (
     "COMPLETE BLOOD COUNT\n"
@@ -112,6 +117,48 @@ async def test_download_report_file_returns_original_bytes(
     assert download.content == CBC_TEXT.encode()
     assert download.headers["content-type"].startswith("text/plain")
     assert 'filename="cbc.txt"' in download.headers["content-disposition"]
+
+
+async def test_delete_report_removes_report_results_and_file(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    await register_and_verify(client, otp_provider, unique_identifier("patient"))
+    resp = await _upload(client, filename="cbc.txt", content=CBC_TEXT.encode())
+    report_id = resp.json()["id"]
+
+    detail = await client.get(f"/api/v1/reports/{report_id}")
+    assert detail.json()["status"] == "COMPLETED"
+    results = await client.get(f"/api/v1/reports/{report_id}/results")
+    assert len(results.json()) == 3
+
+    delete_resp = await client.delete(f"/api/v1/reports/{report_id}")
+    assert delete_resp.status_code == 204, delete_resp.text
+
+    assert (await client.get(f"/api/v1/reports/{report_id}")).status_code == 404
+    assert (await client.get(f"/api/v1/reports/{report_id}/results")).status_code == 404
+    assert (await client.get(f"/api/v1/reports/{report_id}/file")).status_code == 404
+
+    listing = await client.get("/api/v1/reports")
+    assert all(r["id"] != report_id for r in listing.json())
+
+
+async def test_user_cannot_delete_another_users_report(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    patient_a = unique_identifier("patient-a")
+    await register_and_verify(client, otp_provider, patient_a)
+    resp = await _upload(client, content=CBC_TEXT.encode())
+    report_id = resp.json()["id"]
+
+    await client.post("/api/v1/auth/logout")
+    await register_and_verify(client, otp_provider, unique_identifier("patient-b"))
+
+    delete_resp = await client.delete(f"/api/v1/reports/{report_id}")
+    assert delete_resp.status_code == 404
+
+    await client.post("/api/v1/auth/logout")
+    await login_and_verify(client, otp_provider, patient_a)
+    assert (await client.get(f"/api/v1/reports/{report_id}")).status_code == 200
 
 
 async def test_user_cannot_access_another_users_report(

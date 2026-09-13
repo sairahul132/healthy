@@ -83,6 +83,15 @@ async def get_report_results(
     return await service.get_results(identity.user_id, report_id)
 
 
+@router.delete("/{report_id}", status_code=204)
+async def delete_report(
+    report_id: uuid.UUID,
+    identity: CurrentIdentity = Depends(get_current_identity),
+    service: ReportsService = Depends(get_reports_service),
+) -> None:
+    await service.delete_report(identity.user_id, report_id)
+
+
 @router.get("/{report_id}/file")
 async def download_report_file(
     report_id: uuid.UUID,

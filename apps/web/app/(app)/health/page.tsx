@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { RequireReports } from "@/components/reports/RequireReports";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 
 function HealthCategories() {
   const { data: categories, isLoading, isError, refetch } = useHealthCategories();
@@ -28,8 +29,8 @@ function HealthCategories() {
           {categories.map((category) => (
             <Link key={category.id} href={`/health/${category.id}`} className="block focus-visible:outline-none">
               <Card className="flex flex-col items-center gap-2 p-5 text-center transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--color-brand)]/30 hover:shadow-md">
-                <span aria-hidden="true" className="text-2xl">
-                  {category.icon}
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-tint)] text-[var(--color-brand)]">
+                  <CategoryIcon id={category.id} className="h-4.5 w-4.5" />
                 </span>
                 <span className="text-sm font-medium text-[var(--color-text)]">{category.label}</span>
               </Card>

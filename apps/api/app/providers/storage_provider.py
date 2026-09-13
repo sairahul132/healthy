@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 from typing import Protocol
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import get_settings
@@ -29,6 +29,7 @@ from app.db.models.stored_object import StoredObject
 class StorageProvider(Protocol):
     async def put(self, key: str, data: bytes, *, content_type: str) -> None: ...
     async def get(self, key: str) -> bytes: ...
+    async def delete(self, key: str) -> None: ...
 
 
 def build_object_key(user_id: uuid.UUID, filename: str) -> str:
@@ -60,6 +61,9 @@ class LocalFilesystemStorageProvider:
 
     async def get(self, key: str) -> bytes:
         return self._resolve(key).read_bytes()
+
+    async def delete(self, key: str) -> None:
+        self._resolve(key).unlink(missing_ok=True)
 
 
 class S3CompatibleStorageProvider:
@@ -94,6 +98,9 @@ class S3CompatibleStorageProvider:
         response = self._client.get_object(Bucket=self._bucket, Key=key)
         return response["Body"].read()
 
+    async def delete(self, key: str) -> None:
+        self._client.delete_object(Bucket=self._bucket, Key=key)
+
 
 class DatabaseStorageProvider:
     """Real storage backed by Postgres instead of a filesystem/S3 bucket —
@@ -121,6 +128,11 @@ class DatabaseStorageProvider:
             if row is None:
                 raise FileNotFoundError(f"No stored object for key '{key}'.")
             return row
+
+    async def delete(self, key: str) -> None:
+        async with self._session_factory() as db:
+            await db.execute(delete(StoredObject).where(StoredObject.key == key))
+            await db.commit()
 
 
 _local_instance: StorageProvider | None = None

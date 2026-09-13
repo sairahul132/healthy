@@ -2,9 +2,10 @@
 
 import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ClinicalDirection, HealthCategoryId, LabResult } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
-import { useDownloadReportFile, useReport, useReportResults } from "@/lib/reports/hooks";
+import { useDeleteReport, useDownloadReportFile, useReport, useReportResults } from "@/lib/reports/hooks";
 import { useCompareReport } from "@/lib/ai/hooks";
 import { computeTrend } from "@/lib/health/status-engine";
 import { getCategory } from "@/lib/health/categories";
@@ -12,9 +13,12 @@ import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { ExplainPanel } from "@/components/ai/ExplainPanel";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { ShareReportDialog } from "@/components/sharing/ShareReportDialog";
+import { ReportToolbar, type SortBy, type StatusFilter } from "@/components/reports/ReportToolbar";
 
 type Tone = "success" | "warning" | "critical" | "neutral";
 
@@ -54,6 +58,13 @@ function toneFor(direction: ClinicalDirection): Tone {
   }
 }
 
+function attentionRank(direction: ClinicalDirection): number {
+  if (direction.startsWith("CRITICAL")) return 0;
+  if (direction === "HIGH" || direction === "LOW") return 1;
+  if (direction === "NORMAL") return 2;
+  return 3;
+}
+
 function StatusPill({ result }: { result: LabResult }) {
   const tone = toneFor(result.status.direction);
   return (
@@ -80,7 +91,7 @@ function VisualRange({ result }: { result: LabResult }) {
 
   return (
     <div className="w-full min-w-[150px]">
-      <div className={cn("relative mt-4.5 h-1.5 rounded-full", TONE_TRACK[tone])}>
+      <div className={cn("relative mt-4.5 h-px rounded-full", TONE_TRACK[tone])}>
         <span
           className="absolute -top-4 -translate-x-1/2 text-[10.5px] font-bold text-[var(--color-text)] tabular-nums"
           style={{ left: `${pct}%` }}
@@ -89,13 +100,13 @@ function VisualRange({ result }: { result: LabResult }) {
         </span>
         <span
           className={cn(
-            "absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--color-surface)] shadow-sm",
+            "absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--color-surface)] shadow-sm",
             TONE_DOT[tone],
           )}
           style={{ left: `${pct}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-[var(--color-text-faint)] tabular-nums">
+      <div className="mt-1.5 flex justify-between text-[10px] text-[var(--color-text-faint)] tabular-nums">
         <span>{low}</span>
         <span>{high}</span>
       </div>
@@ -201,8 +212,8 @@ function ResultGroup({
       className="group overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[var(--color-surface-muted)] px-5.5 py-4">
-        <span className="flex items-center gap-3 text-[15px] font-semibold text-[var(--color-text)]">
-          <span aria-hidden="true">{category.icon}</span>
+        <span className="flex items-center gap-2.5 text-[15px] font-semibold text-[var(--color-text)]">
+          <CategoryIcon id={categoryId} className="text-[var(--color-brand)]" />
           {category.label}
           <span className="font-normal text-[var(--color-text-faint)]">({results.length})</span>
         </span>
@@ -277,11 +288,17 @@ function CompareWithPreviousReport({ reportId }: { reportId: string }) {
 const ATTENTION_DIRECTIONS: ClinicalDirection[] = ["CRITICAL_HIGH", "CRITICAL_LOW", "HIGH", "LOW"];
 
 export function ReportDetail({ reportId }: { reportId: string }) {
+  const router = useRouter();
   const { data: report, isLoading, isError } = useReport(reportId);
   const { data: results } = useReportResults(reportId, report?.status === "COMPLETED");
   const downloadMutation = useDownloadReportFile();
-  const [activeCategory, setActiveCategory] = useState<HealthCategoryId | "all">("all");
+  const deleteMutation = useDeleteReport();
+
+  const [selectedCategories, setSelectedCategories] = useState<HealthCategoryId[]>([]);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("category");
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<HealthCategoryId, number>();
@@ -293,8 +310,22 @@ export function ReportDetail({ reportId }: { reportId: string }) {
 
   const filteredResults = useMemo(() => {
     if (!results) return [];
-    return activeCategory === "all" ? results : results.filter((r) => r.category === activeCategory);
-  }, [results, activeCategory]);
+    return results.filter((r) => {
+      if (selectedCategories.length > 0 && !selectedCategories.includes(r.category)) return false;
+      if (statusFilter === "in_range" && r.status.direction !== "NORMAL") return false;
+      if (statusFilter === "attention" && !ATTENTION_DIRECTIONS.includes(r.status.direction)) return false;
+      if (statusFilter === "not_available" && r.status.direction !== "UNKNOWN") return false;
+      return true;
+    });
+  }, [results, selectedCategories, statusFilter]);
+
+  const sortedFlatResults = useMemo(() => {
+    const list = [...filteredResults];
+    if (sortBy === "name") list.sort((a, b) => a.testName.localeCompare(b.testName));
+    if (sortBy === "status")
+      list.sort((a, b) => attentionRank(a.status.direction) - attentionRank(b.status.direction));
+    return list;
+  }, [filteredResults, sortBy]);
 
   const groups = useMemo(() => {
     const byCategory = new Map<HealthCategoryId, LabResult[]>();
@@ -303,8 +334,9 @@ export function ReportDetail({ reportId }: { reportId: string }) {
       list.push(result);
       byCategory.set(result.category, list);
     }
-    return Array.from(byCategory.entries());
-  }, [filteredResults]);
+    const order = report?.categories ?? [];
+    return order.filter((c) => byCategory.has(c)).map((c) => [c, byCategory.get(c)!] as const);
+  }, [filteredResults, report?.categories]);
 
   const summary = useMemo(() => {
     const total = results?.length ?? 0;
@@ -318,10 +350,7 @@ export function ReportDetail({ reportId }: { reportId: string }) {
     () =>
       [...(results ?? [])]
         .filter((r) => ATTENTION_DIRECTIONS.includes(r.status.direction))
-        .sort((a, b) => {
-          const rank = (d: ClinicalDirection) => (d.startsWith("CRITICAL") ? 0 : 1);
-          return rank(a.status.direction) - rank(b.status.direction);
-        })
+        .sort((a, b) => attentionRank(a.status.direction) - attentionRank(b.status.direction))
         .slice(0, 4),
     [results],
   );
@@ -330,6 +359,18 @@ export function ReportDetail({ reportId }: { reportId: string }) {
     () => (results ?? []).filter((r) => r.previousValue !== null).slice(0, 4),
     [results],
   );
+
+  function showAllAttention() {
+    setSelectedCategories([]);
+    setStatusFilter("attention");
+    document.getElementById("results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleDelete() {
+    deleteMutation.mutate(reportId, {
+      onSuccess: () => router.push("/reports"),
+    });
+  }
 
   if (isLoading) return <LoadingState label="Loading report…" />;
   if (isError || !report) {
@@ -352,51 +393,23 @@ export function ReportDetail({ reportId }: { reportId: string }) {
         ← Back to Reports
       </Link>
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display text-[28px] font-medium text-[var(--color-text)]">
-              {report.fileName}
-            </h1>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap",
-                TONE_PILL[statusTone],
-              )}
-            >
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
-              {statusLabel}
-            </span>
-          </div>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            {formatDate(report.collectionDate)}
-            {report.labName ? ` · ${report.labName}` : ""} · Uploaded {formatDateTime(report.uploadedAt)}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            isLoading={downloadMutation.isPending}
-            onClick={() => downloadMutation.mutate(reportId)}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-display text-[28px] font-medium text-[var(--color-text)]">{report.fileName}</h1>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap",
+              TONE_PILL[statusTone],
+            )}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M12 3v12m0 0-4-4m4 4 4-4" />
-              <path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
-            </svg>
-            Download
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => setIsShareOpen(true)}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="18" cy="5" r="2.3" />
-              <circle cx="6" cy="12" r="2.3" />
-              <circle cx="18" cy="19" r="2.3" />
-              <path d="m8.2 10.7 7.6-4.5M8.2 13.3l7.6 4.5" />
-            </svg>
-            Share
-          </Button>
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+            {statusLabel}
+          </span>
         </div>
+        <p className="text-sm text-[var(--color-text-muted)]">
+          {formatDate(report.collectionDate)}
+          {report.labName ? ` · ${report.labName}` : ""} · Uploaded {formatDateTime(report.uploadedAt)}
+        </p>
       </div>
 
       {downloadMutation.isError ? (
@@ -407,86 +420,62 @@ export function ReportDetail({ reportId }: { reportId: string }) {
 
       {report.status === "COMPLETED" && results && results.length > 0 ? (
         <>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <button
-              type="button"
-              onClick={() => setActiveCategory("all")}
-              className={cn(
-                "shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
-                activeCategory === "all"
-                  ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
-                  : "border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)]",
-              )}
-            >
-              All <span className="opacity-70">{results.length}</span>
-            </button>
-            {report.categories.map((categoryId) => {
-              const category = getCategory(categoryId);
-              const count = categoryCounts.get(categoryId) ?? 0;
-              return (
-                <button
-                  key={categoryId}
-                  type="button"
-                  onClick={() => setActiveCategory(categoryId)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
-                    activeCategory === categoryId
-                      ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
-                      : "border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)]",
-                  )}
-                >
-                  <span aria-hidden="true">{category.icon}</span>
-                  {category.label} <span className="opacity-70">{count}</span>
-                </button>
-              );
-            })}
-          </div>
+          <ReportToolbar
+            categories={report.categories}
+            categoryCounts={categoryCounts}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            onDownload={() => downloadMutation.mutate(reportId)}
+            isDownloading={downloadMutation.isPending}
+            onShare={() => setIsShareOpen(true)}
+            onDelete={() => setIsDeleteOpen(true)}
+          />
 
-          <Card className="p-7">
-            <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <h2 className="font-display text-2xl font-medium text-[var(--color-text)]">Health Summary</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                  {summary.attention > 0
-                    ? `Most of your results are within reference ranges. ${summary.attention} result${summary.attention === 1 ? "" : "s"} may need your attention.`
-                    : "All of your results are within reference ranges."}
+          <Card className="@container p-7">
+            <h2 className="font-display text-2xl font-medium text-[var(--color-text)]">Health Summary</h2>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              {summary.attention > 0
+                ? `Most of your results are within reference ranges. ${summary.attention} result${summary.attention === 1 ? "" : "s"} may need your attention.`
+                : "All of your results are within reference ranges."}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3 @lg:grid-cols-4">
+              <div className="rounded-xl bg-[var(--status-green-tint)] p-4">
+                <p className="font-display text-[26px] font-semibold text-[var(--status-green)]">
+                  {summary.inRange}
                 </p>
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="rounded-xl bg-[var(--status-green-tint)] p-4">
-                    <p className="font-display text-[26px] font-semibold text-[var(--status-green)]">
-                      {summary.inRange}
-                    </p>
-                    <p className="mt-1 text-[13px] font-semibold text-[var(--status-green)]">In range</p>
-                    <p className="text-[11.5px] text-[var(--color-text-muted)]">
-                      {summary.total > 0 ? Math.round((summary.inRange / summary.total) * 100) : 0}% of results
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-[var(--status-yellow-tint)] p-4">
-                    <p className="font-display text-[26px] font-semibold text-[var(--status-yellow)]">
-                      {summary.attention}
-                    </p>
-                    <p className="mt-1 text-[13px] font-semibold text-[var(--status-yellow)]">Need attention</p>
-                    <p className="text-[11.5px] text-[var(--color-text-muted)]">
-                      {summary.total > 0 ? Math.round((summary.attention / summary.total) * 100) : 0}% of results
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-[var(--color-surface-muted)] p-4">
-                    <p className="font-display text-[26px] font-semibold text-[var(--color-text)]">
-                      {summary.notAvailable}
-                    </p>
-                    <p className="mt-1 text-[13px] font-semibold text-[var(--color-text)]">Not available</p>
-                    <p className="text-[11.5px] text-[var(--color-text-muted)]">
-                      {summary.total > 0 ? Math.round((summary.notAvailable / summary.total) * 100) : 0}% of results
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-[var(--color-brand-tint)] p-4">
-                    <p className="font-display text-[26px] font-semibold text-[var(--color-brand)]">
-                      {summary.total}
-                    </p>
-                    <p className="mt-1 text-[13px] font-semibold text-[var(--color-brand)]">Total results</p>
-                    <p className="text-[11.5px] text-[var(--color-text-muted)]">Analysed from this report</p>
-                  </div>
-                </div>
+                <p className="mt-1 text-[13px] font-semibold text-[var(--status-green)]">In range</p>
+                <p className="text-[11.5px] text-[var(--color-text-muted)]">
+                  {summary.total > 0 ? Math.round((summary.inRange / summary.total) * 100) : 0}% of results
+                </p>
+              </div>
+              <div className="rounded-xl bg-[var(--status-yellow-tint)] p-4">
+                <p className="font-display text-[26px] font-semibold text-[var(--status-yellow)]">
+                  {summary.attention}
+                </p>
+                <p className="mt-1 text-[13px] font-semibold text-[var(--status-yellow)]">Need attention</p>
+                <p className="text-[11.5px] text-[var(--color-text-muted)]">
+                  {summary.total > 0 ? Math.round((summary.attention / summary.total) * 100) : 0}% of results
+                </p>
+              </div>
+              <div className="rounded-xl bg-[var(--color-surface-muted)] p-4">
+                <p className="font-display text-[26px] font-semibold text-[var(--color-text)]">
+                  {summary.notAvailable}
+                </p>
+                <p className="mt-1 text-[13px] font-semibold text-[var(--color-text)]">Not available</p>
+                <p className="text-[11.5px] text-[var(--color-text-muted)]">
+                  {summary.total > 0 ? Math.round((summary.notAvailable / summary.total) * 100) : 0}% of results
+                </p>
+              </div>
+              <div className="rounded-xl bg-[var(--color-brand-tint)] p-4">
+                <p className="font-display text-[26px] font-semibold text-[var(--color-brand)]">
+                  {summary.total}
+                </p>
+                <p className="mt-1 text-[13px] font-semibold text-[var(--color-brand)]">Total results</p>
+                <p className="text-[11.5px] text-[var(--color-text-muted)]">Analysed from this report</p>
               </div>
             </div>
           </Card>
@@ -494,54 +483,82 @@ export function ReportDetail({ reportId }: { reportId: string }) {
           <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
             <div id="results" className="flex flex-col gap-4">
               <h2 className="font-display text-xl font-medium text-[var(--color-text)]">Results</h2>
-              {groups.map(([categoryId, categoryResults], index) => (
-                <ResultGroup
-                  key={categoryId}
-                  categoryId={categoryId}
-                  results={categoryResults}
-                  defaultOpen={index === 0}
+
+              {filteredResults.length === 0 ? (
+                <EmptyState
+                  title="No matching results"
+                  description="Try a different category or filter."
+                  action={
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setSelectedCategories([]);
+                        setStatusFilter("all");
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  }
                 />
-              ))}
+              ) : sortBy === "category" ? (
+                groups.map(([categoryId, categoryResults], index) => (
+                  <ResultGroup
+                    key={categoryId}
+                    categoryId={categoryId}
+                    results={categoryResults}
+                    defaultOpen={index === 0}
+                  />
+                ))
+              ) : (
+                <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+                  <ResultsTable results={sortedFlatResults} />
+                </div>
+              )}
+
               <CompareWithPreviousReport reportId={report.id} />
             </div>
 
             <aside className="flex flex-col gap-4">
               {attentionResults.length > 0 ? (
-                <Card className="border-transparent bg-[var(--status-red-tint)] p-5">
-                  <div className="mb-3 flex items-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-red)" strokeWidth="1.9">
+                <div>
+                  <h2 className="flex items-center gap-2 font-display text-xl font-medium text-[var(--status-red)]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
                       <path d="M13.7 21a2 2 0 0 1-3.4 0" />
                     </svg>
-                    <h3 className="text-[15px] font-bold text-[var(--status-red)]">Attention Required</h3>
-                  </div>
-                  <div className="flex flex-col">
-                    {attentionResults.map((result) => (
-                      <div
-                        key={result.id}
-                        className="flex items-center justify-between gap-3 border-t border-[var(--status-red)]/15 py-2.5 first:border-t-0"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[var(--status-red)]">
-                            {result.testName}
-                          </p>
-                          <p className="text-xs text-[var(--color-text-muted)]">
-                            {result.value} {result.unit}
-                          </p>
+                    Attention Required
+                  </h2>
+                  <Card className="mt-3 border-transparent bg-[var(--status-red-tint)] p-5">
+                    <div className="flex flex-col">
+                      {attentionResults.map((result) => (
+                        <div
+                          key={result.id}
+                          className="flex items-center justify-between gap-3 border-t border-[var(--status-red)]/15 py-2.5 first:border-t-0"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[var(--status-red)]">
+                              {result.testName}
+                            </p>
+                            <p className="text-xs text-[var(--color-text-muted)]">
+                              {result.value} {result.unit}
+                            </p>
+                          </div>
+                          <StatusPill result={result} />
                         </div>
-                        <StatusPill result={result} />
-                      </div>
-                    ))}
-                  </div>
-                  {summary.attention > attentionResults.length ? (
-                    <a
-                      href="#results"
-                      className="mt-3 block rounded-lg bg-[var(--color-surface)] px-3 py-2 text-center text-xs font-semibold text-[var(--status-red)]"
-                    >
-                      View all {summary.attention} in results →
-                    </a>
-                  ) : null}
-                </Card>
+                      ))}
+                    </div>
+                    {summary.attention > attentionResults.length ? (
+                      <button
+                        type="button"
+                        onClick={showAllAttention}
+                        className="mt-3 block w-full rounded-lg bg-[var(--color-surface)] px-3 py-2 text-center text-xs font-semibold text-[var(--status-red)]"
+                      >
+                        View all {summary.attention} in results →
+                      </button>
+                    ) : null}
+                  </Card>
+                </div>
               ) : null}
 
               {trendResults.length > 0 ? (
@@ -617,6 +634,25 @@ export function ReportDetail({ reportId }: { reportId: string }) {
         </>
       ) : null}
 
+      {report.status !== "COMPLETED" || (results && results.length === 0) ? (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            isLoading={downloadMutation.isPending}
+            onClick={() => downloadMutation.mutate(reportId)}
+          >
+            Download
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setIsShareOpen(true)}>
+            Share
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setIsDeleteOpen(true)}>
+            Delete
+          </Button>
+        </div>
+      ) : null}
+
       {report.status === "FAILED" ? (
         <ErrorState
           title="Processing failed"
@@ -645,6 +681,18 @@ export function ReportDetail({ reportId }: { reportId: string }) {
           reportName={report.fileName}
           categoryIds={report.categories}
           onClose={() => setIsShareOpen(false)}
+        />
+      ) : null}
+
+      {isDeleteOpen ? (
+        <ConfirmDialog
+          title="Delete this report?"
+          description={`This permanently deletes "${report.fileName}" and all of its extracted results. This can't be undone.`}
+          confirmLabel="Delete report"
+          isLoading={deleteMutation.isPending}
+          error={deleteMutation.isError ? "Couldn't delete this report. Please try again." : null}
+          onConfirm={handleDelete}
+          onClose={() => setIsDeleteOpen(false)}
         />
       ) : null}
     </div>

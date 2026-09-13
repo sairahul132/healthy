@@ -5,6 +5,7 @@ import type { SharingSession } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
 import { formatDate } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 
 export function ShareLinkPanel({
   session,
@@ -51,7 +52,7 @@ export function ShareLinkPanel({
               key={id}
               className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]"
             >
-              <span aria-hidden="true">{category.icon}</span>
+              <CategoryIcon id={category.id} className="h-3 w-3" />
               {category.label}
             </span>
           );

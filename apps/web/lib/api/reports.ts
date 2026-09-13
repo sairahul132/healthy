@@ -31,6 +31,10 @@ export function downloadReportFile(id: string): Promise<{ blob: Blob; filename: 
   return apiDownload(`/reports/${id}/file`);
 }
 
+export function deleteReport(id: string): Promise<void> {
+  return apiFetch<void>(`/reports/${id}`, { method: "DELETE" });
+}
+
 export function listTimelineEvents(): Promise<TimelineEvent[]> {
   return apiFetch<TimelineEvent[]>("/timeline");
 }

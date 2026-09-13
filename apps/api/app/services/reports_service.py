@@ -327,6 +327,34 @@ class ReportsService:
         await self._db.commit()
         return report_to_response(report, categories)
 
+    async def delete_report(self, user_id: uuid.UUID, report_id: uuid.UUID) -> None:
+        """Deletes a report, its results, and its timeline events, then
+        best-effort removes the underlying file bytes. Storage deletion is
+        attempted after the DB commit succeeds and never rolls it back on
+        failure — an orphaned blob is recoverable manual cleanup, but a
+        report the user can still see with none of its data would not be."""
+        report = await self._reports.get_report_by_id(report_id)
+        if report is None or report.user_id != user_id:
+            raise NotFoundError("Report not found.")
+        storage_key = report.storage_key
+        file_name = report.file_name
+
+        await self._reports.delete_report(report)
+        await self._audit.record(
+            actor_user_id=user_id,
+            event_type=audit_events.REPORT_DELETED,
+            outcome="success",
+            resource_type="lab_report",
+            resource_id=str(report_id),
+            metadata={"fileName": file_name},
+        )
+        await self._db.commit()
+
+        try:
+            await self._storage.delete(storage_key)
+        except Exception:
+            logger.exception("Failed to delete storage object for report %s", report_id)
+
     async def get_report_file(
         self, user_id: uuid.UUID, report_id: uuid.UUID
     ) -> tuple[bytes, str, str]:

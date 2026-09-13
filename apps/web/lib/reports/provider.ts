@@ -13,6 +13,7 @@ export interface ReportsProvider {
   getResults(reportId: string): Promise<LabResult[]>;
   uploadReport(file: File): Promise<LabReport>;
   downloadReportFile(id: string): Promise<{ blob: Blob; filename: string }>;
+  deleteReport(id: string): Promise<void>;
   listTimelineEvents(): Promise<TimelineEvent[]>;
 }
 

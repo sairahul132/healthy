@@ -78,6 +78,19 @@ export function useDownloadReportFile() {
   });
 }
 
+export function useDeleteReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reportId: string) => getReportsProvider().deleteReport(reportId),
+    onSuccess: (_data, reportId) => {
+      queryClient.invalidateQueries({ queryKey: reportsKeys.list });
+      queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+      queryClient.removeQueries({ queryKey: reportsKeys.detail(reportId) });
+      queryClient.removeQueries({ queryKey: reportsKeys.results(reportId) });
+    },
+  });
+}
+
 export function useUploadReport() {
   const queryClient = useQueryClient();
   return useMutation({

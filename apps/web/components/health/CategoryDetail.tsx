@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils/format";
 import { Card } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { CategoryIcon } from "./CategoryIcon";
 import { TrendChart } from "./TrendChart";
 
 export function CategoryDetail({ categoryId }: { categoryId: string }) {
@@ -24,8 +25,8 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
       </Link>
 
       <div className="mt-4 flex items-center gap-3">
-        <span aria-hidden="true" className="text-3xl">
-          {category.icon}
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-brand-tint)] text-[var(--color-brand)]">
+          <CategoryIcon id={category.id} className="h-5 w-5" />
         </span>
         <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">{category.label}</h1>
       </div>

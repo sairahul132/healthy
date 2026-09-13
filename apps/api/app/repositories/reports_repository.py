@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
@@ -14,6 +14,17 @@ class ReportsRepository:
 
     def add(self, instance: Base) -> None:
         self._db.add(instance)
+
+    async def delete_report(self, report: LabReport) -> None:
+        """Removes a report and everything derived from it — results and
+        timeline events don't have DB-level cascade configured (this repo
+        deletes explicitly everywhere else too, see upload/process), so
+        both are cleared before the report row itself."""
+        await self._db.execute(delete(LabResult).where(LabResult.report_id == report.id))
+        await self._db.execute(
+            delete(TimelineEvent).where(TimelineEvent.related_report_id == report.id)
+        )
+        await self._db.delete(report)
 
     async def get_report_by_id(self, report_id: uuid.UUID) -> LabReport | None:
         return await self._db.get(LabReport, report_id)

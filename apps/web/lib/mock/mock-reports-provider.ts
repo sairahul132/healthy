@@ -271,6 +271,16 @@ export class MockReportsProvider implements ReportsProvider {
     return this.state.resultsByReport[reportId] ?? [];
   }
 
+  async deleteReport(reportId: string): Promise<void> {
+    this.ensureHydrated();
+    this.state.reports = this.state.reports.filter((r) => r.id !== reportId);
+    delete this.state.resultsByReport[reportId];
+    this.state.timelineEvents = this.state.timelineEvents.filter(
+      (e) => e.relatedReportId !== reportId,
+    );
+    persist(this.state);
+  }
+
   async downloadReportFile(reportId: string): Promise<{ blob: Blob; filename: string }> {
     this.ensureHydrated();
     const report = this.state.reports.find((r) => r.id === reportId);

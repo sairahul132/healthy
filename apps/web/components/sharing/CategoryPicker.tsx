@@ -1,5 +1,6 @@
 import type { HealthCategoryId } from "@/lib/api/types";
 import { HEALTH_CATEGORIES } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { cn } from "@/lib/utils/cn";
 
 export function CategoryPicker({
@@ -33,7 +34,7 @@ export function CategoryPicker({
                 : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]",
             )}
           >
-            <span aria-hidden="true">{category.icon}</span>
+            <CategoryIcon id={category.id} />
             {category.label}
           </button>
         );
