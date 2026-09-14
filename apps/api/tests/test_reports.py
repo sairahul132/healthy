@@ -208,6 +208,8 @@ async def test_trend_uses_previous_completed_report(
     assert trends.status_code == 200, trends.text
     hgb_trend = next(t for t in trends.json() if t["canonicalCode"] == "HGB")
     assert [p["value"] for p in hgb_trend["points"]] == [13.5, 12.0]
+    assert hgb_trend["referenceLow"] == 13.0
+    assert hgb_trend["referenceHigh"] == 17.0
 
 
 async def test_health_categories_and_category_detail(

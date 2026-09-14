@@ -110,7 +110,13 @@ export function TrendPanel({
         {filtered.length === 0 ? (
           <p className="py-6 text-center text-sm text-[var(--color-text-faint)]">No results in this range.</p>
         ) : (
-          <Chart points={filtered} hoverIndex={hoverIndex} onHover={setHoverIndex} />
+          <Chart
+            points={filtered}
+            hoverIndex={hoverIndex}
+            onHover={setHoverIndex}
+            referenceLow={referenceLow}
+            referenceHigh={referenceHigh}
+          />
         )}
       </div>
 
@@ -135,16 +141,27 @@ function Chart({
   points,
   hoverIndex,
   onHover,
+  referenceLow,
+  referenceHigh,
 }: {
   points: TrendPoint[];
   hoverIndex: number | null;
   onHover: (index: number | null) => void;
+  referenceLow?: number | null;
+  referenceHigh?: number | null;
 }) {
+  const hasBand = referenceLow != null && referenceHigh != null && referenceLow < referenceHigh;
   const values = points.map((p) => p.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  // The y-scale always stretches to include the reference band too, not
+  // just the plotted values — otherwise a band that the data never
+  // touches would render off the top/bottom edge instead of in view.
+  const allValues = hasBand ? [...values, referenceLow, referenceHigh] : values;
+  const min = Math.min(...allValues);
+  const max = Math.max(...allValues);
   const range = max - min || 1;
   const singlePoint = points.length === 1;
+  const bandTopY = hasBand ? BASE_Y - ((referenceHigh - min) / range) * (BASE_Y - TOP) : null;
+  const bandBottomY = hasBand ? BASE_Y - ((referenceLow - min) / range) * (BASE_Y - TOP) : null;
 
   const coords = points.map((point, index) => {
     const x = singlePoint ? WIDTH / 2 : PAD_X + (index / (points.length - 1)) * (WIDTH - PAD_X * 2);
@@ -165,6 +182,16 @@ function Chart({
       aria-label={`Trend of ${points.length} result${points.length === 1 ? "" : "s"}, from ${points[0]!.value} to ${points.at(-1)!.value}`}
       style={{ overflow: "visible" }}
     >
+      {hasBand ? (
+        <rect
+          x={PAD_X - 20}
+          y={bandTopY!}
+          width={WIDTH - PAD_X * 2 + 40}
+          height={bandBottomY! - bandTopY!}
+          fill="var(--status-green-tint)"
+          opacity="0.6"
+        />
+      ) : null}
       <line x1={PAD_X - 20} y1={BASE_Y} x2={WIDTH - PAD_X + 20} y2={BASE_Y} stroke="var(--color-border)" strokeWidth="1" />
       {!singlePoint ? <path d={path} fill="none" stroke="var(--color-border-strong)" strokeWidth="1.6" /> : null}
 

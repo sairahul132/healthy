@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/lib/auth/session-context";
 import { useReports } from "@/lib/reports/hooks";
@@ -23,6 +24,7 @@ export default function DashboardPage() {
     new Set((reports ?? []).filter((r) => r.status === "COMPLETED").flatMap((r) => r.categories)),
   );
   const attentionCount = attentionSummary?.abnormalCount ?? 0;
+  const [outsideRangeOpen, setOutsideRangeOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-7">
@@ -44,11 +46,13 @@ export default function DashboardPage() {
         healthyId={user?.healthyId ?? "—"}
         name={user?.name ?? null}
         attentionCount={attentionCount}
+        outsideRangeOpen={outsideRangeOpen}
+        onToggleOutsideRange={() => setOutsideRangeOpen((v) => !v)}
       />
 
-      <QuickActions hasReports={(reports?.length ?? 0) > 0} />
+      {outsideRangeOpen ? <OutsideRangeList results={attentionSummary?.results ?? []} /> : null}
 
-      <OutsideRangeList results={attentionSummary?.results ?? []} />
+      <QuickActions hasReports={(reports?.length ?? 0) > 0} />
 
       <Card>
         <CardHeader>

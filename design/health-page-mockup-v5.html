@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Healthy — Health Page Mockup v5 (Timeline Ledger)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-bg: #f3eee0; --color-surface: #fdfbf4; --color-surface-muted: #ede5cf;
+    --color-border: #ddd0a9; --color-border-strong: #c7b47f;
+    --color-text: #1a2118; --color-text-muted: #5c5a44; --color-text-faint: #8b8768;
+    --color-brand: #0e2c1e; --color-brand-hover: #081b12; --color-brand-foreground: #f5efdd;
+    --color-brand-tint: #e2e2cd; --color-accent: #a9782e; --color-accent-bright: #c79a45; --color-accent-tint: #f2e5c4;
+    --status-green: #2f6b45; --status-green-tint: #e2ecdd;
+    --status-yellow: #97671f; --status-yellow-tint: #f4e6c8;
+    --status-red: #8b3a2e; --status-red-tint: #f2e0da;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Geist", Arial, sans-serif; background: var(--color-bg); color: var(--color-text); }
+  .font-display { font-family: "Fraunces", Georgia, serif; }
+  .font-mono { font-family: "Geist Mono", monospace; }
+  .label { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6550; background: #fff; padding: 3px 10px; border-radius: 999px; border: 1px solid #ddd0a9; z-index: 40; }
+
+  .app { display: grid; grid-template-columns: 240px 1fr; width: 1650px; min-height: 1300px; }
+  .sidebar { position: relative; background: linear-gradient(180deg, var(--color-brand) 0%, var(--color-brand-hover) 100%); padding: 26px 18px; display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-hair { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--color-accent-bright) 45%, var(--color-accent-bright) 55%, transparent); opacity: .7; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; }
+  .brand .box { width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--color-brand-foreground); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--color-brand-foreground); }
+  .brand .word { font-family: "Fraunces"; font-size: 17px; color: var(--color-brand-foreground); }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav a { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; color: rgba(245,239,221,0.62); font-size: 13.5px; font-weight: 500; text-decoration: none; }
+  .nav a.active { background: rgba(245,239,221,0.1); color: var(--color-brand-foreground); position: relative; }
+  .nav a.active::before { content:""; position:absolute; left:-18px; top:8px; bottom:8px; width:3px; border-radius:2px; background: var(--color-accent-bright); }
+  .nav svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-spacer { flex: 1; }
+  .member-card { border-radius: 16px; border: 1px solid rgba(245,239,221,0.15); background: rgba(245,239,221,0.06); padding: 16px; }
+  .member-card .k { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-bright); }
+  .member-card .t { font-family: "Fraunces"; font-size: 14px; color: var(--color-brand-foreground); margin-top: 5px; line-height: 1.3; }
+
+  .main { padding: 30px 44px 60px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+  .search { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 9px 16px; color: var(--color-text-faint); font-size: 13px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--color-brand); color: var(--color-brand-foreground); display: flex; align-items: center; justify-content: center; font-family: "Fraunces"; font-size: 14px; }
+
+  .page-head .k { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent); }
+  .page-head h1 { font-family: "Fraunces"; font-size: 28px; font-weight: 500; margin: 6px 0 0; }
+  .page-head p { margin: 4px 0 0; font-size: 13.5px; color: var(--color-text-muted); max-width: 60ch; }
+
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0 28px; }
+  .stat-tile { border-radius: 14px; padding: 16px 18px; border: 1px solid var(--color-border); background: var(--color-surface); }
+  .stat-tile .n { font-family: "Fraunces"; font-size: 26px; font-weight: 600; }
+  .stat-tile .l { font-size: 12px; font-weight: 600; margin-top: 2px; }
+  .stat-tile .s { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+  .stat-tile.attn { background: var(--status-yellow-tint); border-color: transparent; }
+  .stat-tile.attn .n, .stat-tile.attn .l { color: var(--status-yellow); }
+  .stat-tile.ok .n, .stat-tile.ok .l { color: var(--status-green); }
+
+  /* ---- date scrubber ---- */
+  .scrubber-card { border-radius: 16px; border: 1px solid var(--color-border); background: var(--color-surface); padding: 20px 26px 16px; margin-bottom: 24px; }
+  .scrubber-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .scrubber-head h2 { font-family: "Fraunces"; font-size: 15px; font-weight: 500; margin: 0; }
+  .scrubber-head .hint { font-size: 11.5px; color: var(--color-text-faint); }
+  .scrubber-track { position: relative; height: 3px; background: var(--color-border); border-radius: 3px; margin: 0 20px; }
+  .scrubber-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--color-border-strong); border-radius: 3px; }
+  .scrub-pt { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--color-surface); border: 2.5px solid var(--color-border-strong); transform: translate(-50%,-50%); }
+  .scrub-pt.selected { width: 18px; height: 18px; background: var(--color-brand); border-color: var(--color-brand); box-shadow: 0 0 0 5px var(--color-accent-tint); }
+  .scrub-labels { display: flex; justify-content: space-between; margin: 14px 20px 0; font-size: 10.5px; font-family: "Geist Mono"; color: var(--color-text-faint); }
+  .scrub-labels .sel { color: var(--color-text); font-weight: 700; }
+
+  /* ---- since-last-report digest ---- */
+  .digest-card { border-radius: 16px; border: 1px solid var(--color-border); background: var(--color-surface); padding: 20px 26px; margin-bottom: 28px; }
+  .digest-card h2 { font-family: "Fraunces"; font-size: 15px; font-weight: 500; margin: 0 0 3px; }
+  .digest-card .sub { font-size: 12px; color: var(--color-text-muted); margin: 0 0 14px; }
+  .digest-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--color-border); }
+  .digest-row:first-of-type { border-top: none; }
+  .digest-name { font-size: 13.5px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .digest-delta { display: flex; align-items: center; gap: 10px; font-family: "Geist Mono"; font-size: 12.5px; }
+  .digest-delta .arrow-up { color: var(--status-red); }
+  .digest-delta .arrow-down { color: var(--status-green); }
+  .cat-tag { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: var(--color-surface-muted); color: var(--color-text-muted); }
+
+  /* ---- ledger table ---- */
+  .ledger-card { border-radius: 16px; border: 1px solid var(--color-border); background: var(--color-surface); overflow: hidden; }
+  .ledger-title { padding: 18px 24px 4px; font-family: "Fraunces"; font-size: 15px; }
+  table.ledger { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  table.ledger th { text-align: right; font-size: 10.5px; font-weight: 600; color: var(--color-text-faint); padding: 8px 18px; font-family: "Geist Mono"; border-bottom: 1px solid var(--color-border); }
+  table.ledger th:first-child { text-align: left; }
+  table.ledger td { padding: 11px 18px; text-align: right; font-family: "Geist Mono"; font-size: 12.5px; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+  table.ledger td:first-child { text-align: left; font-family: "Geist"; font-weight: 500; font-size: 13px; }
+  table.ledger tr:last-child td { border-bottom: none; }
+  table.ledger tr.cat-divider td { background: var(--color-surface-muted); font-weight: 700; color: var(--color-text-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; padding: 7px 18px; }
+  .cell-green { color: var(--status-green); } .cell-yellow { color: var(--status-yellow); } .cell-red { color: var(--status-red); }
+  .cell-current { font-weight: 700; background: var(--color-accent-tint); border-radius: 6px; }
+  .spark-cell { width: 90px; }
+</style>
+</head>
+<body>
+<span class="label">Health Page — Mockup v5, Timeline Ledger</span>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-hair"></div>
+    <div class="brand"><span class="box">H</span><span class="word">Healthy</span></div>
+    <nav class="nav">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>Home</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h10a1 1 0 011 1v16l-6-3-6 3V4a1 1 0 011-1z"/></svg>Reports</a>
+      <a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6a5.5 5.5 0 00-9.3-4 5.5 5.5 0 00-8.2 7.3L12 21l8.7-9.1a5.5 5.5 0 000-3.3z"/></svg>Health</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Timeline</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 016 0v2"/></svg>Medicines</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="4.5" r="2.4"/><circle cx="18" cy="19.5" r="2.4"/><path d="M8.2 8.2l7.6-3.2M8.2 8.8l7.6 8.5"/></svg>Share</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z"/></svg>Permissions</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10z"/></svg>Ask Healthy</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg>Profile</a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="member-card"><p class="k">Member since 2026</p><p class="t">Better Care Together</p></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search reports, tests, or health insights…</div>
+      <div class="avatar">H</div>
+    </div>
+
+    <div class="page-head">
+      <p class="k">Your results, organized</p>
+      <h1 class="font-display">Health</h1>
+      <p>Every report you've had, laid out like a ledger — drag the timeline to see any point in your history.</p>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat-tile"><div class="n">55</div><div class="l">Total tests</div><div class="s">Across 12 categories</div></div>
+      <div class="stat-tile ok"><div class="n">43</div><div class="l">Within range</div><div class="s">78% of results</div></div>
+      <div class="stat-tile attn"><div class="n">12</div><div class="l">Need attention</div><div class="s">22% of results</div></div>
+      <div class="stat-tile"><div class="n">5</div><div class="l">Reports on file</div><div class="s">Since Aug 2025</div></div>
+    </div>
+
+    <!-- NEW: unified timeline scrubber across every report -->
+    <div class="scrubber-card">
+      <div class="scrubber-head">
+        <h2>Your test history</h2>
+        <span class="hint">Drag to any report date to see the ledger as of that day</span>
+      </div>
+      <div class="scrubber-track">
+        <div class="scrubber-fill"></div>
+        <div class="scrub-pt" style="left:5%"></div>
+        <div class="scrub-pt" style="left:28%"></div>
+        <div class="scrub-pt" style="left:52%"></div>
+        <div class="scrub-pt" style="left:74%"></div>
+        <div class="scrub-pt selected" style="left:96%"></div>
+      </div>
+      <div class="scrub-labels">
+        <span>Aug '25</span><span>Nov '25</span><span>Feb '26</span><span>May '26</span><span class="sel">18 Jul '26 (viewing)</span>
+      </div>
+    </div>
+
+    <!-- NEW: what changed since the previous report, biggest movers first -->
+    <div class="digest-card">
+      <h2>Since your last report</h2>
+      <p class="sub">Comparing 18 Jul 2026 to 27 Jul 2026 — biggest movers first</p>
+      <div class="digest-row">
+        <span class="digest-name">Potassium <span class="cat-tag">Kidney</span></span>
+        <span class="digest-delta"><span>3.5 → 2.6 mmol/L</span><span class="arrow-down">▼ 26%</span></span>
+      </div>
+      <div class="digest-row">
+        <span class="digest-name">Uric Acid <span class="cat-tag">Kidney</span></span>
+        <span class="digest-delta"><span>7.1 → 8.65 mg/dL</span><span class="arrow-up">▲ 22%</span></span>
+      </div>
+      <div class="digest-row">
+        <span class="digest-name">Vitamin D (25-OH) <span class="cat-tag">Vitamins</span></span>
+        <span class="digest-delta"><span>30.1 → 25.83 ng/ml</span><span class="arrow-down">▼ 14%</span></span>
+      </div>
+      <div class="digest-row">
+        <span class="digest-name">Total IgE <span class="cat-tag">Allergy</span></span>
+        <span class="digest-delta"><span>510 → 565.9 IU/mL</span><span class="arrow-up">▲ 11%</span></span>
+      </div>
+    </div>
+
+    <!-- Multi-report ledger: every date's value in one grid, unique to this concept -->
+    <div class="ledger-card">
+      <p class="ledger-title">Full ledger</p>
+      <table class="ledger">
+        <thead>
+          <tr><th>Test</th><th>Aug '25</th><th>Nov '25</th><th>Feb '26</th><th>May '26</th><th>18 Jul '26</th><th class="spark-cell">Trend</th></tr>
+        </thead>
+        <tbody>
+          <tr class="cat-divider"><td colspan="7">Kidney</td></tr>
+          <tr>
+            <td>Creatinine</td><td>1.05</td><td>0.95</td><td>1.1</td><td class="cell-yellow">1.3</td><td class="cell-green cell-current">1.0</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,10 22,14 40,7 58,3 76,9" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="9" r="2.5" fill="var(--status-green)"/></svg></td>
+          </tr>
+          <tr>
+            <td>Uric Acid</td><td>6.4</td><td>6.8</td><td>6.9</td><td>7.1</td><td class="cell-yellow cell-current">8.65</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,16 22,13 40,12 58,10 76,3" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="3" r="2.5" fill="var(--status-yellow)"/></svg></td>
+          </tr>
+          <tr>
+            <td>Potassium</td><td>4.1</td><td>4.0</td><td>3.9</td><td>3.5</td><td class="cell-yellow cell-current">2.6</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,5 22,6 40,8 58,11 76,18" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="18" r="2.5" fill="var(--status-yellow)"/></svg></td>
+          </tr>
+          <tr class="cat-divider"><td colspan="7">Liver</td></tr>
+          <tr>
+            <td>ALT (SGPT)</td><td>28</td><td>30</td><td>29</td><td>31</td><td class="cell-green cell-current">19</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,10 22,8 40,9 58,7 76,17" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="17" r="2.5" fill="var(--status-green)"/></svg></td>
+          </tr>
+          <tr>
+            <td>Bilirubin, Total</td><td>0.7</td><td>0.8</td><td>0.85</td><td>0.9</td><td class="cell-yellow cell-current">1.7</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,18 22,16 40,14 58,12 76,3" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="3" r="2.5" fill="var(--status-yellow)"/></svg></td>
+          </tr>
+          <tr class="cat-divider"><td colspan="7">Blood</td></tr>
+          <tr>
+            <td>Hemoglobin</td><td>13.2</td><td>13.5</td><td>13.8</td><td>14.1</td><td class="cell-green cell-current">15.6</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,18 22,15 40,12 58,8 76,3" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="3" r="2.5" fill="var(--status-green)"/></svg></td>
+          </tr>
+          <tr>
+            <td>WBC Count</td><td>7.1</td><td>8.0</td><td>7.6</td><td>8300</td><td class="cell-green cell-current">8300</td>
+            <td class="spark-cell"><svg width="80" height="22" viewBox="0 0 80 22"><polyline points="4,14 22,10 40,12 58,7 76,7" fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/><circle cx="76" cy="7" r="2.5" fill="var(--status-green)"/></svg></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -515,14 +515,19 @@ class ReportsService:
             if canonical is None:
                 continue
             ordered = sorted(items, key=lambda r: r.collection_date or date.min)
+            latest = ordered[-1]
             trends.append(
                 TestTrendResponse(
                     canonical_test_name=canonical.name,
                     canonical_code=code,
                     category=canonical.category,
                     unit=canonical.unit,
+                    reference_low=latest.reference_low,
+                    reference_high=latest.reference_high,
+                    reference_text=latest.reference_text,
                     points=[
                         TrendPointResponse(
+                            id=str(r.id),
                             report_id=str(r.report_id),
                             value=r.value,
                             unit=r.unit,

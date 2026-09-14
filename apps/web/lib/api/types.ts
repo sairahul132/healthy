@@ -159,6 +159,7 @@ export interface HealthCategoryDetail {
 }
 
 export interface TrendPoint {
+  id: string;
   reportId: string;
   value: number;
   unit: string;
@@ -171,6 +172,9 @@ export interface TestTrend {
   canonicalCode: string;
   category: HealthCategoryId;
   unit: string;
+  referenceLow: number | null;
+  referenceHigh: number | null;
+  referenceText: string;
   points: TrendPoint[];
 }
 

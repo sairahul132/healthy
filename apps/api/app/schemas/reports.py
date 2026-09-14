@@ -61,6 +61,7 @@ class AttentionSummaryResponse(CamelModel):
 
 
 class TrendPointResponse(CamelModel):
+    id: str
     report_id: str
     value: float
     unit: str
@@ -73,6 +74,9 @@ class TestTrendResponse(CamelModel):
     canonical_code: str
     category: str
     unit: str
+    reference_low: float | None
+    reference_high: float | None
+    reference_text: str
     points: list[TrendPointResponse]
 
 

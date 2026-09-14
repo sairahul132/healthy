@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Healthy — Health Page Mockup v4 (Constellation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-bg: #f3eee0; --color-surface: #fdfbf4; --color-surface-muted: #ede5cf;
+    --color-border: #ddd0a9; --color-border-strong: #c7b47f;
+    --color-text: #1a2118; --color-text-muted: #5c5a44; --color-text-faint: #8b8768;
+    --color-brand: #0e2c1e; --color-brand-hover: #081b12; --color-brand-foreground: #f5efdd;
+    --color-brand-tint: #e2e2cd; --color-accent: #a9782e; --color-accent-bright: #c79a45; --color-accent-tint: #f2e5c4;
+    --status-green: #2f6b45; --status-green-tint: #e2ecdd;
+    --status-yellow: #97671f; --status-yellow-tint: #f4e6c8;
+    --status-red: #8b3a2e; --status-red-tint: #f2e0da;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Geist", Arial, sans-serif; background: var(--color-bg); color: var(--color-text); }
+  .font-display { font-family: "Fraunces", Georgia, serif; }
+  .font-mono { font-family: "Geist Mono", monospace; }
+  .label { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6550; background: #fff; padding: 3px 10px; border-radius: 999px; border: 1px solid #ddd0a9; z-index: 40; }
+
+  .app { display: grid; grid-template-columns: 240px 1fr; width: 1600px; min-height: 1300px; }
+  .sidebar { position: relative; background: linear-gradient(180deg, var(--color-brand) 0%, var(--color-brand-hover) 100%); padding: 26px 18px; display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-hair { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--color-accent-bright) 45%, var(--color-accent-bright) 55%, transparent); opacity: .7; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; }
+  .brand .box { width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--color-brand-foreground); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--color-brand-foreground); }
+  .brand .word { font-family: "Fraunces"; font-size: 17px; color: var(--color-brand-foreground); }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav a { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; color: rgba(245,239,221,0.62); font-size: 13.5px; font-weight: 500; text-decoration: none; }
+  .nav a.active { background: rgba(245,239,221,0.1); color: var(--color-brand-foreground); position: relative; }
+  .nav a.active::before { content:""; position:absolute; left:-18px; top:8px; bottom:8px; width:3px; border-radius:2px; background: var(--color-accent-bright); }
+  .nav svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-spacer { flex: 1; }
+  .member-card { border-radius: 16px; border: 1px solid rgba(245,239,221,0.15); background: rgba(245,239,221,0.06); padding: 16px; }
+  .member-card .k { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-bright); }
+  .member-card .t { font-family: "Fraunces"; font-size: 14px; color: var(--color-brand-foreground); margin-top: 5px; line-height: 1.3; }
+
+  .main { padding: 30px 44px 60px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+  .search { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 9px 16px; color: var(--color-text-faint); font-size: 13px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--color-brand); color: var(--color-brand-foreground); display: flex; align-items: center; justify-content: center; font-family: "Fraunces"; font-size: 14px; }
+
+  .page-head .k { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent); }
+  .page-head h1 { font-family: "Fraunces"; font-size: 28px; font-weight: 500; margin: 6px 0 0; }
+  .page-head p { margin: 4px 0 0; font-size: 13.5px; color: var(--color-text-muted); max-width: 60ch; }
+
+  /* ---- new: summary stat strip ---- */
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0 34px; }
+  .stat-tile { border-radius: 14px; padding: 16px 18px; border: 1px solid var(--color-border); background: var(--color-surface); }
+  .stat-tile .n { font-family: "Fraunces"; font-size: 26px; font-weight: 600; }
+  .stat-tile .l { font-size: 12px; font-weight: 600; margin-top: 2px; }
+  .stat-tile .s { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+  .stat-tile.attn { background: var(--status-yellow-tint); border-color: transparent; }
+  .stat-tile.attn .n, .stat-tile.attn .l { color: var(--status-yellow); }
+  .stat-tile.ok .n, .stat-tile.ok .l { color: var(--status-green); }
+
+  /* ---- constellation ---- */
+  .constellation-wrap { display: grid; grid-template-columns: 460px 1fr; gap: 30px; align-items: start; margin-bottom: 10px; }
+  .constellation-card { border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-surface); padding: 20px; }
+  .constellation-card h2 { font-family: "Fraunces"; font-size: 16px; font-weight: 500; margin: 0 0 4px; }
+  .constellation-card p { font-size: 12px; color: var(--color-text-muted); margin: 0 0 6px; }
+  .node-label { font-size: 11px; font-weight: 600; }
+  .legend { display: flex; gap: 14px; margin-top: 8px; font-size: 11px; color: var(--color-text-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* ---- selected-category panel ---- */
+  .selected-panel { border-radius: 20px; border: 1px solid var(--color-border-strong); background: var(--color-surface); padding: 24px 26px; }
+  .selected-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .selected-head .name-wrap { display: flex; align-items: center; gap: 10px; }
+  .selected-head .icon-tile { width: 34px; height: 34px; border-radius: 11px; background: var(--color-brand-tint); color: var(--color-brand); display: flex; align-items: center; justify-content: center; }
+  .selected-head h2 { font-family: "Fraunces"; font-size: 20px; font-weight: 500; margin: 0; }
+  .reminder-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--color-accent-tint); color: var(--color-accent); font-size: 11.5px; font-weight: 600; }
+
+  .mini-row { display: grid; grid-template-columns: 1.3fr 0.8fr 1.3fr 0.9fr auto auto; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--color-border); }
+  .mini-row:last-child { border-bottom: none; }
+  .mini-row .name { font-weight: 500; font-size: 13.5px; }
+  .mini-row .val { font-family: "Geist Mono"; font-weight: 600; font-size: 14px; }
+  .mini-row .val .u { font-family: "Geist"; font-weight: 500; font-size: 10.5px; color: var(--color-text-faint); margin-left: 3px; }
+  .mini-track { position: relative; height: 1px; background: var(--color-border-strong); }
+  .mini-track .d { position: absolute; top: 50%; width: 7px; height: 7px; border-radius: 50%; transform: translate(-50%,-50%); border: 2px solid var(--color-surface); }
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 600; width: fit-content; }
+  .status-pill .d2 { width: 6px; height: 6px; border-radius: 50%; }
+  .sp-green { background: var(--status-green-tint); color: var(--status-green); } .sp-green .d2 { background: var(--status-green); }
+  .sp-yellow { background: var(--status-yellow-tint); color: var(--status-yellow); } .sp-yellow .d2 { background: var(--status-yellow); }
+  .sp-red { background: var(--status-red-tint); color: var(--status-red); } .sp-red .d2 { background: var(--status-red); }
+
+  .icon-btn { width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--color-border); background: var(--color-surface); display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); flex-shrink: 0; }
+  .icon-btn.ask { color: var(--color-accent); border-color: var(--color-accent-tint); background: var(--color-accent-tint); }
+</style>
+</head>
+<body>
+<span class="label">Health Page — Mockup v4, Constellation</span>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-hair"></div>
+    <div class="brand"><span class="box">H</span><span class="word">Healthy</span></div>
+    <nav class="nav">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>Home</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h10a1 1 0 011 1v16l-6-3-6 3V4a1 1 0 011-1z"/></svg>Reports</a>
+      <a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6a5.5 5.5 0 00-9.3-4 5.5 5.5 0 00-8.2 7.3L12 21l8.7-9.1a5.5 5.5 0 000-3.3z"/></svg>Health</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Timeline</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 016 0v2"/></svg>Medicines</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="4.5" r="2.4"/><circle cx="18" cy="19.5" r="2.4"/><path d="M8.2 8.2l7.6-3.2M8.2 8.8l7.6 8.5"/></svg>Share</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z"/></svg>Permissions</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10z"/></svg>Ask Healthy</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg>Profile</a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="member-card"><p class="k">Member since 2026</p><p class="t">Better Care Together</p></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search reports, tests, or health insights…</div>
+      <div class="avatar">H</div>
+    </div>
+
+    <div class="page-head">
+      <p class="k">Your results, organized</p>
+      <h1 class="font-display">Health</h1>
+      <p>Every body system you've been tested for, at a glance. Tap a node to see its tests.</p>
+    </div>
+
+    <!-- NEW: summary strip (missing from v1-v3 — the "how am I doing overall" answer) -->
+    <div class="stat-strip">
+      <div class="stat-tile"><div class="n">55</div><div class="l">Total tests</div><div class="s">Across 12 categories</div></div>
+      <div class="stat-tile ok"><div class="n">43</div><div class="l">Within range</div><div class="s">78% of results</div></div>
+      <div class="stat-tile attn"><div class="n">12</div><div class="l">Need attention</div><div class="s">22% of results</div></div>
+      <div class="stat-tile"><div class="n">18 Jul</div><div class="l">Last updated</div><div class="s">naveen27.pdf</div></div>
+    </div>
+
+    <div class="constellation-wrap">
+      <!-- Radial "constellation" nav: node size = test count, color = worst status -->
+      <div class="constellation-card">
+        <h2>Body systems</h2>
+        <p>Bigger = more tests · color = worst result in that system</p>
+        <svg viewBox="0 0 420 420" width="100%">
+          <g stroke="var(--color-border)" stroke-width="1.5">
+            <line x1="210" y1="210" x2="210" y2="70" />
+            <line x1="210" y1="210" x2="340" y2="130" />
+            <line x1="210" y1="210" x2="360" y2="260" />
+            <line x1="210" y1="210" x2="260" y2="360" />
+            <line x1="210" y1="210" x2="130" y2="350" />
+            <line x1="210" y1="210" x2="60" y2="250" />
+            <line x1="210" y1="210" x2="80" y2="120" />
+          </g>
+          <circle cx="210" cy="210" r="44" fill="var(--color-brand)" />
+          <text x="210" y="206" text-anchor="middle" fill="var(--color-brand-foreground)" font-family="Fraunces" font-size="13">You</text>
+          <text x="210" y="222" text-anchor="middle" fill="var(--color-accent-bright)" font-family="Geist Mono" font-size="9.5">55 tests</text>
+
+          <!-- Blood: 15 tests, ok -->
+          <circle cx="210" cy="70" r="30" fill="var(--status-green-tint)" stroke="var(--status-green)" stroke-width="2" />
+          <text x="210" y="65" text-anchor="middle" font-family="Fraunces" font-size="11.5" fill="var(--status-green)">Blood</text>
+          <text x="210" y="79" text-anchor="middle" font-family="Geist Mono" font-size="9" fill="var(--status-green)">15</text>
+
+          <!-- Liver: 10 tests, red (worst) -->
+          <circle cx="340" cy="130" r="27" fill="var(--status-red-tint)" stroke="var(--status-red)" stroke-width="2.5" />
+          <text x="340" y="125" text-anchor="middle" font-family="Fraunces" font-size="11" fill="var(--status-red)">Liver</text>
+          <text x="340" y="139" text-anchor="middle" font-family="Geist Mono" font-size="9" fill="var(--status-red)">10</text>
+
+          <!-- Kidney: 6 tests, yellow, SELECTED -->
+          <circle cx="360" cy="260" r="26" fill="var(--status-yellow)" stroke="var(--color-brand)" stroke-width="3" />
+          <text x="360" y="255" text-anchor="middle" font-family="Fraunces" font-size="11" fill="var(--color-brand-foreground)">Kidney</text>
+          <text x="360" y="269" text-anchor="middle" font-family="Geist Mono" font-size="9" fill="var(--color-brand-foreground)">6</text>
+
+          <!-- Thyroid: 3 tests, ok -->
+          <circle cx="260" cy="360" r="21" fill="var(--status-green-tint)" stroke="var(--status-green)" stroke-width="2" />
+          <text x="260" y="356" text-anchor="middle" font-family="Fraunces" font-size="10" fill="var(--status-green)">Thyroid</text>
+          <text x="260" y="368" text-anchor="middle" font-family="Geist Mono" font-size="8.5" fill="var(--status-green)">3</text>
+
+          <!-- Diabetes: 3 tests, ok -->
+          <circle cx="130" cy="350" r="21" fill="var(--status-green-tint)" stroke="var(--status-green)" stroke-width="2" />
+          <text x="130" y="346" text-anchor="middle" font-family="Fraunces" font-size="9.5" fill="var(--status-green)">Diabetes</text>
+          <text x="130" y="358" text-anchor="middle" font-family="Geist Mono" font-size="8.5" fill="var(--status-green)">3</text>
+
+          <!-- Allergy: 1 test, yellow -->
+          <circle cx="60" cy="250" r="18" fill="var(--status-yellow-tint)" stroke="var(--status-yellow)" stroke-width="2" />
+          <text x="60" y="246" text-anchor="middle" font-family="Fraunces" font-size="9.5" fill="var(--status-yellow)">Allergy</text>
+          <text x="60" y="258" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="var(--status-yellow)">1</text>
+
+          <!-- Vitamins: 8 tests, yellow -->
+          <circle cx="80" cy="120" r="24" fill="var(--status-yellow-tint)" stroke="var(--status-yellow)" stroke-width="2" />
+          <text x="80" y="115" text-anchor="middle" font-family="Fraunces" font-size="10.5" fill="var(--status-yellow)">Vitamins</text>
+          <text x="80" y="128" text-anchor="middle" font-family="Geist Mono" font-size="8.5" fill="var(--status-yellow)">8</text>
+        </svg>
+        <div class="legend">
+          <span><i style="background:var(--status-green)"></i>All normal</span>
+          <span><i style="background:var(--status-yellow)"></i>Some borderline</span>
+          <span><i style="background:var(--status-red)"></i>Needs attention</span>
+        </div>
+      </div>
+
+      <!-- Selected category: Kidney -->
+      <div class="selected-panel">
+        <div class="selected-head">
+          <div class="name-wrap">
+            <span class="icon-tile"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3c-2 3-4 6-4 10a8 8 0 0016 0c0-4-2-7-4-10-1 2-2 3-4 3s-3-1-4-3z"/></svg></span>
+            <h2>Kidney</h2>
+          </div>
+          <span class="reminder-chip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            Next panel suggested ~Oct 2026
+          </span>
+        </div>
+        <p style="font-size:12px;color:var(--color-text-muted);margin:0 0 14px;">6 tests · last updated 27 Jul 2026</p>
+
+        <div class="mini-row">
+          <span class="name">Creatinine</span>
+          <span class="val">1.0<span class="u">mg/dL</span></span>
+          <span class="mini-track"><span class="d" style="left:57%;background:var(--status-green)"></span></span>
+          <span class="status-pill sp-green"><span class="d2"></span>Normal</span>
+          <button class="icon-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg></button>
+          <button class="icon-btn ask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.5 8.5 0 01-4-1L3 20l1.1-5.5a8.4 8.4 0 1116.9-3Z"/></svg></button>
+        </div>
+        <div class="mini-row">
+          <span class="name">eGFR</span>
+          <span class="val">98<span class="u">mL/min</span></span>
+          <span class="mini-track"><span class="d" style="left:70%;background:var(--status-green)"></span></span>
+          <span class="status-pill sp-green"><span class="d2"></span>Normal</span>
+          <button class="icon-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg></button>
+          <button class="icon-btn ask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.5 8.5 0 01-4-1L3 20l1.1-5.5a8.4 8.4 0 1116.9-3Z"/></svg></button>
+        </div>
+        <div class="mini-row">
+          <span class="name">Uric Acid</span>
+          <span class="val">8.65<span class="u">mg/dL</span></span>
+          <span class="mini-track"><span class="d" style="left:90%;background:var(--status-yellow)"></span></span>
+          <span class="status-pill sp-yellow"><span class="d2"></span>Above range</span>
+          <button class="icon-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg></button>
+          <button class="icon-btn ask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.5 8.5 0 01-4-1L3 20l1.1-5.5a8.4 8.4 0 1116.9-3Z"/></svg></button>
+        </div>
+        <div class="mini-row">
+          <span class="name">Sodium</span>
+          <span class="val">137<span class="u">mmol/L</span></span>
+          <span class="mini-track"><span class="d" style="left:52%;background:var(--status-green)"></span></span>
+          <span class="status-pill sp-green"><span class="d2"></span>Normal</span>
+          <button class="icon-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg></button>
+          <button class="icon-btn ask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.5 8.5 0 01-4-1L3 20l1.1-5.5a8.4 8.4 0 1116.9-3Z"/></svg></button>
+        </div>
+        <div class="mini-row">
+          <span class="name">Potassium</span>
+          <span class="val">2.6<span class="u">mmol/L</span></span>
+          <span class="mini-track"><span class="d" style="left:8%;background:var(--status-yellow)"></span></span>
+          <span class="status-pill sp-yellow"><span class="d2"></span>Below range</span>
+          <button class="icon-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg></button>
+          <button class="icon-btn ask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.5 8.5 0 01-4-1L3 20l1.1-5.5a8.4 8.4 0 1116.9-3Z"/></svg></button>
+        </div>
+        <div class="mini-row">
+          <span class="name">Chloride</span>
+          <span class="val">94<span class="u">mmol/L</span></span>
+          <span class="mini-track"><span class="d" style="left:0%;background:var(--status-yellow)"></span></span>
+          <span class="status-pill sp-yellow"><span class="d2"></span>Below range</span>
+          <button class="icon-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg></button>
+          <button class="icon-btn ask"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.5 8.5 0 01-4-1L3 20l1.1-5.5a8.4 8.4 0 1116.9-3Z"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
