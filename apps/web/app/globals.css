@@ -128,49 +128,6 @@
   border-color: var(--color-border);
 }
 
-/* Health page's own theme — approved from design/health-page-mockup-v3-soft.html,
- * scoped to just this page's content (not the sidebar/shell) rather than a
- * site-wide rebrand. Deliberately light-only: this is a one-page exception,
- * not a second theme the rest of the app needs to support in dark mode too. */
-.theme-health-soft {
-  --color-bg: #f6f5f9;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f1eff8;
-  --color-border: #e6e3f2;
-  --color-border-strong: #d2cce8;
-  --color-text: #26243a;
-  --color-text-muted: #6d6a87;
-  --color-text-faint: #9d99b5;
-
-  --color-brand: #4b4695;
-  --color-brand-hover: #3c3878;
-  --color-brand-foreground: #f6f5fb;
-  --color-brand-tint: #eae8f8;
-
-  --color-accent: #c9679a;
-  --color-accent-bright: #d47eab;
-  --color-accent-tint: #fbe9f2;
-  --color-accent-foreground: #ffffff;
-
-  --color-danger: #cf5c6e;
-  --color-danger-tint: #fbe6ea;
-
-  --status-green: #3f9066;
-  --status-green-tint: #e2f3e9;
-  --status-yellow: #c98a2e;
-  --status-yellow-tint: #faedd8;
-  --status-orange: #c98a2e;
-  --status-orange-tint: #faedd8;
-  --status-red: #cf5c6e;
-  --status-red-tint: #fbe6ea;
-  --status-neutral: #6d6a87;
-  --status-neutral-tint: #f1eff8;
-
-  --focus-ring: #4b4695;
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
 body {
   background: var(--color-bg);
   color: var(--color-text);

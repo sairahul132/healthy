@@ -17,8 +17,8 @@ import { cn } from "@/lib/utils/cn";
  * Health page: every test browsable on the left, the selected one's full
  * picture (value, range, trend, explainer, recent results) on the right,
  * with a "your test history" scrubber that lets you see what a test showed
- * as of any past report. Scoped to its own theme via the `theme-health-soft`
- * class (see app/globals.css) — the rest of the app keeps its usual palette.
+ * as of any past report. Uses the app's one site-wide theme (same as the
+ * sidebar and every other page), not a separate palette.
  *
  * `initialCategoryId` seeds the selection from the `/health/[id]` deep link
  * (e.g. a report's category chip) by picking that category's first test.
@@ -117,7 +117,7 @@ export function HealthMasterDetail({
   }
 
   return (
-    <div className="theme-health-soft -mx-4 -my-7 min-h-[calc(100%+3.5rem)] px-4 py-6 md:-mx-10 md:-my-9 md:px-8 md:py-8">
+    <div>
       <span className="text-[11px] font-bold tracking-[0.16em] text-[var(--color-accent)] uppercase">
         Your results, organized
       </span>
