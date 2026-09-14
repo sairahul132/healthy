@@ -24,6 +24,7 @@ export function TestListPane({
   selectedCode,
   onSelect,
   viewingDate,
+  statusFilter = "all",
   className,
 }: {
   categories: HealthCategory[];
@@ -31,15 +32,23 @@ export function TestListPane({
   selectedCode: string | null;
   onSelect: (code: string) => void;
   viewingDate: string | null;
+  statusFilter?: "all" | "ok" | "attn";
   className?: string;
 }) {
   const [search, setSearch] = useState("");
 
   const grouped = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const matching = query
+    let matching = query
       ? trends.filter((t) => t.canonicalTestName.toLowerCase().includes(query))
       : trends;
+    if (statusFilter !== "all") {
+      matching = matching.filter((t) => {
+        const direction = latestPointAsOf(t.points, viewingDate)?.status.direction;
+        const isOk = direction === "NORMAL";
+        return statusFilter === "ok" ? isOk : direction !== undefined && !isOk;
+      });
+    }
     const byCategory = new Map<string, TestTrend[]>();
     for (const trend of matching) {
       const list = byCategory.get(trend.category) ?? [];
@@ -52,7 +61,7 @@ export function TestListPane({
     return categories
       .filter((c) => byCategory.has(c.id))
       .map((c) => ({ category: c, tests: byCategory.get(c.id)! }));
-  }, [categories, trends, search]);
+  }, [categories, trends, search, statusFilter, viewingDate]);
 
   return (
     <aside className={cn("overflow-y-auto", className)}>
@@ -82,7 +91,13 @@ export function TestListPane({
 
       {grouped.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-[var(--color-text-faint)]">
-          No tests match &ldquo;{search}&rdquo;.
+          {search
+            ? <>No tests match &ldquo;{search}&rdquo;.</>
+            : statusFilter === "ok"
+              ? "No tests are within range yet."
+              : statusFilter === "attn"
+                ? "Nothing needs attention right now."
+                : "No tests to show."}
         </p>
       ) : (
         grouped.map(({ category, tests }) => (

@@ -42,6 +42,7 @@ export function HealthMasterDetail({ initialCategoryId }: { initialCategoryId?: 
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [viewingDate, setViewingDate] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
+  const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "attn">("all");
 
   const effectiveSelectedCode = useMemo(() => {
     if (selectedCode && sortedTrends.some((t) => t.canonicalCode === selectedCode)) return selectedCode;
@@ -107,9 +108,29 @@ export function HealthMasterDetail({ initialCategoryId }: { initialCategoryId?: 
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile n={totalTests} l="Total tests" s={`Across ${categories.length} categories`} />
-        <StatTile n={inRangeCount} l="Within range" s={`${totalTests ? Math.round((inRangeCount / totalTests) * 100) : 0}% of results`} tone="ok" />
-        <StatTile n={attentionCount} l="Need attention" s={`${totalTests ? Math.round((attentionCount / totalTests) * 100) : 0}% of results`} tone="attn" />
+        <StatTile
+          n={totalTests}
+          l="Total tests"
+          s={`Across ${categories.length} categories`}
+          active={statusFilter === "all"}
+          onClick={() => setStatusFilter("all")}
+        />
+        <StatTile
+          n={inRangeCount}
+          l="Within range"
+          s={`${totalTests ? Math.round((inRangeCount / totalTests) * 100) : 0}% of results`}
+          tone="ok"
+          active={statusFilter === "ok"}
+          onClick={() => setStatusFilter((f) => (f === "ok" ? "all" : "ok"))}
+        />
+        <StatTile
+          n={attentionCount}
+          l="Need attention"
+          s={`${totalTests ? Math.round((attentionCount / totalTests) * 100) : 0}% of results`}
+          tone="attn"
+          active={statusFilter === "attn"}
+          onClick={() => setStatusFilter((f) => (f === "attn" ? "all" : "attn"))}
+        />
         <StatTile
           n={lastReport ? formatDate(lastReport.collectionDate) : "—"}
           l="Last updated"
@@ -178,6 +199,7 @@ export function HealthMasterDetail({ initialCategoryId }: { initialCategoryId?: 
           selectedCode={effectiveSelectedCode}
           onSelect={selectTest}
           viewingDate={effectiveViewingDate}
+          statusFilter={statusFilter}
           className={cn(
             "w-full shrink-0 border-[var(--color-border)] bg-[var(--color-surface-muted)] sm:block sm:w-[300px] sm:border-r",
             mobilePane === "detail" ? "hidden" : "block",
@@ -203,17 +225,27 @@ function StatTile({
   l,
   s,
   tone,
+  active,
+  onClick,
 }: {
   n: number | string;
   l: string;
   s: string;
   tone?: "ok" | "attn";
+  active?: boolean;
+  onClick?: () => void;
 }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div
+    <Tag
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      aria-pressed={onClick ? active : undefined}
       className={cn(
-        "rounded-[14px] border border-[var(--color-border)] p-4",
-        tone === "attn" ? "border-transparent bg-[var(--status-yellow-tint)]" : "bg-[var(--color-surface)]",
+        "rounded-[14px] border p-4 text-left transition-shadow",
+        tone === "attn" ? "border-transparent bg-[var(--status-yellow-tint)]" : "border-[var(--color-border)] bg-[var(--color-surface)]",
+        onClick && "cursor-pointer hover:shadow-[var(--shadow-sm)]",
+        active && onClick ? "ring-2 ring-[var(--color-accent)] ring-offset-1 ring-offset-[var(--color-bg)]" : "",
       )}
     >
       <p
@@ -233,6 +265,6 @@ function StatTile({
         {l}
       </p>
       <p className="mt-0.5 truncate text-[10.5px] text-[var(--color-text-muted)]">{s}</p>
-    </div>
+    </Tag>
   );
 }
