@@ -5,6 +5,7 @@ import type { HealthCategoryId } from "@/lib/api/types";
 import { useHealthCategories, useHealthTrends } from "@/lib/health/hooks";
 import { useReports } from "@/lib/reports/hooks";
 import { latestPointAsOf } from "@/lib/health/as-of";
+import type { HealthStatusFilter } from "@/lib/health/status-filter";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { TestListPane } from "@/components/health/TestListPane";
@@ -16,12 +17,20 @@ import { cn } from "@/lib/utils/cn";
  * Health page: every test browsable on the left, the selected one's full
  * picture (value, range, trend, explainer, recent results) on the right,
  * with a "your test history" scrubber that lets you see what a test showed
- * as of any past report. Uses the app's usual theme (same as the sidebar
- * and every other page) rather than the mockup's own indigo/rose palette.
+ * as of any past report. Scoped to its own theme via the `theme-health-soft`
+ * class (see app/globals.css) — the rest of the app keeps its usual palette.
  *
  * `initialCategoryId` seeds the selection from the `/health/[id]` deep link
- * (e.g. a report's category chip) by picking that category's first test. */
-export function HealthMasterDetail({ initialCategoryId }: { initialCategoryId?: HealthCategoryId }) {
+ * (e.g. a report's category chip) by picking that category's first test.
+ * `initialStatusFilter` seeds the stat-tile filter, e.g. so the dashboard's
+ * "Outside range" list can land directly on the "Need attention" card. */
+export function HealthMasterDetail({
+  initialCategoryId,
+  initialStatusFilter = "all",
+}: {
+  initialCategoryId?: HealthCategoryId;
+  initialStatusFilter?: HealthStatusFilter;
+}) {
   const { data: categories, isLoading: categoriesLoading, isError, refetch } = useHealthCategories();
   const { data: trends, isLoading: trendsLoading } = useHealthTrends();
   const { data: reports } = useReports();
@@ -42,19 +51,29 @@ export function HealthMasterDetail({ initialCategoryId }: { initialCategoryId?: 
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [viewingDate, setViewingDate] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
-  const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "attn">("all");
+  const [statusFilter, setStatusFilter] = useState<HealthStatusFilter>(initialStatusFilter);
+
+  const effectiveViewingDate = viewingDate ?? reportDates.at(-1) ?? null;
 
   const effectiveSelectedCode = useMemo(() => {
-    if (selectedCode && sortedTrends.some((t) => t.canonicalCode === selectedCode)) return selectedCode;
+    const matchesFilter = (trend: (typeof sortedTrends)[number]) => {
+      if (statusFilter === "all") return true;
+      const direction = latestPointAsOf(trend.points, effectiveViewingDate)?.status.direction;
+      const isOk = direction === "NORMAL";
+      return statusFilter === "ok" ? isOk : direction !== undefined && !isOk;
+    };
+    if (selectedCode && sortedTrends.some((t) => t.canonicalCode === selectedCode && matchesFilter(t))) {
+      return selectedCode;
+    }
     const scoped = initialCategoryId
-      ? sortedTrends.find((t) => t.category === initialCategoryId)
+      ? sortedTrends.find((t) => t.category === initialCategoryId && matchesFilter(t))
       : undefined;
-    return (scoped ?? sortedTrends[0])?.canonicalCode ?? null;
-  }, [selectedCode, sortedTrends, initialCategoryId]);
+    const fallback = scoped ?? sortedTrends.find(matchesFilter) ?? sortedTrends[0];
+    return fallback?.canonicalCode ?? null;
+  }, [selectedCode, sortedTrends, initialCategoryId, statusFilter, effectiveViewingDate]);
 
   const selectedTrend = sortedTrends.find((t) => t.canonicalCode === effectiveSelectedCode);
   const selectedCategory = categories?.find((c) => c.id === selectedTrend?.category);
-  const effectiveViewingDate = viewingDate ?? reportDates.at(-1) ?? null;
 
   const lastReport = useMemo(() => {
     const completed = (reports ?? []).filter((r) => r.status === "COMPLETED");
@@ -98,7 +117,7 @@ export function HealthMasterDetail({ initialCategoryId }: { initialCategoryId?: 
   }
 
   return (
-    <div>
+    <div className="theme-health-soft -mx-4 -my-7 min-h-[calc(100%+3.5rem)] px-4 py-6 md:-mx-10 md:-my-9 md:px-8 md:py-8">
       <span className="text-[11px] font-bold tracking-[0.16em] text-[var(--color-accent)] uppercase">
         Your results, organized
       </span>

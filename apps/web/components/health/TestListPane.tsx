@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { HealthCategory, TestTrend } from "@/lib/api/types";
 import { toneFor } from "@/lib/health/status-engine";
 import { latestPointAsOf } from "@/lib/health/as-of";
+import type { HealthStatusFilter } from "@/lib/health/status-filter";
 import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { cn } from "@/lib/utils/cn";
 
@@ -32,7 +33,7 @@ export function TestListPane({
   selectedCode: string | null;
   onSelect: (code: string) => void;
   viewingDate: string | null;
-  statusFilter?: "all" | "ok" | "attn";
+  statusFilter?: HealthStatusFilter;
   className?: string;
 }) {
   const [search, setSearch] = useState("");

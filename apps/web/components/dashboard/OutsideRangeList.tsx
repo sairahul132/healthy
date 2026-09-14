@@ -40,7 +40,7 @@ function OutsideRangeRow({ result }: { result: LabResult }) {
 
   return (
     <Link
-      href={`/health/${result.category}`}
+      href={`/health/${result.category}?filter=attention`}
       className="block border-b border-[var(--color-border)] transition-colors last:border-b-0 hover:bg-[var(--color-surface-muted)]"
     >
       {/* Mobile: stacked */}
