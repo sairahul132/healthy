@@ -2,6 +2,7 @@
 
 import type { AccessRequest } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { formatRelative } from "@/lib/utils/format";
 import {
   useAccessRequests,
@@ -25,7 +26,7 @@ function RequestRow({ request }: { request: AccessRequest }) {
           <p className="text-sm font-semibold text-[var(--color-text)]">
             {request.recipientIdentifierMasked} wants access to{" "}
             <span className="inline-flex items-center gap-1">
-              <span aria-hidden="true">{category.icon}</span>
+              <CategoryIcon id={category.id} />
               {category.label}
             </span>
           </p>

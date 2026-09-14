@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PermissionRole } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { useDeleteRole, usePermissionRoles } from "@/lib/permissions/hooks";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -47,7 +48,7 @@ function RoleRow({ role }: { role: PermissionRole }) {
               key={id}
               className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]"
             >
-              <span aria-hidden="true">{category.icon}</span>
+              <CategoryIcon id={category.id} />
               {category.label}
             </span>
           );

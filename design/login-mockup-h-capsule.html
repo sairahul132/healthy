@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Healthy — Login Mockup H: Capsule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,500&family=Caveat:wght@600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-bg: #f3eee0;
+    --color-surface: #fdfbf4;
+    --color-border: #ddd0a9;
+    --color-text: #1a2118;
+    --color-text-muted: #5c5a44;
+    --color-text-faint: #8b8768;
+    --color-brand: #0e2c1e;
+    --color-brand-hover: #081b12;
+    --color-brand-foreground: #f5efdd;
+    --color-accent: #a9782e;
+    --color-accent-bright: #c79a45;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Geist", Arial, sans-serif; background: var(--color-bg); color: var(--color-text); }
+  .font-display { font-family: "Fraunces", Georgia, serif; }
+  .label { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-family: "Geist"; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6550; background: #fff; padding: 3px 10px; border-radius: 999px; border: 1px solid #ddd0a9; z-index: 8; }
+
+  .stage { position: relative; width: 1600px; height: 1000px; overflow: hidden; background: var(--color-bg); }
+
+  .topbar { position: absolute; top: 48px; left: 80px; right: 80px; display: flex; align-items: center; justify-content: space-between; }
+  .brandmark { display: inline-flex; align-items: center; gap: 10px; }
+  .brandmark .box { width: 34px; height: 34px; border-radius: 8px; border: 2px solid var(--color-brand); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--color-brand); }
+  .brandmark .word { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-brand); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-right span { font-size: 14px; color: var(--color-text-muted); }
+  .topbar-right a { font-size: 14px; font-weight: 500; color: var(--color-brand); border: 1px solid var(--color-brand); border-radius: 999px; padding: 7px 18px; text-decoration: none; }
+
+  .eyebrow-wrap { position: absolute; top: 128px; left: 0; right: 0; text-align: center; }
+  .eyebrow-wrap .kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-accent); margin: 0; }
+  .eyebrow-wrap .headline { font-size: 26px; font-weight: 500; letter-spacing: -0.01em; margin: 10px 0 0; }
+
+  .capsule {
+    position: absolute; top: 268px; left: 50%; transform: translateX(-50%);
+    width: 1260px; height: 500px;
+    border-radius: 170px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 34px 70px -26px rgba(20,20,10,0.34);
+    display: flex;
+    overflow: hidden;
+  }
+  .capsule-left {
+    position: relative;
+    width: 50%; height: 100%;
+    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-hover) 100%);
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 60px 0 130px;
+  }
+  .capsule-left .rings { position: absolute; left: -120px; bottom: -140px; opacity: 0.16; }
+  .capsule-left .mark { font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-accent-bright); margin: 0; }
+  .capsule-left h2 { font-family: "Fraunces"; font-size: 32px; font-weight: 500; line-height: 1.14; color: var(--color-brand-foreground); margin: 10px 0 0; }
+  .capsule-left p { font-size: 14px; line-height: 1.6; color: rgba(245,239,221,0.72); margin: 14px 0 0; max-width: 320px; }
+
+  .seam {
+    position: relative;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--color-accent-bright) 20%, var(--color-accent-bright) 80%, transparent);
+  }
+  .seam .band {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 34px; height: 34px; border-radius: 999px;
+    background: var(--color-surface);
+    border: 2px solid var(--color-accent-bright);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .seam .band .h { font-family: "Fraunces"; font-size: 14px; color: var(--color-accent); font-weight: 600; }
+
+  .capsule-right {
+    width: 50%; height: 100%;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 130px 0 60px;
+  }
+  .capsule-right h3 { font-family: "Fraunces"; font-size: 22px; font-weight: 500; margin: 0; }
+  .capsule-right p.desc { font-size: 13px; color: var(--color-text-muted); margin: 6px 0 0; line-height: 1.5; }
+
+  .field-label { display: block; font-size: 12px; font-weight: 500; color: var(--color-text); margin: 18px 0 5px; }
+  .phone-input { display: flex; align-items: center; border: 1px solid var(--color-border); border-radius: 11px; overflow: hidden; background: #fff; }
+  .phone-input .prefix { padding: 11px 12px; font-size: 14px; font-weight: 500; color: var(--color-text-muted); border-right: 1px solid var(--color-border); background: #faf7ee; }
+  .phone-input input { border: none; outline: none; padding: 11px 12px; font-size: 14px; flex: 1; color: #b3ad94; font-family: "Geist"; }
+
+  .btn { margin-top: 14px; width: 100%; height: 44px; border-radius: 11px; background: var(--color-brand); color: var(--color-brand-foreground); border: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; cursor: pointer; font-family: "Geist"; }
+
+  .mini-terms { font-size: 11px; color: var(--color-text-faint); margin-top: 14px; line-height: 1.5; }
+  .mini-terms b { color: var(--color-text-muted); font-weight: 600; }
+
+  .footer-tag { position: absolute; bottom: 56px; left: 0; right: 0; text-align: center; font-size: 13px; color: var(--color-text-faint); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <span class="label">Option H — Capsule</span>
+
+  <div class="topbar">
+    <div class="brandmark"><span class="box">H</span><span class="word">Healthy</span></div>
+    <div class="topbar-right"><span>New to Healthy?</span><a href="#">Create a vault</a></div>
+  </div>
+
+  <div class="eyebrow-wrap">
+    <p class="kicker">Patient login</p>
+    <h1 class="headline font-display">Your health, finally in one place.</h1>
+  </div>
+
+  <div class="capsule">
+    <div class="capsule-left">
+      <svg class="rings" width="360" height="360" viewBox="0 0 360 360">
+        <circle cx="180" cy="180" r="179" fill="none" stroke="#c79a45" stroke-width="1" />
+        <circle cx="180" cy="180" r="130" fill="none" stroke="#c79a45" stroke-width="1" />
+      </svg>
+      <p class="mark">A healthier tomorrow</p>
+      <h2>For you, your family — and everyone you care about.</h2>
+      <p>One dose of calm: every report, result and visit, kept in a single private place.</p>
+    </div>
+    <div class="seam"><div class="band"><span class="h">H</span></div></div>
+    <div class="capsule-right">
+      <h3>Welcome back</h3>
+      <p class="desc">Enter your mobile number for a one-time code.</p>
+      <label class="field-label">Mobile number</label>
+      <div class="phone-input">
+        <span class="prefix">🇮🇳 +91</span>
+        <input placeholder="Enter your mobile number" />
+      </div>
+      <button class="btn">Send one-time code
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <p class="mini-terms">By continuing, you agree to our <b>Terms</b> and <b>Privacy Policy</b>.</p>
+    </div>
+  </div>
+
+  <p class="footer-tag">Or continue with Google / Apple on the next step</p>
+</div>
+</body>
+</html>

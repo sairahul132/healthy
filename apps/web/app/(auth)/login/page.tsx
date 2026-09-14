@@ -7,8 +7,10 @@ export default function LoginPage() {
   return (
     <PremiumAuthShell
       kicker="Patient login"
-      heroTitle="Your health, finally in one place."
-      heroSubtext="For you, your family — and everyone you care about."
+      pageHeadline="Your health, finally in one place."
+      panelMark="A healthier tomorrow"
+      panelHeadline="For you, your family — and everyone you care about."
+      panelBody="One private place for every report, result, and visit — nothing shared until you say so."
       formTitle="Welcome back"
       formDescription="Enter your mobile number and we'll send a one-time code to sign in."
       headerQuestion="New to Healthy?"

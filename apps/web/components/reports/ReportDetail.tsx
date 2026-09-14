@@ -171,7 +171,7 @@ function ResultsTable({ results }: { results: LabResult[] }) {
                     <button
                       type="button"
                       onClick={() => setExplainingId(explainingId === result.id ? null : result.id)}
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-brand)] hover:gap-1.5"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-accent)] hover:gap-1.5"
                     >
                       {explainingId === result.id ? "Hide" : "Explain"}
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -213,7 +213,7 @@ function ResultGroup({
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[var(--color-surface-muted)] px-5.5 py-4">
         <span className="flex items-center gap-2.5 text-[15px] font-semibold text-[var(--color-text)]">
-          <CategoryIcon id={categoryId} className="text-[var(--color-brand)]" />
+          <CategoryIcon id={categoryId} className="text-[var(--color-accent)]" />
           {category.label}
           <span className="font-normal text-[var(--color-text-faint)]">({results.length})</span>
         </span>
@@ -394,6 +394,9 @@ export function ReportDetail({ reportId }: { reportId: string }) {
       </Link>
 
       <div className="flex flex-col gap-2">
+        <span className="text-[10.5px] font-bold tracking-[0.14em] text-[var(--color-accent)] uppercase">
+          Lab Report
+        </span>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-[28px] font-medium text-[var(--color-text)]">{report.fileName}</h1>
           <span
@@ -435,7 +438,11 @@ export function ReportDetail({ reportId }: { reportId: string }) {
             onDelete={() => setIsDeleteOpen(true)}
           />
 
-          <Card className="@container p-7">
+          <Card className="@container relative overflow-hidden p-7">
+            <span
+              aria-hidden="true"
+              className="absolute top-0 left-7 h-[3px] w-11 rounded-b-full bg-[var(--color-accent)]"
+            />
             <h2 className="font-display text-2xl font-medium text-[var(--color-text)]">Health Summary</h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               {summary.attention > 0
@@ -470,19 +477,24 @@ export function ReportDetail({ reportId }: { reportId: string }) {
                   {summary.total > 0 ? Math.round((summary.notAvailable / summary.total) * 100) : 0}% of results
                 </p>
               </div>
-              <div className="rounded-xl bg-[var(--color-brand-tint)] p-4">
-                <p className="font-display text-[26px] font-semibold text-[var(--color-brand)]">
+              <div className="rounded-xl bg-[var(--color-brand)] p-4">
+                <p className="font-display text-[26px] font-semibold text-[var(--color-accent-bright)]">
                   {summary.total}
                 </p>
-                <p className="mt-1 text-[13px] font-semibold text-[var(--color-brand)]">Total results</p>
-                <p className="text-[11.5px] text-[var(--color-text-muted)]">Analysed from this report</p>
+                <p className="mt-1 text-[13px] font-semibold text-[var(--color-brand-foreground)] opacity-85">
+                  Total results
+                </p>
+                <p className="text-[11.5px] text-[var(--color-brand-foreground)]/50">Analysed from this report</p>
               </div>
             </div>
           </Card>
 
           <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
             <div id="results" className="flex flex-col gap-4">
-              <h2 className="font-display text-xl font-medium text-[var(--color-text)]">Results</h2>
+              <div className="flex items-baseline gap-3">
+                <h2 className="font-display text-xl font-medium text-[var(--color-text)]">Results</h2>
+                <span aria-hidden="true" className="h-px flex-1 bg-[var(--color-border-strong)]" />
+              </div>
 
               {filteredResults.length === 0 ? (
                 <EmptyState
@@ -564,7 +576,7 @@ export function ReportDetail({ reportId }: { reportId: string }) {
               {trendResults.length > 0 ? (
                 <Card className="p-5">
                   <h3 className="mb-3 flex items-center gap-2 text-[15px] font-bold text-[var(--color-text)]">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.9">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="1.9">
                       <path d="M3 17 9 11l4 4 8-9" />
                       <path d="M15 6h6v6" />
                     </svg>
@@ -615,7 +627,7 @@ export function ReportDetail({ reportId }: { reportId: string }) {
 
               <Card className="p-5">
                 <h3 className="mb-2 flex items-center gap-2 text-[15px] font-bold text-[var(--color-text)]">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.9">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="1.9">
                     <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5a8.4 8.4 0 1 1 16.9-3Z" />
                   </svg>
                   Have questions?

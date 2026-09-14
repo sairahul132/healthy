@@ -1,56 +1,56 @@
-import { statSync } from "node:fs";
-import path from "node:path";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { HeroSceneCarousel } from "./HeroSceneCarousel";
-
-/** The hero images get swapped out (same filename, new bytes) periodically
- * as better artwork arrives. A file's mtime as a cache-busting `?v=`
- * query param means every real swap gets a new URL, so browsers that
- * cached the old `/_next/image?...` response can't keep serving it. This
- * runs server-side (PremiumAuthShell isn't a client component) so it
- * always reflects the file that's actually on disk right now. */
-function assetVersion(publicRelativePath: string): number {
-  try {
-    return Math.round(statSync(path.join(process.cwd(), "public", publicRelativePath)).mtimeMs);
-  } catch {
-    return 0;
-  }
-}
+import { VaultDoor } from "./VaultDoor";
 
 interface PremiumAuthShellProps {
+  /** Small uppercase label above the page-level headline, e.g. "Patient login". */
   kicker: string;
-  heroTitle: string;
-  heroSubtext: string;
+  /** Large serif headline shown once, above the capsule. */
+  pageHeadline: string;
+  /** Small uppercase label at the top of the capsule's dark panel. */
+  panelMark: string;
+  /** Supporting headline inside the dark panel — distinct from
+   * `pageHeadline` so the two don't just repeat each other. */
+  panelHeadline: string;
+  panelBody: string;
+  /** Optional chip rendered under the dark panel's copy — used by the
+   * verify page to surface the masked phone number being confirmed. */
+  panelBadge?: ReactNode;
   formTitle: string;
   formDescription: string;
-  headerQuestion: string;
+  /** Paired with `headerCtaLabel`/`headerCtaHref` to render "<question>
+   * <pill link>" (login/register). Omit to render `headerCtaLabel` as a
+   * plain back-arrow link instead (verify's "Wrong number?"). */
+  headerQuestion?: string;
   headerCtaLabel: string;
   headerCtaHref: string;
   children: ReactNode;
 }
 
-/** Hero-scene login shell used by the login and register pages only — a
- * minimal split composition: a wide brand panel (logo, headline, a
- * full-bleed composed character scene) beside a card-based form.
- * Deliberately a separate component from AuthShell (which stays on
- * verify and the share-recipient flow) so this redesign can't touch
- * either of those.
+/** Shared shell for login, register and verify — a capsule-shaped panel
+ * (a lozenge, not a literal full stadium: the radius is capped so content
+ * never runs into the curve regardless of how tall a given page's form
+ * is) split by a gold seam into a dark brand half and a light form half,
+ * with a small "H" medallion sitting on the seam. Below `lg` there isn't
+ * room for two panels side by side, so the halves stack — dark copy block
+ * on top with rounded bottom corners, form card below — and the medallion
+ * moves to sit on that horizontal seam instead so the brand mark survives
+ * the breakpoint change.
  *
- * Fits the viewport with no page scroll (`h-dvh overflow-hidden`) — `dvh`
- * rather than `vh` so mobile browsers' collapsing address bar doesn't
- * leave a sliver cut off. Every size below `lg` is deliberately compact
- * (smaller type, tighter gaps, a short hero strip instead of a tall one)
- * because fitting a phone input, primary button, two social buttons, and
- * legal text in whatever's left after the hero and header, on the
- * shortest real phones (~650-700px tall), doesn't leave room for
- * generous spacing. None of this has been visually verified pixel-by-
- * pixel — it's sized from measuring each element's own rendered height,
- * not eyeballed. */
+ * The dark panel carries a VaultDoor graphic (`seal` text off — too fine
+ * to read at this scale) bleeding off the bottom-left corner, echoing the
+ * landing page's hero so the whole signed-out funnel shares one motif.
+ *
+ * Replaces the old split hero-photo layout. AuthShell (a different,
+ * plainer two-pane component) still exists separately for the
+ * share-recipient flow, which has no reason to pick up this treatment. */
 export function PremiumAuthShell({
   kicker,
-  heroTitle,
-  heroSubtext,
+  pageHeadline,
+  panelMark,
+  panelHeadline,
+  panelBody,
+  panelBadge,
   formTitle,
   formDescription,
   headerQuestion,
@@ -58,97 +58,95 @@ export function PremiumAuthShell({
   headerCtaHref,
   children,
 }: PremiumAuthShellProps) {
-  const heroVersions: [number, number] = [
-    assetVersion("characters/ui.png"),
-    assetVersion("characters/ui1.png"),
-  ];
-
   return (
-    <main className="flex h-dvh w-full flex-col overflow-hidden bg-[var(--color-bg)] lg:flex-row">
-      <div
-        className="relative flex h-[20vh] min-h-[104px] max-h-[200px] shrink-0 flex-col overflow-hidden bg-[var(--color-brand-hover)] px-5 py-3 sm:h-[28vh] sm:min-h-[190px] sm:max-h-[300px] sm:px-8 sm:py-6 lg:h-full lg:max-h-none lg:w-[64%] lg:px-14 lg:py-10 xl:px-16 2xl:max-w-[1500px]"
-        style={{
-          paddingTop: "max(1rem, env(safe-area-inset-top))",
-          paddingLeft: "max(1.25rem, env(safe-area-inset-left))",
-        }}
-      >
-        <HeroSceneCarousel versions={heroVersions} />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-transparent"
-        />
-
-        <Link href="/" className="relative z-10 inline-flex w-fit items-center gap-2 focus-visible:outline-none sm:gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[var(--color-brand-foreground)] sm:h-9 sm:w-9 sm:rounded-xl lg:h-10 lg:w-10">
-            <span className="font-display text-sm font-bold text-[var(--color-brand-foreground)] sm:text-base lg:text-lg">
-              H
-            </span>
+    <main
+      className="flex min-h-dvh w-full flex-col items-center bg-[var(--color-bg)] px-5 py-6 sm:px-8 sm:py-8 lg:py-10"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
+      <div className="flex w-full max-w-[1220px] items-center justify-between">
+        <Link href="/" className="inline-flex items-center gap-2 focus-visible:outline-none">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-[var(--color-brand)] sm:h-9 sm:w-9">
+            <span className="font-display text-sm font-bold text-[var(--color-brand)] sm:text-base">H</span>
           </span>
-          <span className="font-display text-base font-semibold tracking-tight text-[var(--color-brand-foreground)] sm:text-lg lg:text-xl">
+          <span className="font-display text-base font-semibold tracking-tight text-[var(--color-brand)] sm:text-lg">
             Healthy
           </span>
         </Link>
 
-        <div className="relative z-10 mt-3 max-w-xl sm:mt-6 lg:mt-12">
-          <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)] sm:block">
-            {kicker}
-          </p>
-          <h1 className="font-display mt-0 text-[19px] font-medium leading-[1.15] tracking-tight text-[var(--color-brand-foreground)] sm:mt-2 sm:text-[28px] sm:leading-[1.12] lg:text-[46px] lg:leading-[1.08]">
-            {heroTitle}
-          </h1>
-          <p className="mt-3 hidden max-w-md text-[15px] leading-relaxed text-[var(--color-brand-foreground)]/70 sm:block">
-            {heroSubtext}
-          </p>
-        </div>
-
-        <div className="flex-1" />
-
-        <p className="font-script relative z-10 hidden text-xl leading-none text-[var(--color-brand-foreground)]/80 lg:block">
-          A healthier tomorrow together ♡
-        </p>
-      </div>
-
-      <div
-        className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-3 sm:px-10 sm:py-5 lg:px-14 lg:py-10 xl:px-16"
-        style={{
-          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-          paddingRight: "max(1.25rem, env(safe-area-inset-right))",
-        }}
-      >
-        {/* Header and footer are normal flow, not absolutely positioned —
-           an earlier version centered the card against the whole panel via
-           `absolute inset-0`, which let it overlap this header/footer on
-           shorter viewports where the card is tall relative to the
-           available height. Normal flow can't overlap: header and footer
-           always keep their own space, and the card centers in whatever's
-           left between them. */}
-        <div className="flex items-center justify-end gap-3">
-          <span className="hidden text-sm text-[var(--color-text-muted)] sm:inline">{headerQuestion}</span>
+        {headerQuestion ? (
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-[var(--color-text-muted)] sm:inline">{headerQuestion}</span>
+            <Link
+              href={headerCtaHref}
+              className="inline-flex min-h-9 items-center rounded-full border border-[var(--color-brand)] px-4 py-1.5 text-xs font-medium text-[var(--color-brand)] transition-colors hover:bg-[var(--color-brand)]/5 sm:text-sm"
+            >
+              {headerCtaLabel}
+            </Link>
+          </div>
+        ) : (
           <Link
             href={headerCtaHref}
-            className="inline-flex min-h-9 items-center rounded-full border border-[var(--color-brand)] px-4 py-1.5 text-xs font-medium text-[var(--color-brand)] transition-colors hover:bg-[var(--color-brand)]/5 sm:min-h-11 sm:px-5 sm:py-2 sm:text-sm"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-brand)] hover:underline"
           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M19 12H5M11 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
             {headerCtaLabel}
           </Link>
-        </div>
+        )}
+      </div>
 
-        <div className="flex min-h-0 flex-1 items-center justify-center py-1 sm:py-6">
-          <div className="max-h-full w-full max-w-[420px] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-lg)] sm:rounded-3xl sm:p-8 lg:p-10">
-            <h2 className="font-display text-[20px] font-medium tracking-tight text-[var(--color-text)] sm:text-[26px] lg:text-[30px]">
-              {formTitle}
+      <div className="flex w-full max-w-[1220px] flex-1 flex-col items-center justify-center py-8 lg:py-6">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+          {kicker}
+        </p>
+        <h1 className="font-display mt-2 max-w-2xl text-center text-[26px] font-medium leading-[1.15] tracking-tight text-[var(--color-text)] sm:text-[32px] lg:text-[38px]">
+          {pageHeadline}
+        </h1>
+
+        <div className="relative mt-8 w-full max-w-[1080px] overflow-hidden rounded-[28px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_28px_64px_-26px_rgb(var(--shadow-color)/0.45)] sm:mt-10 lg:flex lg:rounded-[64px]">
+          <div className="relative flex flex-col gap-3 overflow-hidden bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-hover)] px-7 py-8 sm:px-10 sm:py-10 lg:w-[42%] lg:justify-center lg:px-14 lg:py-12">
+            <div className="pointer-events-none absolute -bottom-44 -left-36 opacity-45 sm:-bottom-40 sm:-left-32">
+              <VaultDoor className="w-64 sm:w-80 lg:w-96" showSeal={false} />
+            </div>
+            <p className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-bright)]">
+              {panelMark}
+            </p>
+            <h2 className="font-display relative max-w-sm text-[19px] font-medium leading-snug text-[var(--color-brand-foreground)] sm:text-[22px] lg:text-[24px]">
+              {panelHeadline}
             </h2>
-            <p className="mt-1 text-[13px] leading-snug text-[var(--color-text-muted)] sm:mt-2 sm:text-[15px] sm:leading-relaxed">
+            <p className="relative max-w-xs text-[13px] leading-relaxed text-[var(--color-brand-foreground)]/70 sm:text-[13.5px]">
+              {panelBody}
+            </p>
+            {panelBadge ? <div className="relative mt-4">{panelBadge}</div> : null}
+          </div>
+
+          <div className="relative hidden shrink-0 lg:block lg:w-px">
+            <div className="absolute inset-y-10 left-0 w-px bg-gradient-to-b from-transparent via-[var(--color-accent-bright)] to-transparent opacity-80" />
+            <div className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[var(--color-accent-bright)] bg-[var(--color-surface)]">
+              <span className="font-display text-sm font-semibold text-[var(--color-accent)]">H</span>
+            </div>
+          </div>
+
+          <div className="relative z-10 -mt-[18px] flex justify-center lg:hidden">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[var(--color-accent-bright)] bg-[var(--color-surface)] shadow-sm">
+              <span className="font-display text-sm font-semibold text-[var(--color-accent)]">H</span>
+            </div>
+          </div>
+
+          <div className="px-7 pb-9 pt-4 sm:px-10 sm:pb-10 lg:flex lg:w-[58%] lg:flex-col lg:justify-center lg:px-14 lg:py-12">
+            <h3 className="font-display text-[20px] font-medium tracking-tight text-[var(--color-text)] sm:text-[22px]">
+              {formTitle}
+            </h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--color-text-muted)] sm:text-sm">
               {formDescription}
             </p>
-            <div className="mt-4 sm:mt-7">{children}</div>
+            <div className="mt-5 sm:mt-6">{children}</div>
           </div>
         </div>
-
-        <p className="font-script hidden text-center text-lg leading-tight text-[var(--color-text-muted)] lg:block">
-          Healthier People
-          <br />
-          Happier Homes ♡
-        </p>
       </div>
     </main>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { HealthCategoryId } from "@/lib/api/types";
 import { useDoctorPatientCategories, useDoctorPatientCategoryResults } from "@/lib/doctor/hooks";
 import { getCategory } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { formatDateTime } from "@/lib/utils/format";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { ResultRow } from "@/components/reports/ResultRow";
@@ -65,7 +66,7 @@ export function PatientCategoriesView({ sessionId }: { sessionId: string }) {
                 className="rounded-xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4"
               >
                 <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-faint)]">
-                  <span aria-hidden="true">{category.icon}</span>
+                  <CategoryIcon id={category.id} />
                   {category.label}
                 </p>
                 <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--color-text-faint)]">
@@ -80,7 +81,7 @@ export function PatientCategoriesView({ sessionId }: { sessionId: string }) {
               className="rounded-xl border border-[var(--status-green)]/25 bg-[var(--status-green-tint)] p-4"
             >
               <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text)]">
-                <span aria-hidden="true">{category.icon}</span>
+                <CategoryIcon id={category.id} />
                 {category.label}
               </p>
               <p className="mt-1 text-xs font-medium text-[var(--status-green)]">Available</p>

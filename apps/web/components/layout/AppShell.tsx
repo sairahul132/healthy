@@ -11,8 +11,9 @@ import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { status, refresh } = useSession();
+  const { user, status, refresh } = useSession();
   const router = useRouter();
+  const memberSinceYear = user?.createdAt ? new Date(user.createdAt).getFullYear() : null;
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -54,17 +55,37 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg)]">
-      <aside className="hidden w-[235px] shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-muted)]/60 md:flex md:flex-col">
-        <div className="px-5 py-6">
-          <LogoBlock />
+      <aside className="relative hidden w-[235px] shrink-0 flex-col overflow-hidden bg-gradient-to-b from-[var(--color-brand)] to-[var(--color-brand-hover)] shadow-[10px_0_32px_-16px_rgb(var(--shadow-color)/0.4)] md:flex">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-[2px] opacity-70"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, var(--color-accent-bright) 45%, var(--color-accent-bright) 55%, transparent)",
+          }}
+        />
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-20 -bottom-24 opacity-[0.12]"
+          width="280"
+          height="280"
+          viewBox="0 0 360 360"
+        >
+          <circle cx="180" cy="180" r="179" fill="none" stroke="var(--color-accent-bright)" strokeWidth="1" />
+          <circle cx="180" cy="180" r="130" fill="none" stroke="var(--color-accent-bright)" strokeWidth="1" />
+          <circle cx="180" cy="180" r="80" fill="none" stroke="var(--color-accent-bright)" strokeWidth="1" />
+        </svg>
+
+        <div className="relative px-5 py-6">
+          <LogoBlock inverted />
         </div>
-        <Sidebar className="flex-1" />
-        <div className="p-4">
-          <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4.5 py-4 shadow-sm">
+        <Sidebar className="relative flex-1" />
+        <div className="relative p-4">
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--color-brand-foreground)]/15 bg-[var(--color-brand-foreground)]/[0.06] px-4.5 py-4">
             <svg
               aria-hidden="true"
               viewBox="0 0 64 64"
-              className="pointer-events-none absolute -right-3.5 -bottom-3.5 h-16 w-16 text-[var(--color-brand)] opacity-[0.35]"
+              className="pointer-events-none absolute -right-3.5 -bottom-3.5 h-16 w-16 text-[var(--color-accent-bright)] opacity-30"
             >
               <path
                 d="M56 8C40 8 22 18 22 40c0 6 2 10 2 10"
@@ -72,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 stroke="currentColor"
                 strokeWidth="1.4"
                 strokeLinecap="round"
-                opacity="0.7"
+                opacity="0.8"
               />
               <path
                 d="M24 50c6-16 16-26 32-32"
@@ -80,21 +101,26 @@ export function AppShell({ children }: { children: ReactNode }) {
                 stroke="currentColor"
                 strokeWidth="1.4"
                 strokeLinecap="round"
-                opacity="0.45"
+                opacity="0.5"
               />
             </svg>
-            <p className="font-display text-[17px] font-medium leading-tight text-[var(--color-brand-hover)]">
+            {memberSinceYear ? (
+              <p className="relative text-[9.5px] font-semibold tracking-[0.14em] text-[var(--color-accent-bright)] uppercase">
+                Member since {memberSinceYear}
+              </p>
+            ) : null}
+            <p className="relative mt-1.5 font-display text-[17px] leading-tight font-medium text-[var(--color-brand-foreground)]">
               Better Care
               <br />
               Together
             </p>
-            <p className="relative mt-2 max-w-[15ch] text-[12px] leading-relaxed text-[var(--color-text-muted)]">
+            <p className="relative mt-2 max-w-[15ch] text-[12px] leading-relaxed text-[var(--color-brand-foreground)]/55">
               Small steps today for a healthier tomorrow
             </p>
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="relative mt-2.5 h-4 w-4 text-[var(--color-brand)] opacity-70"
+              className="relative mt-2.5 h-4 w-4 text-[var(--color-accent-bright)]"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Healthy — Landing Mockup 1: Capsule Hero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-bg: #f3eee0;
+    --color-surface: #fdfbf4;
+    --color-surface-muted: #ede5cf;
+    --color-border: #ddd0a9;
+    --color-text: #1a2118;
+    --color-text-muted: #5c5a44;
+    --color-text-faint: #8b8768;
+    --color-brand: #0e2c1e;
+    --color-brand-hover: #081b12;
+    --color-brand-foreground: #f5efdd;
+    --color-accent: #a9782e;
+    --color-accent-bright: #c79a45;
+    --color-accent-tint: #f2e5c4;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Geist", Arial, sans-serif; background: var(--color-bg); color: var(--color-text); }
+  .font-display { font-family: "Fraunces", Georgia, serif; }
+  .label { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6550; background: #fff; padding: 3px 10px; border-radius: 999px; border: 1px solid #ddd0a9; z-index: 20; }
+
+  .wrap { width: 1600px; margin: 0 auto; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 34px 72px; }
+  .brandmark { display: inline-flex; align-items: center; gap: 10px; }
+  .brandmark .box { width: 34px; height: 34px; border-radius: 8px; border: 2px solid var(--color-brand); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--color-brand); }
+  .brandmark .word { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-brand); }
+  nav { display: flex; align-items: center; gap: 14px; }
+  nav a.ghost { font-size: 14px; font-weight: 500; color: var(--color-text-muted); text-decoration: none; padding: 9px 6px; }
+  nav a.solid { font-size: 14px; font-weight: 500; color: var(--color-brand-foreground); background: var(--color-brand); border-radius: 999px; padding: 10px 20px; text-decoration: none; }
+
+  .hero-top { text-align: center; padding: 8px 24px 0; }
+  .kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--color-accent); margin: 0; }
+
+  .capsule {
+    position: relative;
+    margin: 34px 72px 0;
+    border-radius: 72px;
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 40px 80px -30px rgba(20,20,10,0.34);
+    border: 1px solid var(--color-border);
+  }
+  .capsule-left {
+    position: relative;
+    width: 54%;
+    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-hover) 100%);
+    padding: 84px 40px 84px 96px;
+    display: flex; flex-direction: column; justify-content: center;
+    overflow: hidden;
+  }
+  .capsule-left .rings { position: absolute; right: -100px; bottom: -140px; opacity: 0.14; }
+  .capsule-left h1 { font-family: "Fraunces"; font-size: 50px; font-weight: 500; line-height: 1.08; letter-spacing: -0.01em; color: var(--color-brand-foreground); margin: 0; max-width: 640px; }
+  .capsule-left p { font-size: 16px; line-height: 1.6; color: rgba(245,239,221,0.72); margin: 22px 0 0; max-width: 480px; }
+  .cta-row { display: flex; gap: 14px; margin-top: 34px; }
+  .btn-primary { background: var(--color-accent-bright); color: #241a06; border: none; border-radius: 999px; padding: 15px 28px; font-size: 15px; font-weight: 600; font-family: "Geist"; cursor: pointer; }
+  .btn-secondary { background: transparent; color: var(--color-brand-foreground); border: 1px solid rgba(245,239,221,0.4); border-radius: 999px; padding: 15px 28px; font-size: 15px; font-weight: 500; font-family: "Geist"; cursor: pointer; }
+
+  .seam { position: relative; width: 1px; background: linear-gradient(180deg, transparent, var(--color-accent-bright) 15%, var(--color-accent-bright) 85%, transparent); }
+  .seam .band { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 44px; height: 44px; border-radius: 999px; background: var(--color-surface); border: 2px solid var(--color-accent-bright); display: flex; align-items: center; justify-content: center; font-family: "Fraunces"; font-size: 18px; color: var(--color-accent); font-weight: 600; }
+
+  .capsule-right { width: 46%; background: var(--color-surface); padding: 64px 84px 64px 56px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+  .preview-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-faint); }
+  .preview-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 18px; padding: 20px; box-shadow: 0 16px 34px -18px rgba(20,20,10,0.22); }
+  .preview-card .row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .preview-card .fname { font-family: "Fraunces"; font-size: 15px; font-weight: 500; }
+  .status-ok { font-size: 11px; font-weight: 600; color: #3d6b4a; background: #e4efe1; padding: 3px 9px; border-radius: 999px; }
+  .preview-card .meta { font-size: 12px; color: var(--color-text-muted); margin-top: 3px; }
+  .pill-row { display: flex; gap: 6px; margin-top: 12px; }
+  .pill { font-size: 11px; color: var(--color-text-muted); background: var(--color-surface-muted); border-radius: 999px; padding: 4px 10px; }
+  .summary-line { margin-top: 12px; font-size: 12.5px; color: var(--color-text-muted); border-top: 1px solid var(--color-border); padding-top: 10px; }
+  .stat-strip { display: flex; gap: 10px; margin-top: 4px; }
+  .stat { flex: 1; background: var(--color-accent-tint); border-radius: 14px; padding: 14px 16px; }
+  .stat .n { font-family: "Fraunces"; font-size: 22px; font-weight: 500; color: var(--color-accent); }
+  .stat .l { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-faint); margin-top: 2px; }
+
+  .highlights { max-width: 1320px; margin: 72px auto 0; padding: 0 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .hcard { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 18px; padding: 24px; }
+  .hcard .icon { width: 40px; height: 40px; border-radius: 12px; background: var(--color-accent-tint); color: var(--color-accent); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .hcard h3 { font-family: "Fraunces"; font-size: 15px; font-weight: 500; margin: 0; }
+  .hcard p { font-size: 12.5px; line-height: 1.55; color: var(--color-text-muted); margin: 7px 0 0; }
+
+  .trust { position: relative; margin-top: 100px; overflow: hidden; background: linear-gradient(180deg, var(--color-brand) 0%, var(--color-brand-hover) 100%); padding: 84px 72px; }
+  .trust-hair { position: absolute; inset-inline: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--color-accent-bright) 45%, var(--color-accent-bright) 55%, transparent); opacity: .7; }
+  .trust .rings { position: absolute; top: -100px; right: -100px; opacity: 0.1; }
+  .trust-head { text-align: center; max-width: 640px; margin: 0 auto; }
+  .trust-head .kicker { color: var(--color-accent-bright); }
+  .trust-head h2 { font-family: "Fraunces"; font-size: 36px; font-weight: 500; color: var(--color-brand-foreground); margin: 12px 0 0; }
+  .trust-head p { font-size: 15px; color: rgba(245,239,221,0.65); margin: 14px 0 0; line-height: 1.6; }
+  .trust-grid { max-width: 1100px; margin: 56px auto 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .tcard { background: rgba(245,239,221,0.05); border: 1px solid rgba(245,239,221,0.12); border-radius: 18px; padding: 26px; }
+  .tcard .icon { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(199,154,69,0.3); color: var(--color-accent-bright); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .tcard h3 { font-family: "Fraunces"; font-size: 15px; color: var(--color-brand-foreground); margin: 0; }
+  .tcard p { font-size: 12.5px; color: rgba(245,239,221,0.6); margin: 8px 0 0; line-height: 1.55; }
+
+  footer { text-align: center; padding: 56px 24px; }
+  footer .brandmark { justify-content: center; opacity: 0.7; }
+  footer p { font-size: 12px; color: var(--color-text-faint); margin-top: 8px; }
+</style>
+</head>
+<body>
+<span class="label">Landing Mockup 1 — Capsule Hero</span>
+<div class="wrap">
+  <header>
+    <div class="brandmark"><span class="box">H</span><span class="word">Healthy</span></div>
+    <nav><a class="ghost" href="#">Log in</a><a class="solid" href="#">Create your vault</a></nav>
+  </header>
+
+  <div class="hero-top"><p class="kicker">Private · Personal · Permissioned</p></div>
+
+  <div class="capsule">
+    <div class="capsule-left">
+      <svg class="rings" width="420" height="420" viewBox="0 0 360 360"><circle cx="180" cy="180" r="179" fill="none" stroke="#c79a45" stroke-width="1"/><circle cx="180" cy="180" r="130" fill="none" stroke="#c79a45" stroke-width="1"/></svg>
+      <h1>Your health data.<br>Your vault. Your permission.</h1>
+      <p>A private place to keep your lab reports, structured and explained — shared only when you say so.</p>
+      <div class="cta-row">
+        <button class="btn-primary">Create your vault</button>
+        <button class="btn-secondary">Log in</button>
+      </div>
+    </div>
+    <div class="seam"><div class="band">H</div></div>
+    <div class="capsule-right">
+      <p class="preview-tag">Your vault, structured</p>
+      <div class="preview-card">
+        <div class="row1"><span class="fname">CBC_and_Lipid_Panel.pdf</span><span class="status-ok">All in range</span></div>
+        <p class="meta">12 Aug 2025 · Apollo Diagnostics</p>
+        <div class="pill-row"><span class="pill">Blood</span><span class="pill">Metabolic</span></div>
+        <p class="summary-line">18 of 18 tests within range</p>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="n">312</div><div class="l">Reports vaulted</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">Public links</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlights">
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M12 19V5M19 19v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><h3>Structured, not stacked</h3><p>Every report becomes readable data — values, ranges, trends, not another PDF to scroll through.</p></div>
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="7" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="6" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="18" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Yours to share</h3><p>Nothing leaves your vault until you choose who sees it, and for how long.</p></div>
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Built like a vault</h3><p>Encrypted storage, audit trails, and zero-trust access by design.</p></div>
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10z" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Explained, not just numbers</h3><p>Ask Healthy puts every result in plain English — what changed, and whether it matters.</p></div>
+  </div>
+
+  <section class="trust">
+    <div class="trust-hair"></div>
+    <svg class="rings" width="420" height="420" viewBox="0 0 360 360"><circle cx="180" cy="180" r="179" fill="none" stroke="#c79a45" stroke-width="1"/><circle cx="180" cy="180" r="130" fill="none" stroke="#c79a45" stroke-width="1"/><circle cx="180" cy="180" r="80" fill="none" stroke="#c79a45" stroke-width="1"/></svg>
+    <div class="trust-head">
+      <p class="kicker">Privacy by design</p>
+      <h2>Nothing about you is public.</h2>
+      <p>No public profile, no indexed pages, no default sharing. Your vault is private the moment you create it, and stays that way unless you decide otherwise.</p>
+    </div>
+    <div class="trust-grid">
+      <div class="tcard"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Private storage. No public link, ever.</h3><p>Your files live in encrypted, access-controlled storage — reports are only ever readable by you.</p></div>
+      <div class="tcard"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>You approve every share.</h3><p>A specific person, specific categories, an expiry you set — verified with a one-time code.</p></div>
+      <div class="tcard"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 12h6M9 15.5h6" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Every access, logged.</h3><p>Every view, download, and share is written to an audit trail tied to your account.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="brandmark"><span class="box">H</span><span class="word">Healthy</span></div>
+    <p>Private by default. Shared only when you say so.</p>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Healthy — Landing Mockup 2: Vault Door</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-bg: #f3eee0;
+    --color-surface: #fdfbf4;
+    --color-surface-muted: #ede5cf;
+    --color-border: #ddd0a9;
+    --color-text: #1a2118;
+    --color-text-muted: #5c5a44;
+    --color-text-faint: #8b8768;
+    --color-brand: #0e2c1e;
+    --color-brand-hover: #081b12;
+    --color-brand-foreground: #f5efdd;
+    --color-accent: #a9782e;
+    --color-accent-bright: #c79a45;
+    --color-accent-tint: #f2e5c4;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Geist", Arial, sans-serif; background: var(--color-bg); color: var(--color-text); }
+  .font-display { font-family: "Fraunces", Georgia, serif; }
+  .label { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6550; background: #fff; padding: 3px 10px; border-radius: 999px; border: 1px solid #ddd0a9; z-index: 20; }
+
+  .wrap { width: 1600px; margin: 0 auto; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 34px 72px; }
+  .brandmark { display: inline-flex; align-items: center; gap: 10px; }
+  .brandmark .box { width: 34px; height: 34px; border-radius: 8px; border: 2px solid var(--color-brand); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--color-brand); }
+  .brandmark .word { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-brand); }
+  nav { display: flex; align-items: center; gap: 14px; }
+  nav a.ghost { font-size: 14px; font-weight: 500; color: var(--color-text-muted); text-decoration: none; padding: 9px 6px; }
+  nav a.solid { font-size: 14px; font-weight: 500; color: var(--color-brand-foreground); background: var(--color-brand); border-radius: 999px; padding: 10px 20px; text-decoration: none; }
+
+  .hero { position: relative; display: flex; align-items: center; gap: 40px; padding: 56px 72px 40px; }
+  .hero-glow { position: absolute; top: -220px; left: 50%; width: 980px; height: 720px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle, rgba(169,120,46,0.14) 0%, transparent 68%); pointer-events: none; z-index: 0; }
+  .hero-copy { position: relative; z-index: 1; flex: 0 0 46%; }
+  .kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--color-accent); margin: 0; }
+  .hero-copy h1 { font-family: "Fraunces"; font-size: 52px; font-weight: 500; line-height: 1.08; letter-spacing: -0.01em; margin: 16px 0 0; }
+  .hero-copy p { font-size: 16px; line-height: 1.65; color: var(--color-text-muted); margin: 22px 0 0; max-width: 440px; }
+  .cta-row { display: flex; gap: 14px; margin-top: 32px; }
+  .btn-primary { background: var(--color-brand); color: var(--color-brand-foreground); border: none; border-radius: 999px; padding: 15px 28px; font-size: 15px; font-weight: 600; font-family: "Geist"; cursor: pointer; }
+  .btn-secondary { background: transparent; color: var(--color-brand); border: 1px solid var(--color-brand); border-radius: 999px; padding: 15px 28px; font-size: 15px; font-weight: 500; font-family: "Geist"; cursor: pointer; }
+  .reassure { display: flex; align-items: center; gap: 8px; margin-top: 22px; font-size: 12.5px; color: var(--color-text-faint); }
+  .reassure svg { flex-shrink: 0; color: var(--color-accent); }
+
+  .door-wrap { position: relative; z-index: 1; flex: 1; display: flex; justify-content: center; }
+  .door { position: relative; width: 560px; height: 560px; }
+  .badge { position: absolute; width: 158px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 12px 14px; box-shadow: 0 14px 30px -16px rgba(20,20,10,0.28); z-index: 3; }
+  .badge .n { display: flex; align-items: center; gap: 6px; font-family: "Fraunces"; font-size: 17px; color: var(--color-text); }
+  .badge .n svg { flex-shrink: 0; color: var(--color-accent); }
+  .badge .l { font-size: 10.5px; color: var(--color-text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .badge.top { top: -10px; left: -52px; }
+  .badge.right { top: 50%; right: -84px; transform: translateY(-50%); }
+  .badge.bottom { bottom: -4px; left: -30px; }
+
+  /* Motion: a one-time "arrival" as the door settles into place, then a
+     near-imperceptible continuous drift on the dial ring only — everything
+     else stays still. Guarded behind prefers-reduced-motion so the base,
+     non-animated markup (full opacity, no rotation) IS the reduced-motion
+     experience — these rules only ever ADD motion on top of it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .door-base { animation: doorFadeScale 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .door-dial {
+      transform-box: view-box;
+      transform-origin: 280px 280px;
+      animation:
+        doorFadeIn 0.6s ease-out 0.15s both,
+        dialDrift 150s linear 0.9s infinite;
+    }
+    .door-seal { animation: doorFadeIn 0.6s ease-out 0.3s both; }
+    .door-hub {
+      transform-box: view-box;
+      transform-origin: 280px 280px;
+      animation: hubSettle 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+    }
+    .badge.top { animation: badgeInTop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+    .badge.right { animation: badgeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+    .badge.bottom { animation: badgeInBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both; }
+  }
+
+  @keyframes doorFadeScale {
+    from { opacity: 0; transform: scale(0.95); transform-origin: 280px 280px; transform-box: view-box; }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes doorFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes hubSettle {
+    from { opacity: 0; transform: rotate(-28deg) scale(0.9); }
+    to { opacity: 1; transform: rotate(0deg) scale(1); }
+  }
+  @keyframes dialDrift {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes badgeInTop {
+    from { opacity: 0; transform: translate(-10px, -8px); }
+    to { opacity: 1; transform: translate(0, 0); }
+  }
+  @keyframes badgeInRight {
+    from { opacity: 0; transform: translate(10px, -50%); }
+    to { opacity: 1; transform: translate(0, -50%); }
+  }
+  @keyframes badgeInBottom {
+    from { opacity: 0; transform: translate(-10px, 8px); }
+    to { opacity: 1; transform: translate(0, 0); }
+  }
+
+  .highlights { max-width: 1320px; margin: 88px auto 0; padding: 0 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .hcard { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 18px; padding: 24px; }
+  .hcard .icon { width: 40px; height: 40px; border-radius: 12px; background: var(--color-accent-tint); color: var(--color-accent); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .hcard h3 { font-family: "Fraunces"; font-size: 15px; font-weight: 500; margin: 0; }
+  .hcard p { font-size: 12.5px; line-height: 1.55; color: var(--color-text-muted); margin: 7px 0 0; }
+
+  .trust { position: relative; margin-top: 100px; overflow: hidden; background: linear-gradient(180deg, var(--color-brand) 0%, var(--color-brand-hover) 100%); padding: 84px 72px; }
+  .trust-hair { position: absolute; inset-inline: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--color-accent-bright) 45%, var(--color-accent-bright) 55%, transparent); opacity: .7; }
+  .trust .rings { position: absolute; top: -100px; right: -100px; opacity: 0.1; }
+  .trust-head { text-align: center; max-width: 640px; margin: 0 auto; }
+  .trust-head .kicker { color: var(--color-accent-bright); }
+  .trust-head h2 { font-family: "Fraunces"; font-size: 36px; font-weight: 500; color: var(--color-brand-foreground); margin: 12px 0 0; }
+  .trust-head p { font-size: 15px; color: rgba(245,239,221,0.65); margin: 14px 0 0; line-height: 1.6; }
+  .trust-grid { max-width: 1100px; margin: 56px auto 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .tcard { background: rgba(245,239,221,0.05); border: 1px solid rgba(245,239,221,0.12); border-radius: 18px; padding: 26px; }
+  .tcard .icon { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(199,154,69,0.3); color: var(--color-accent-bright); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .tcard h3 { font-family: "Fraunces"; font-size: 15px; color: var(--color-brand-foreground); margin: 0; }
+  .tcard p { font-size: 12.5px; color: rgba(245,239,221,0.6); margin: 8px 0 0; line-height: 1.55; }
+
+  .audit-preview { max-width: 1100px; margin: 20px auto 0; border: 1px solid rgba(245,239,221,0.12); border-radius: 16px; overflow: hidden; }
+  .audit-preview .ap-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-bottom: 1px solid rgba(245,239,221,0.1); background: rgba(245,239,221,0.03); }
+  .audit-preview .ap-head span { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,239,221,0.5); }
+  .audit-row { display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-bottom: 1px solid rgba(245,239,221,0.07); font-size: 13px; }
+  .audit-row:last-child { border-bottom: none; }
+  .audit-row .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--color-accent-bright); flex-shrink: 0; }
+  .audit-row .who { color: var(--color-brand-foreground); font-weight: 500; width: 120px; flex-shrink: 0; }
+  .audit-row .what { color: rgba(245,239,221,0.6); flex: 1; }
+  .audit-row .when { color: rgba(245,239,221,0.4); font-family: "Geist Mono", monospace; font-size: 11.5px; flex-shrink: 0; }
+
+  footer { text-align: center; padding: 56px 24px; }
+  footer .brandmark { justify-content: center; opacity: 0.7; }
+  footer p { font-size: 12px; color: var(--color-text-faint); margin-top: 8px; }
+</style>
+</head>
+<body>
+<span class="label">Landing Mockup 2 — Vault Door</span>
+<div class="wrap">
+  <header>
+    <div class="brandmark"><span class="box">H</span><span class="word">Healthy</span></div>
+    <nav><a class="ghost" href="#">Log in</a><a class="solid" href="#">Create your vault</a></nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-copy">
+      <p class="kicker">Private · Personal · Permissioned</p>
+      <h1>Your health data.<br>Your vault.<br>Your permission.</h1>
+      <p>A private place to keep your lab reports, structured and explained — shared only when you say so.</p>
+      <div class="cta-row">
+        <button class="btn-primary">Create your vault</button>
+        <button class="btn-secondary">Log in</button>
+      </div>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        No password. Just your phone number and a one-time code.
+      </div>
+    </div>
+    <div class="door-wrap">
+      <div class="badge top">
+        <div class="n"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z" stroke="currentColor" stroke-width="1.8"/></svg>Encrypted</div>
+        <div class="l">At rest & in transit</div>
+      </div>
+      <div class="badge right">
+        <div class="n"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.8"/></svg>Zero-trust</div>
+        <div class="l">Access, by design</div>
+      </div>
+      <svg class="door" viewBox="0 0 560 560">
+        <defs>
+          <linearGradient id="doorGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0e2c1e" /><stop offset="100%" stop-color="#081b12" />
+          </linearGradient>
+        </defs>
+        <g class="door-base">
+          <circle cx="280" cy="280" r="270" fill="url(#doorGrad)" />
+          <circle cx="280" cy="280" r="270" fill="none" stroke="#c79a45" stroke-width="1.5" opacity="0.5" />
+          <circle cx="280" cy="280" r="222" fill="none" stroke="#c79a45" stroke-width="1" opacity="0.26" />
+          <circle cx="280" cy="280" r="176" fill="none" stroke="#c79a45" stroke-width="1" opacity="0.18" />
+          <circle cx="280" cy="280" r="130" fill="none" stroke="#c79a45" stroke-width="1" opacity="0.12" />
+          <g stroke="#c79a45" stroke-width="1" opacity="0.14">
+            <line x1="379.0" y1="181.0" x2="425.0" y2="135.0" />
+            <line x1="379.0" y1="379.0" x2="425.0" y2="425.0" />
+            <line x1="181.0" y1="379.0" x2="135.0" y2="425.0" />
+            <line x1="181.0" y1="181.0" x2="135.0" y2="135.0" />
+          </g>
+        </g>
+
+        <g class="door-dial">
+          <g fill="#c79a45" opacity="0.4">
+            <circle cx="280.0" cy="30.0" r="3.2" /><circle cx="375.7" cy="49.0" r="3.2" />
+            <circle cx="456.8" cy="103.2" r="3.2" /><circle cx="511.0" cy="184.3" r="3.2" />
+            <circle cx="530.0" cy="280.0" r="3.2" /><circle cx="511.0" cy="375.7" r="3.2" />
+            <circle cx="456.8" cy="456.8" r="3.2" /><circle cx="375.7" cy="511.0" r="3.2" />
+            <circle cx="280.0" cy="530.0" r="3.2" /><circle cx="184.3" cy="511.0" r="3.2" />
+            <circle cx="103.2" cy="456.8" r="3.2" /><circle cx="49.0" cy="375.7" r="3.2" />
+            <circle cx="30.0" cy="280.0" r="3.2" /><circle cx="49.0" cy="184.3" r="3.2" />
+            <circle cx="103.2" cy="103.2" r="3.2" /><circle cx="184.3" cy="49.0" r="3.2" />
+          </g>
+          <g stroke="#c79a45">
+            <line x1="280.0" y1="42.0" x2="280.0" y2="18.0" stroke-width="1.6" opacity="0.6" />
+            <line x1="403.0" y1="67.0" x2="411.0" y2="53.1" stroke-width="1" opacity="0.3" />
+            <line x1="493.0" y1="157.0" x2="506.9" y2="149.0" stroke-width="1" opacity="0.3" />
+            <line x1="518.0" y1="280.0" x2="542.0" y2="280.0" stroke-width="1.6" opacity="0.6" />
+            <line x1="493.0" y1="403.0" x2="506.9" y2="411.0" stroke-width="1" opacity="0.3" />
+            <line x1="403.0" y1="493.0" x2="411.0" y2="506.9" stroke-width="1" opacity="0.3" />
+            <line x1="280.0" y1="518.0" x2="280.0" y2="542.0" stroke-width="1.6" opacity="0.6" />
+            <line x1="157.0" y1="493.0" x2="149.0" y2="506.9" stroke-width="1" opacity="0.3" />
+            <line x1="67.0" y1="403.0" x2="53.1" y2="411.0" stroke-width="1" opacity="0.3" />
+            <line x1="42.0" y1="280.0" x2="18.0" y2="280.0" stroke-width="1.6" opacity="0.6" />
+            <line x1="67.0" y1="157.0" x2="53.1" y2="149.0" stroke-width="1" opacity="0.3" />
+            <line x1="157.0" y1="67.0" x2="149.0" y2="53.1" stroke-width="1" opacity="0.3" />
+          </g>
+        </g>
+
+        <!-- Engraved seal ring: circular text tracing the hub, like a coin or wax-seal legend -->
+        <g class="door-seal">
+          <path id="vaultRing" d="M162,280 a118,118 0 1,1 236,0 a118,118 0 1,1 -236,0" fill="none" />
+          <circle cx="280" cy="280" r="118" fill="none" stroke="#c79a45" stroke-width="1" opacity="0.22" />
+          <text font-family="Geist, Arial, sans-serif" font-size="10.5" letter-spacing="3" fill="#c79a45" opacity="0.75">
+            <textPath href="#vaultRing" startOffset="2%">YOUR VAULT &#160;&#183;&#160; PRIVATE BY DESIGN &#160;&#183;&#160; ZERO TRUST &#160;&#183;&#160;</textPath>
+          </text>
+        </g>
+
+        <!-- Vault wheel hub -->
+        <g class="door-hub">
+          <g stroke="#c79a45" stroke-width="3" stroke-linecap="round" opacity="0.55">
+            <line x1="280.0" y1="222.0" x2="280.0" y2="176.0" />
+            <line x1="330.2" y1="251.0" x2="370.1" y2="228.0" />
+            <line x1="330.2" y1="309.0" x2="370.1" y2="332.0" />
+            <line x1="280.0" y1="338.0" x2="280.0" y2="384.0" />
+            <line x1="229.8" y1="309.0" x2="189.9" y2="332.0" />
+            <line x1="229.8" y1="251.0" x2="189.9" y2="228.0" />
+          </g>
+          <g fill="#c79a45" opacity="0.85">
+            <circle cx="280.0" cy="176.0" r="4.5" /><circle cx="370.1" cy="228.0" r="4.5" />
+            <circle cx="370.1" cy="332.0" r="4.5" /><circle cx="280.0" cy="384.0" r="4.5" />
+            <circle cx="189.9" cy="332.0" r="4.5" /><circle cx="189.9" cy="228.0" r="4.5" />
+          </g>
+          <circle cx="280" cy="280" r="60" fill="url(#hubGrad)" stroke="#c79a45" stroke-width="1.5" opacity="0.98" />
+          <circle cx="280" cy="280" r="60" fill="none" stroke="#c79a45" stroke-width="1" opacity="0.3" />
+          <text x="280" y="290" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="30" font-weight="500" fill="#f5efdd">H</text>
+        </g>
+        <defs>
+          <radialGradient id="hubGrad" cx="38%" cy="32%" r="75%">
+            <stop offset="0%" stop-color="#16412b" /><stop offset="100%" stop-color="#081b12" />
+          </radialGradient>
+        </defs>
+      </svg>
+      <div class="badge bottom">
+        <div class="n"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 12h6M9 15.5h6" stroke="currentColor" stroke-width="1.8"/></svg>Audit-logged</div>
+        <div class="l">Every access recorded</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlights">
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M12 19V5M19 19v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><h3>Structured, not stacked</h3><p>Every report becomes readable data — values, ranges, trends, not another PDF to scroll through.</p></div>
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="7" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="6" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="18" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Yours to share</h3><p>Nothing leaves your vault until you choose who sees it, and for how long.</p></div>
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Built like a vault</h3><p>Encrypted storage, audit trails, and zero-trust access by design.</p></div>
+    <div class="hcard"><div class="icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10z" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Explained, not just numbers</h3><p>Ask Healthy puts every result in plain English — what changed, and whether it matters.</p></div>
+  </div>
+
+  <section class="trust">
+    <div class="trust-hair"></div>
+    <svg class="rings" width="420" height="420" viewBox="0 0 360 360"><circle cx="180" cy="180" r="179" fill="none" stroke="#c79a45" stroke-width="1"/><circle cx="180" cy="180" r="130" fill="none" stroke="#c79a45" stroke-width="1"/><circle cx="180" cy="180" r="80" fill="none" stroke="#c79a45" stroke-width="1"/></svg>
+    <div class="trust-head">
+      <p class="kicker">Privacy by design</p>
+      <h2>Nothing about you is public.</h2>
+      <p>No public profile, no indexed pages, no default sharing. Your vault is private the moment you create it, and stays that way unless you decide otherwise.</p>
+    </div>
+    <div class="trust-grid">
+      <div class="tcard"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.2v5.3c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6.2L12 3z" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Private storage. No public link, ever.</h3><p>Your files live in encrypted, access-controlled storage — reports are only ever readable by you.</p></div>
+      <div class="tcard"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>You approve every share.</h3><p>A specific person, specific categories, an expiry you set — verified with a one-time code.</p></div>
+      <div class="tcard"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 12h6M9 15.5h6" stroke="currentColor" stroke-width="1.6"/></svg></div><h3>Every access, logged.</h3><p>Every view, download, and share is written to an audit trail tied to your account.</p></div>
+    </div>
+
+    <div class="audit-preview">
+      <div class="ap-head"><span>Your audit trail — a real example</span><span>Live</span></div>
+      <div class="audit-row"><span class="dot"></span><span class="who">You</span><span class="what">Viewed CBC_and_Lipid_Panel.pdf</span><span class="when">2 min ago</span></div>
+      <div class="audit-row"><span class="dot"></span><span class="who">You</span><span class="what">Created a share for Dr. Mehta — Blood, Metabolic only, expires in 7 days</span><span class="when">1 hr ago</span></div>
+      <div class="audit-row"><span class="dot"></span><span class="who">Dr. Mehta</span><span class="what">Verified identity and viewed shared report</span><span class="when">42 min ago</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="brandmark"><span class="box">H</span><span class="word">Healthy</span></div>
+    <p>Private by default. Shared only when you say so.</p>
+  </footer>
+</div>
+</body>
+</html>

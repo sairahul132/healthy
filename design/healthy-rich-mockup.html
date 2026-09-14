@@ -1,0 +1,464 @@
+<title>Healthy — Rich Design</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #f3eee0;
+    --bg-deep: #ece4cd;
+    --surface: #fdfbf4;
+    --surface-muted: #ede5cf;
+    --border: #ddd0a9;
+    --border-strong: #c7b47f;
+    --ink: #1a2118;
+    --ink-muted: #5c5a44;
+    --ink-faint: #8b8768;
+
+    --brand: #0e2c1e;
+    --brand-deep: #081b12;
+    --brand-foreground: #f5efdd;
+    --brand-tint: #e2e2cd;
+
+    --gold: #a9782e;
+    --gold-bright: #c79a45;
+    --gold-tint: #f2e5c4;
+
+    --success: #2f6b45;
+    --success-tint: #e2ecdd;
+    --warning: #97671f;
+    --warning-tint: #f4e6c8;
+    --critical: #8b3a2e;
+    --critical-tint: #f2e0da;
+
+    --shadow-card: 0 1px 2px rgba(20, 20, 10, 0.05), 0 14px 32px -16px rgba(20, 20, 10, 0.22);
+    --shadow-lift: 0 20px 48px -18px rgba(10, 20, 12, 0.32);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image: radial-gradient(1200px 500px at 15% -10%, rgba(169, 120, 46, 0.06), transparent 60%);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; text-wrap: balance; margin: 0; }
+  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    position: relative;
+    background: linear-gradient(180deg, var(--brand) 0%, var(--brand-deep) 100%);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow: hidden;
+    box-shadow: 12px 0 40px -20px rgba(0,0,0,0.45);
+  }
+  .sidebar::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-bright) 45%, var(--gold-bright) 55%, transparent);
+    opacity: 0.7;
+  }
+  .sidebar-deco {
+    position: absolute;
+    right: -70px;
+    bottom: -60px;
+    opacity: 0.10;
+    pointer-events: none;
+  }
+
+  .brand-row { display: flex; align-items: center; gap: 12px; padding: 30px 24px 26px; position: relative; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 11px;
+    border: 1.4px solid rgba(245, 239, 221, 0.5);
+    display: grid; place-items: center;
+    position: relative;
+  }
+  .brand-mark svg { color: var(--brand-foreground); }
+  .brand-mark .dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-bright); }
+  .brand-name { font-family: var(--serif); font-size: 20px; color: var(--brand-foreground); line-height: 1.1; }
+  .brand-tag { font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(245,239,221,0.42); margin-top: 4px; }
+
+  .nav { display: flex; flex-direction: column; gap: 2px; padding: 8px 14px; position: relative; }
+  .nav-item {
+    display: flex; align-items: center; gap: 13px;
+    padding: 11px 14px; border-radius: 10px;
+    color: rgba(245, 239, 221, 0.56);
+    font-size: 13.5px; font-weight: 500;
+    text-decoration: none;
+    position: relative;
+  }
+  .nav-item svg { opacity: 0.75; flex-shrink: 0; }
+  .nav-item.active {
+    background: rgba(245, 239, 221, 0.09);
+    color: var(--brand-foreground);
+  }
+  .nav-item.active svg { opacity: 1; color: var(--gold-bright); }
+  .nav-item.active::before {
+    content: "";
+    position: absolute; left: -14px; top: 8px; bottom: 8px; width: 3px;
+    background: var(--gold-bright); border-radius: 0 3px 3px 0;
+  }
+
+  .sidebar-foot { margin-top: auto; padding: 20px; position: relative; }
+  .sidebar-divider { height: 1px; background: rgba(245,239,221,0.12); margin: 0 20px 18px; }
+  .patron-card {
+    border: 1px solid rgba(245, 239, 221, 0.16);
+    border-radius: 16px;
+    padding: 18px 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .patron-card::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(199,154,69,0.10), transparent 55%);
+  }
+  .patron-kicker { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-bright); font-weight: 600; position: relative; }
+  .patron-title { font-family: var(--serif); font-size: 17px; color: var(--brand-foreground); margin-top: 7px; line-height: 1.25; position: relative; }
+  .patron-text { font-size: 11.5px; color: rgba(245,239,221,0.5); margin-top: 6px; line-height: 1.5; position: relative; max-width: 20ch; }
+
+  /* ---------- Topbar ---------- */
+  .main { min-width: 0; }
+  .topbar {
+    display: flex; align-items: center; gap: 20px;
+    padding: 20px 44px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .search-field {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 11px 16px;
+    width: min(420px, 38vw);
+    color: var(--ink-faint); font-size: 13.5px;
+  }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
+  .icon-btn { position: relative; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--ink-muted); }
+  .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--critical); border: 1.5px solid var(--bg); }
+  .user-chip { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--brand); color: var(--brand-foreground);
+    display: grid; place-items: center;
+    font-family: var(--serif); font-size: 13px;
+    border: 1.5px solid var(--gold-tint);
+  }
+  .user-chip span.name { font-size: 13.5px; font-weight: 600; }
+  .user-chip .hid { font-size: 10.5px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 0.02em; }
+  .logout-link { font-size: 13px; font-weight: 600; color: var(--ink-muted); text-decoration: none; }
+
+  /* ---------- Content ---------- */
+  .content { max-width: 1320px; margin: 0 auto; padding: 40px 44px 72px; display: flex; flex-direction: column; gap: 26px; }
+  .back-link { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-muted); font-size: 13px; text-decoration: none; width: fit-content; font-weight: 500; }
+
+  .report-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .report-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .report-title { font-size: 34px; letter-spacing: -0.01em; }
+  .kicker { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 6px; display: block; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+  .pill-success { background: var(--success-tint); color: var(--success); }
+  .pill-warning { background: var(--warning-tint); color: var(--warning); }
+  .pill-critical { background: var(--critical-tint); color: var(--critical); }
+  .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .report-meta { font-size: 13px; color: var(--ink-muted); margin-top: 8px; }
+
+  .report-actions { display: flex; align-items: center; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    padding: 10px 17px; border-radius: 9px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--ink);
+    box-shadow: var(--shadow-card);
+  }
+  .btn-icon-only { padding: 10px; }
+  .btn-critical { background: var(--critical); border-color: var(--critical); color: #fbeee9; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .toolbar .btn { font-size: 12.5px; padding: 9px 14px; }
+  .toolbar .spacer { margin-left: auto; display: flex; gap: 10px; }
+
+  /* ---------- Health Summary ---------- */
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 34px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-card::before {
+    content: "";
+    position: absolute; left: 34px; top: 0; width: 46px; height: 3px;
+    background: var(--gold);
+    border-radius: 0 0 3px 3px;
+  }
+  .summary-heading h2 { font-size: 27px; }
+  .summary-heading p { margin: 8px 0 0; font-size: 13.5px; color: var(--ink-muted); max-width: 62ch; }
+  .metric-row { margin-top: 26px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .metric {
+    border-radius: 14px; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    position: relative;
+  }
+  .metric-value { font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; color: var(--ink); }
+  .metric-label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 6px; }
+  .metric-sub { font-size: 11.5px; color: var(--ink-faint); margin-top: 1px; }
+  .metric-inrange .metric-value { color: var(--success); }
+  .metric-inrange .metric-label { color: var(--success); }
+  .metric-attention .metric-value, .metric-attention .metric-label { color: var(--warning); }
+  .metric-neutral .metric-value, .metric-neutral .metric-label { color: var(--ink-muted); }
+  .metric-total { background: var(--brand); border-color: var(--brand); }
+  .metric-total .metric-value { color: var(--gold-bright); }
+  .metric-total .metric-label { color: var(--brand-foreground); opacity: 0.85; }
+  .metric-total .metric-sub { color: rgba(245,239,221,0.5); }
+
+  /* ---------- Layout ---------- */
+  .layout { display: grid; grid-template-columns: minmax(0,1fr) 330px; gap: 26px; align-items: start; }
+  .results-col { display: flex; flex-direction: column; gap: 16px; }
+  .section-heading { display: flex; align-items: baseline; gap: 12px; }
+  .section-heading h2 { font-size: 23px; }
+  .section-heading .rule { flex: 1; height: 1px; background: var(--border-strong); }
+
+  .group { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .group[open] { box-shadow: var(--shadow-card); }
+  .group-summary {
+    list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 22px; cursor: pointer; background: var(--surface-muted);
+  }
+  .group-summary::-webkit-details-marker { display: none; }
+  .group-title { display: flex; align-items: center; gap: 11px; font-size: 14.5px; font-weight: 600; }
+  .group-title .icn { color: var(--gold); }
+  .group-title .count { color: var(--ink-faint); font-weight: 500; }
+  .chevron { color: var(--ink-faint); transition: transform .15s; }
+  .group[open] .chevron { transform: rotate(180deg); }
+
+  table.rtable { width: 100%; border-collapse: collapse; }
+  .rtable th {
+    text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 13px 20px 9px; border-bottom: 1px solid var(--border);
+  }
+  .rtable td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+  .rtable tr:last-child td { border-bottom: none; }
+  .test-name { font-weight: 600; }
+  .test-sub { display: block; font-size: 11px; color: var(--ink-faint); font-weight: 400; margin-top: 2px; }
+  .result-value { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ref-range { color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .range-viz { width: 160px; }
+  .range-track { position: relative; height: 1px; background: var(--border-strong); margin-top: 16px; }
+  .range-marker { position: absolute; top: 50%; width: 7px; height: 7px; border-radius: 50%; background: var(--success); border: 1.5px solid var(--surface); box-shadow: 0 0 0 1px var(--success); transform: translate(-50%,-50%); }
+  .range-marker.warn { background: var(--warning); box-shadow: 0 0 0 1px var(--warning); }
+  .range-value { position: absolute; top: -15px; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: var(--ink); }
+  .range-ends { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--ink-faint); margin-top: 3px; }
+  .status-pill { font-size: 11px; padding: 4px 9px; }
+  .explain { color: var(--gold); font-size: 12.5px; font-weight: 700; text-decoration: none; display: inline-flex; gap: 4px; align-items: center; }
+
+  /* ---------- Rail ---------- */
+  .rail { display: flex; flex-direction: column; gap: 16px; }
+  .rail-heading { display: flex; align-items: center; gap: 8px; font-size: 20px; color: var(--critical); }
+  .rail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow-card); }
+  .rail-card.attn { background: var(--critical-tint); border-color: rgba(139,58,46,0.14); }
+  .attn-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-top: 1px solid rgba(139,58,46,0.14); }
+  .attn-row:first-of-type { border-top: none; }
+  .attn-name { font-size: 13.5px; font-weight: 700; color: var(--critical); }
+  .attn-value { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
+  .rail-link { display: block; margin-top: 12px; padding: 10px; border-radius: 9px; background: var(--surface); color: var(--critical); font-size: 12.5px; font-weight: 700; text-align: center; text-decoration: none; }
+
+  .rail-h3 { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 700; margin-bottom: 12px; }
+  .rail-h3 svg { color: var(--gold); }
+  .trend-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-top: 1px solid var(--border); }
+  .trend-row:first-of-type { border-top: none; }
+  .trend-name { font-size: 13px; font-weight: 700; }
+  .trend-path { font-size: 11px; color: var(--ink-faint); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .trend-status { font-size: 10.5px; font-weight: 700; margin-top: 4px; }
+  .trend-status.up { color: var(--warning); }
+  .trend-status.stable { color: var(--ink-muted); }
+
+  .ask-card p { font-size: 13px; color: var(--ink-muted); line-height: 1.55; margin: 0 0 15px; }
+  .ask-btn { display: inline-flex; align-items: center; gap: 7px; background: var(--brand); color: var(--brand-foreground); padding: 11px 17px; border-radius: 9px; font-size: 13.5px; font-weight: 700; text-decoration: none; width: 100%; justify-content: center; }
+  .ask-btn svg { color: var(--gold-bright); }
+</style>
+
+<div class="app">
+  <aside class="sidebar">
+    <svg class="sidebar-deco" width="320" height="320" viewBox="0 0 320 320" fill="none">
+      <circle cx="160" cy="160" r="159" stroke="#c79a45" stroke-width="1"/>
+      <circle cx="160" cy="160" r="115" stroke="#c79a45" stroke-width="1"/>
+      <circle cx="160" cy="160" r="70" stroke="#c79a45" stroke-width="1"/>
+    </svg>
+
+    <div class="brand-row">
+      <span class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 11.5a8.4 8.4 0 0 1-8.4 8.4A8.4 8.4 0 0 1 4 11.5 8.4 8.4 0 0 1 12.4 3c1.7 0 3.2.6 4.4 1.6"/><path d="M12.4 7.4v4.4l3 1.8"/></svg>
+        <span class="dot"></span>
+      </span>
+      <div>
+        <div class="brand-name">Healthy</div>
+        <div class="brand-tag">Private Health Vault</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>Home</a>
+      <a class="nav-item active" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h6M9 9.5h2"/></svg>Reports</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5 7L13 5l2 7h6"/></svg>Health</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Timeline</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Search</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg>Medicines</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="19" r="2.3"/><path d="m8.2 10.7 7.6-4.5M8.2 13.3l7.6 4.5"/></svg>Share</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Permissions</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5a8.4 8.4 0 1 1 16.9-3Z"/></svg>Ask Healthy</a>
+      <a class="nav-item" href="#"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-3.5 4-5.5 7-5.5s6 2 7 5.5"/></svg>Profile</a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="sidebar-divider"></div>
+      <div class="patron-card">
+        <span class="patron-kicker">Member since 2026</span>
+        <div class="patron-title">Better Care,<br>Attentively Kept</div>
+        <p class="patron-text">Every record, quietly organized for you.</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="search-field">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        Search reports, tests, or insights&hellip;
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></button>
+        <div class="user-chip">
+          <div class="avatar">SR</div>
+          <div><div class="name">Sai Rahul</div><div class="hid">HLT&#8209;VG2K&#8209;BCBU</div></div>
+        </div>
+        <a class="logout-link" href="#">Log out</a>
+      </div>
+    </header>
+
+    <main class="content">
+      <a class="back-link" href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Back to Reports</a>
+
+      <div class="report-header">
+        <div>
+          <span class="kicker">Lab Report</span>
+          <div class="report-title-row">
+            <h1 class="report-title">naveen1422.pdf</h1>
+            <span class="pill pill-success"><span class="pill-dot"></span>Processed</span>
+          </div>
+          <div class="report-meta">18 Jul 2026 &nbsp;&middot;&nbsp; Uploaded 10 Sep 2026, 5:00&nbsp;PM</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>Download</button>
+          <button class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="2.3"/><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="19" r="2.3"/><path d="m8.2 10.7 7.6-4.5M8.2 13.3l7.6 4.5"/></svg>Share</button>
+          <button class="btn btn-critical"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m3 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>Delete</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>All categories</button>
+        <button class="btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16l-6 8v6l-4-2v-4L4 5Z"/></svg>Filter</button>
+        <button class="btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4v16M7 4l-3 3M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg>Sort: By category</button>
+      </div>
+
+      <section class="summary-card">
+        <div class="summary-heading">
+          <h2>Health Summary</h2>
+          <p>Most of your results are within reference ranges. 12 results may need your attention.</p>
+        </div>
+        <div class="metric-row">
+          <div class="metric metric-inrange"><div class="metric-value">42</div><div class="metric-label">In range</div><div class="metric-sub">78% of results</div></div>
+          <div class="metric metric-attention"><div class="metric-value">12</div><div class="metric-label">Need attention</div><div class="metric-sub">22% of results</div></div>
+          <div class="metric metric-neutral"><div class="metric-value">0</div><div class="metric-label">Not available</div><div class="metric-sub">0% of results</div></div>
+          <div class="metric metric-total"><div class="metric-value">54</div><div class="metric-label">Total results</div><div class="metric-sub">Analysed from this report</div></div>
+        </div>
+      </section>
+
+      <div class="layout">
+        <div class="results-col">
+          <div class="section-heading"><h2>Results</h2><span class="rule"></span></div>
+
+          <details class="group" open>
+            <summary class="group-summary">
+              <span class="group-title"><span class="icn"><svg width="16" height="16" viewBox="0 0 48 48" fill="currentColor"><path d="M12 2 5 13a7 7 0 1 0 14 0L12 2Z"/></svg></span>Blood <span class="count">(2)</span></span>
+              <svg class="chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <table class="rtable">
+              <thead><tr><th>Test Name</th><th>Result</th><th>Reference Range</th><th>Visual Range</th><th>Status</th><th>Previous</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="test-name">Hemoglobin</span></td>
+                  <td class="result-value">11 g/dL</td>
+                  <td class="ref-range">13 &ndash; 17 g/dL</td>
+                  <td class="range-viz"><div class="range-track"><span class="range-value" style="left:0%">11</span><span class="range-marker warn" style="left:0%"></span></div><div class="range-ends"><span>13</span><span>17</span></div></td>
+                  <td><span class="pill pill-warning status-pill">Below range</span></td>
+                  <td class="ref-range">15.6 g/dL</td>
+                  <td><a class="explain" href="#">Explain <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></td>
+                </tr>
+                <tr>
+                  <td><span class="test-name">WBC Count</span></td>
+                  <td class="result-value">7.2 10&sup3;/&micro;L</td>
+                  <td class="ref-range">4 &ndash; 11 10&sup3;/&micro;L</td>
+                  <td class="range-viz"><div class="range-track"><span class="range-value" style="left:45.7%">7.2</span><span class="range-marker" style="left:45.7%"></span></div><div class="range-ends"><span>4</span><span>11</span></div></td>
+                  <td><span class="pill pill-success status-pill">Within range</span></td>
+                  <td class="ref-range">No previous</td>
+                  <td><a class="explain" href="#">Explain <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></td>
+                </tr>
+              </tbody>
+            </table>
+          </details>
+
+          <details class="group"><summary class="group-summary"><span class="group-title"><span class="icn"><svg width="16" height="16" viewBox="0 0 48 48" fill="currentColor"><path d="M12.548 30.7535C1.68377 26.1712 5.97137 10.7044 13.513 8.14889C16.6416 7.08877 20.0938 10.6058 20.0717 12.7895C20.0621 13.7337 19.5749 14.6543 19.0673 15.6135C18.4009 16.8727 17.6993 18.1984 17.9972 19.7311C18.5221 22.4312 19.11 26.987 17.5952 29.1496C16.0803 31.3122 14.5569 31.6008 12.548 30.7535ZM34.3473 8.14889C41.889 10.7044 46.1766 26.1712 35.3124 30.7535C33.3034 31.6008 31.78 31.3122 30.2652 29.1496C28.7504 26.987 29.3383 22.4312 29.8631 19.7311C30.161 18.1984 29.4595 16.8727 28.793 15.6135C28.2854 14.6543 27.7982 13.7337 27.7887 12.7895C27.7666 10.6058 31.2188 7.08877 34.3473 8.14889Z"/></svg></span>Kidney Function Tests <span class="count">(6)</span></span><svg class="chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary></details>
+          <details class="group"><summary class="group-summary"><span class="group-title"><span class="icn"><svg width="16" height="16" viewBox="0 0 48 48" fill="currentColor"><path d="M24 4a16 16 0 1 0 0 32 16 16 0 0 0 0-32Zm0 5a11 11 0 1 1 0 22 11 11 0 0 1 0-22Z"/></svg></span>Liver Function Tests <span class="count">(10)</span></span><svg class="chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary></details>
+          <details class="group"><summary class="group-summary"><span class="group-title"><span class="icn"><svg width="16" height="16" viewBox="0 0 48 48" fill="currentColor"><path d="M24 24 8 12a8 8 0 0 0 0 16Z M24 24 40 12a8 8 0 0 0 0 16Z M24 12v24"/></svg></span>Thyroid Function Tests <span class="count">(3)</span></span><svg class="chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary></details>
+
+          <button class="btn" style="width:fit-content">Compare with previous report</button>
+        </div>
+
+        <aside class="rail">
+          <div>
+            <h2 class="rail-heading"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Attention Required</h2>
+            <div class="rail-card attn" style="margin-top:12px">
+              <div class="attn-row"><div><div class="attn-name">Hemoglobin</div><div class="attn-value">11 g/dL</div></div><span class="pill pill-warning">Below range</span></div>
+              <div class="attn-row"><div><div class="attn-name">Serum Albumin</div><div class="attn-value">5.1 g/dL</div></div><span class="pill pill-warning">Above range</span></div>
+              <div class="attn-row"><div><div class="attn-name">Total Cholesterol</div><div class="attn-value">212 mg/dL</div></div><span class="pill pill-warning">Slightly high</span></div>
+              <div class="attn-row"><div><div class="attn-name">TSH</div><div class="attn-value">6.1 mIU/L</div></div><span class="pill pill-critical">Critically high</span></div>
+              <a class="rail-link" href="#">View all 12 in results &rarr;</a>
+            </div>
+          </div>
+
+          <div class="rail-card">
+            <h3 class="rail-h3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17 9 11l4 4 8-9"/><path d="M15 6h6v6"/></svg>Trends from Previous Reports</h3>
+            <div class="trend-row"><div><div class="trend-name">S.G.P.T (ALT)</div><div class="trend-path">18 &rarr; 24 &rarr; 19 U/L</div></div><div class="trend-status stable">Stable</div></div>
+            <div class="trend-row"><div><div class="trend-name">Serum Albumin</div><div class="trend-path">4.8 &rarr; 5.0 &rarr; 5.1 g/dL</div></div><div class="trend-status up">Slight increase</div></div>
+            <div class="trend-row"><div><div class="trend-name">Alkaline Phosphatase</div><div class="trend-path">68 &rarr; 70 &rarr; 72 U/L</div></div><div class="trend-status stable">Stable</div></div>
+          </div>
+
+          <div class="rail-card ask-card">
+            <h3 class="rail-h3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5a8.4 8.4 0 1 1 16.9-3Z"/></svg>Have questions?</h3>
+            <p>Get simple, easy-to-understand explanations of your results, backed by trusted medical sources.</p>
+            <a class="ask-btn" href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>Ask Healthy</a>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>

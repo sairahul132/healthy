@@ -1,93 +1,100 @@
 @import "tailwindcss";
 
 /*
- * Design tokens for the Healthy UI: a private, premium health vault —
- * warm ivory instead of clinical gray, a deep forest green + muted gold
- * accent instead of a generic SaaS blue, soft ambient shadows instead of
- * hard black ones. Status colors (§29/§84) are never the sole signal —
- * every consumer pairs them with text + an icon.
+ * Design tokens for the Healthy UI: a private, richly-appointed health
+ * vault — warm parchment instead of clinical gray, a near-black emerald +
+ * antique gold instead of a generic SaaS blue, deeper ambient shadows for
+ * real lift instead of flat cards. Status colors (§29/§84) are never the
+ * sole signal — every consumer pairs them with text + an icon.
+ *
+ * --color-accent is antique gold for use on light surfaces (borders,
+ * kickers, links); --color-accent-bright is the same hue lightened for
+ * legibility on the dark brand panel (sidebar) — same relationship as
+ * --color-brand/--color-brand-foreground.
  */
 :root {
-  --color-bg: #f7f4ea;
-  --color-surface: #ffffff;
-  --color-surface-muted: #edf1e6;
-  --color-border: #e2ddcb;
-  --color-border-strong: #d4cdb4;
-  --color-text: #24291f;
-  --color-text-muted: #5c6350;
-  --color-text-faint: #8b9080;
+  --color-bg: #f3eee0;
+  --color-surface: #fdfbf4;
+  --color-surface-muted: #ede5cf;
+  --color-border: #ddd0a9;
+  --color-border-strong: #c7b47f;
+  --color-text: #1a2118;
+  --color-text-muted: #5c5a44;
+  --color-text-faint: #8b8768;
 
-  --color-brand: #1e4a34;
-  --color-brand-hover: #163726;
-  --color-brand-foreground: #f6f5ec;
-  --color-brand-tint: #e2ecdf;
+  --color-brand: #0e2c1e;
+  --color-brand-hover: #081b12;
+  --color-brand-foreground: #f5efdd;
+  --color-brand-tint: #e2e2cd;
 
-  --color-accent: #a9752b;
-  --color-accent-tint: #fbf1dc;
+  --color-accent: #a9782e;
+  --color-accent-bright: #c79a45;
+  --color-accent-tint: #f2e5c4;
   --color-accent-foreground: #ffffff;
 
-  --color-danger: #b14a3f;
-  --color-danger-tint: #f9e9e5;
+  --color-danger: #8b3a2e;
+  --color-danger-tint: #f2e0da;
 
-  --status-green: #3d8a5c;
-  --status-green-tint: #e4f3e6;
-  --status-yellow: #a9752b;
-  --status-yellow-tint: #fbf1dc;
-  --status-orange: #a05b25;
-  --status-orange-tint: #fbead9;
-  --status-red: #b14a3f;
-  --status-red-tint: #f9e9e5;
-  --status-neutral: #696f61;
-  --status-neutral-tint: #edf1e6;
+  --status-green: #2f6b45;
+  --status-green-tint: #e2ecdd;
+  --status-yellow: #97671f;
+  --status-yellow-tint: #f4e6c8;
+  --status-orange: #955b1f;
+  --status-orange-tint: #f4e2c8;
+  --status-red: #8b3a2e;
+  --status-red-tint: #f2e0da;
+  --status-neutral: #6b6752;
+  --status-neutral-tint: #ede5cf;
 
-  --focus-ring: #1e4a34;
+  --focus-ring: #0e2c1e;
 
-  --shadow-color: 30 40 25;
+  --shadow-color: 20 20 10;
   --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.05);
-  --shadow-md: 0 2px 8px rgb(var(--shadow-color) / 0.06), 0 1px 2px rgb(var(--shadow-color) / 0.04);
-  --shadow-lg: 0 16px 40px -12px rgb(var(--shadow-color) / 0.16), 0 4px 12px rgb(var(--shadow-color) / 0.05);
+  --shadow-md: 0 4px 14px -4px rgb(var(--shadow-color) / 0.14), 0 1px 2px rgb(var(--shadow-color) / 0.05);
+  --shadow-lg: 0 20px 48px -18px rgb(var(--shadow-color) / 0.3), 0 4px 12px rgb(var(--shadow-color) / 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #14170f;
-    --color-surface: #1b1f16;
-    --color-surface-muted: #1f2519;
-    --color-border: #2c3325;
-    --color-border-strong: #3a4330;
-    --color-text: #ece9dc;
-    --color-text-muted: #b3b6a2;
-    --color-text-faint: #7f8570;
+    --color-bg: #121710;
+    --color-surface: #191f16;
+    --color-surface-muted: #1e2519;
+    --color-border: #332d1e;
+    --color-border-strong: #443b26;
+    --color-text: #f0ead6;
+    --color-text-muted: #b8b39a;
+    --color-text-faint: #837d63;
 
-    --color-brand: #63a884;
-    --color-brand-hover: #7fbb9a;
-    --color-brand-foreground: #0f1b13;
-    --color-brand-tint: #223327;
+    --color-brand: #6cb08b;
+    --color-brand-hover: #85c29d;
+    --color-brand-foreground: #0d1a12;
+    --color-brand-tint: #1f2f22;
 
-    --color-accent: #d6a154;
+    --color-accent: #d9ab54;
+    --color-accent-bright: #e8c383;
     --color-accent-tint: #362a12;
     --color-accent-foreground: #1c1409;
 
-    --color-danger: #d98277;
-    --color-danger-tint: #3a221e;
+    --color-danger: #d68f7f;
+    --color-danger-tint: #35211c;
 
-    --status-green: #6bbb8d;
-    --status-green-tint: #1c3427;
-    --status-yellow: #d6a154;
+    --status-green: #7bc296;
+    --status-green-tint: #18291d;
+    --status-yellow: #d9ab54;
     --status-yellow-tint: #362a12;
     --status-orange: #d99a5c;
     --status-orange-tint: #362913;
-    --status-red: #d98277;
-    --status-red-tint: #3a221e;
-    --status-neutral: #b3b6a2;
-    --status-neutral-tint: #1f2519;
+    --status-red: #d68f7f;
+    --status-red-tint: #35211c;
+    --status-neutral: #b8b39a;
+    --status-neutral-tint: #1e2519;
 
-    --focus-ring: #63a884;
+    --focus-ring: #6cb08b;
 
     --shadow-color: 0 0 0;
-    --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.3);
-    --shadow-md: 0 2px 10px rgb(var(--shadow-color) / 0.35);
-    --shadow-lg: 0 20px 48px -12px rgb(var(--shadow-color) / 0.55);
+    --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.35);
+    --shadow-md: 0 4px 14px -4px rgb(var(--shadow-color) / 0.4);
+    --shadow-lg: 0 20px 48px -12px rgb(var(--shadow-color) / 0.6);
   }
 }
 
@@ -104,6 +111,7 @@
   --color-brand-foreground: var(--color-brand-foreground);
   --color-brand-tint: var(--color-brand-tint);
   --color-accent: var(--color-accent);
+  --color-accent-bright: var(--color-accent-bright);
   --color-accent-tint: var(--color-accent-tint);
   --color-danger: var(--color-danger);
   --color-danger-tint: var(--color-danger-tint);
@@ -144,4 +152,110 @@ body {
 ::selection {
   background: var(--color-accent-tint);
   color: var(--color-text);
+}
+
+/* VaultDoor graphic (components/graphics/VaultDoor.tsx) — used on the
+ * landing hero and as decoration on the auth shell's dark panel. A
+ * one-time "arrival" as the door settles into place, then a
+ * near-imperceptible continuous drift on the dial ring only; everything
+ * else stays still. Guarded behind prefers-reduced-motion so the base,
+ * non-animated markup (full opacity, no rotation) IS the reduced-motion
+ * experience — these rules only ever ADD motion on top of it. */
+@media (prefers-reduced-motion: no-preference) {
+  .vault-door-base {
+    animation: vaultDoorFadeScale 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .vault-door-dial {
+    transform-box: view-box;
+    transform-origin: 280px 280px;
+    animation:
+      vaultDoorFadeIn 0.6s ease-out 0.15s both,
+      vaultDoorDialDrift 150s linear 0.9s infinite;
+  }
+  .vault-door-seal {
+    animation: vaultDoorFadeIn 0.6s ease-out 0.3s both;
+  }
+  .vault-door-hub {
+    transform-box: view-box;
+    transform-origin: 280px 280px;
+    animation: vaultDoorHubSettle 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+  }
+  .vault-door-badge-top {
+    animation: vaultDoorBadgeInTop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+  }
+  .vault-door-badge-right {
+    animation: vaultDoorBadgeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+  }
+  .vault-door-badge-bottom {
+    animation: vaultDoorBadgeInBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+  }
+}
+
+@keyframes vaultDoorFadeScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+    transform-origin: 280px 280px;
+    transform-box: view-box;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes vaultDoorFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes vaultDoorHubSettle {
+  from {
+    opacity: 0;
+    transform: rotate(-28deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+@keyframes vaultDoorDialDrift {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes vaultDoorBadgeInTop {
+  from {
+    opacity: 0;
+    transform: translate(-8px, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+@keyframes vaultDoorBadgeInRight {
+  from {
+    opacity: 0;
+    transform: translate(8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+@keyframes vaultDoorBadgeInBottom {
+  from {
+    opacity: 0;
+    transform: translate(-8px, 6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
 }

@@ -25,9 +25,9 @@ interface AuthShellProps {
  * height) throughout so short/small viewports scroll instead of clipping
  * content, and each pane's own padding accounts for iOS safe areas.
  *
- * Used by the OTP verify screen and the share-recipient flow. Login and
- * register use PremiumAuthShell instead (the hero-scene redesign) — kept
- * separate so this one stays untouched by that work. */
+ * Used by the share-recipient flow only now. Login, register and verify
+ * all use PremiumAuthShell's capsule layout instead — kept separate so
+ * this simpler shell stays untouched by that work. */
 export function AuthShell({
   title,
   description,

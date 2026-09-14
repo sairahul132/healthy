@@ -29,6 +29,13 @@ export function IdentityCard({
             <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-brand-foreground)]/70">
               Health Vault
             </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-accent)]/30 px-2 py-0.5 text-[9.5px] font-semibold tracking-wide text-[var(--color-accent)] uppercase">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                <rect x="4" y="10" width="16" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" strokeLinecap="round" />
+              </svg>
+              Encrypted
+            </span>
           </div>
           <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-brand-foreground)]/60">
             Healthy ID

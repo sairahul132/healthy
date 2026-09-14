@@ -43,7 +43,17 @@ export function Logomark({
 
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <span className={cn("font-display text-lg font-medium tracking-tight", className)}>
+    <span
+      className={cn(
+        "font-display text-lg font-medium tracking-tight",
+        // No default color: inherits the surrounding text color unless a
+        // caller passes one — cn() only concatenates classes, so stacking
+        // a default text-[...] here alongside a caller's override would
+        // leave both in the class list with the winner decided by
+        // stylesheet order, not JSX order.
+        className,
+      )}
+    >
       Healthy
     </span>
   );
@@ -58,14 +68,21 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-/** Sidebar variant with the "A Healthier You" tagline beneath the wordmark. */
-export function LogoBlock({ className }: { className?: string }) {
+/** Sidebar variant with the "A Healthier You" tagline beneath the wordmark.
+ * `inverted` matches Logomark's brand-panel mode — light wordmark/tagline
+ * for placement on the solid brand-green sidebar instead of a light one. */
+export function LogoBlock({ className, inverted }: { className?: string; inverted?: boolean }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <Logomark className="h-8 w-8" />
+      <Logomark inverted={inverted} className="h-8 w-8" />
       <span className="flex flex-col leading-none">
-        <Wordmark />
-        <span className="mt-1 text-[11px] tracking-wide text-[var(--color-text-faint)]">
+        <Wordmark className={inverted ? "text-[var(--color-brand-foreground)]" : undefined} />
+        <span
+          className={cn(
+            "mt-1 text-[11px] tracking-wide",
+            inverted ? "text-[var(--color-brand-foreground)]/60" : "text-[var(--color-text-faint)]",
+          )}
+        >
           A Healthier You
         </span>
       </span>

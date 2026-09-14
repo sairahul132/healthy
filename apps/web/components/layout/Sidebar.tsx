@@ -22,11 +22,11 @@ export function Sidebar({ className }: { className?: string }) {
             <span
               key={item.href}
               aria-disabled="true"
-              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-faint)]"
+              className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-brand-foreground)]/40"
             >
               <Icon name={item.icon} />
               {item.label}
-              <span className="ml-auto rounded-full bg-[var(--color-accent-tint)] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--color-accent)]">
+              <span className="ml-auto rounded-full bg-[var(--color-brand-foreground)]/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--color-accent-bright)]">
                 Soon
               </span>
             </span>
@@ -39,17 +39,23 @@ export function Sidebar({ className }: { className?: string }) {
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150",
+              "group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150",
               isActive
-                ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)] shadow-sm"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]",
+                ? "bg-[var(--color-brand-foreground)]/12 text-[var(--color-brand-foreground)]"
+                : "text-[var(--color-brand-foreground)]/60 hover:bg-[var(--color-brand-foreground)]/8 hover:text-[var(--color-brand-foreground)]/90",
             )}
           >
+            {isActive ? (
+              <span
+                aria-hidden="true"
+                className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-full bg-[var(--color-accent-bright)]"
+              />
+            ) : null}
             <Icon
               name={item.icon}
               className={cn(
                 "transition-colors",
-                isActive ? "text-[var(--color-brand-foreground)]" : "text-[var(--color-text-faint)] group-hover:text-[var(--color-text)]",
+                isActive ? "text-[var(--color-brand-foreground)]" : "text-[var(--color-brand-foreground)]/45 group-hover:text-[var(--color-brand-foreground)]/80",
               )}
             />
             {item.label}

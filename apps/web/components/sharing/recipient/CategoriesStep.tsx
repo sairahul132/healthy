@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as sharingApi from "@/lib/api/sharing";
 import type { HealthCategoryId, ShareCategoryStatus } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { formatDateTime } from "@/lib/utils/format";
 import { Logo } from "@/components/layout/Logo";
 import { Icon } from "@/components/layout/icons";
@@ -32,9 +33,7 @@ function AvailableCategoryCard({
     <div className="rounded-2xl border border-[var(--status-green)]/25 bg-[var(--status-green-tint)] p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
-          <span aria-hidden="true" className="text-base">
-            {category.icon}
-          </span>
+          <CategoryIcon id={category.id} />
           {category.label}
         </p>
         <span className="rounded-full bg-[var(--status-green)]/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--status-green)]">
@@ -81,7 +80,7 @@ function LockedCategoryCard({
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
       <p className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)]">
-        <span aria-hidden="true">{category.icon}</span>
+        <CategoryIcon id={category.id} />
         {category.label}
       </p>
       <p className="mt-1 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-faint)]">

@@ -1,5 +1,6 @@
 import type { HealthCategoryId } from "@/lib/api/types";
 import { getCategory } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 
 /**
  * Honest "what Healthy actually knows" summary (docs/SPEC.md §147) — this
@@ -21,7 +22,7 @@ export function DataCompleteness({ knownCategories }: { knownCategories: HealthC
                 key={id}
                 className="inline-flex items-center gap-1 rounded-full bg-[var(--status-green-tint)] px-2 py-0.5 text-xs text-[var(--status-green)]"
               >
-                <span aria-hidden="true">{category.icon}</span>
+                <CategoryIcon id={id} className="h-3 w-3" />
                 {category.label}
               </span>
             );

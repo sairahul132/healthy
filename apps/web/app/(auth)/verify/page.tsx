@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { AuthShell } from "@/components/layout/AuthShell";
+import { PremiumAuthShell } from "@/components/layout/PremiumAuthShell";
 import { OtpForm } from "@/components/auth/OtpForm";
-import { decodeIdentifierFromUrl } from "@/lib/utils/identifier";
+import { decodeIdentifierFromUrl, maskIdentifier } from "@/lib/utils/identifier";
 
 export const metadata = { title: "Verify your code" };
 
@@ -28,12 +28,21 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
   }
 
   return (
-    <AuthShell
-      title="Enter your code"
-      description="This confirms it's really you before we open your vault."
-      panelKicker="Verify code"
-      panelHeadline="Check your messages."
-      panelSubtext="We've sent a 6-digit code to confirm it's really you."
+    <PremiumAuthShell
+      kicker="Verify code"
+      pageHeadline="Check your messages."
+      panelMark="Almost there"
+      panelHeadline="We've sent a 6-digit code to confirm it's really you."
+      panelBody="This keeps your vault yours — nobody else can open it, even with your phone."
+      panelBadge={
+        <span className="font-mono inline-flex items-center rounded-full border border-[var(--color-brand-foreground)]/30 px-3.5 py-1.5 text-[13px] text-[var(--color-brand-foreground)]">
+          {maskIdentifier(identifier)}
+        </span>
+      }
+      formTitle="Enter your code"
+      formDescription="This confirms it's really you before we open your vault."
+      headerCtaLabel="Wrong number?"
+      headerCtaHref={mode === "register" ? "/register" : "/login"}
     >
       <OtpForm
         identifier={identifier}
@@ -41,6 +50,6 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
         initialExpiresInSeconds={positiveIntOr(expiresIn, 60)}
         initialResendCooldownSeconds={positiveIntOr(retryAfter, 30)}
       />
-    </AuthShell>
+    </PremiumAuthShell>
   );
 }

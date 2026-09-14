@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useDoctorPatients, useDoctorProfile } from "@/lib/doctor/hooks";
 import { getCategory } from "@/lib/health/categories";
+import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { formatDate } from "@/lib/utils/format";
 import { Card } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
@@ -99,7 +100,7 @@ function VerifiedDoctorPatients() {
                     key={id}
                     className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]"
                   >
-                    <span aria-hidden="true">{category.icon}</span>
+                    <CategoryIcon id={category.id} />
                     {category.label}
                   </span>
                 );

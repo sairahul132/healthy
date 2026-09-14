@@ -24,9 +24,16 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-7">
       <div>
-        <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">Home</h1>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Your health data. Your vault. Your permission.
+        <span className="text-[10.5px] font-bold tracking-[0.14em] text-[var(--color-accent)] uppercase">
+          Your Vault
+        </span>
+        <h1 className="mt-1 font-display text-2xl font-medium text-[var(--color-text)]">Home</h1>
+        <p className="mt-1 flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0 text-[var(--color-accent)]">
+            <rect x="4" y="10" width="16" height="10" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" strokeLinecap="round" />
+          </svg>
+          Private by default — nothing here is public unless you choose to share it.
         </p>
       </div>
 
@@ -48,11 +55,12 @@ export default function DashboardPage() {
       </Card>
 
       <div>
-        <div className="mb-3.5 flex items-center justify-between">
+        <div className="mb-3.5 flex items-center gap-3">
           <h2 className="font-display text-base font-medium text-[var(--color-text)]">
             Recent reports
           </h2>
-          <Link href="/reports" className="text-sm font-medium text-[var(--color-brand)] hover:underline">
+          <span aria-hidden="true" className="h-px flex-1 bg-[var(--color-border-strong)]" />
+          <Link href="/reports" className="text-sm font-medium text-[var(--color-accent)] hover:underline">
             View all
           </Link>
         </div>
