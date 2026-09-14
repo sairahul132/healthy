@@ -55,6 +55,10 @@ class HealthCategoryDetailResponse(CamelModel):
     latest_results: list[LabResultResponse]
 
 
+class AttentionSummaryResponse(CamelModel):
+    abnormal_count: int
+
+
 class TrendPointResponse(CamelModel):
     report_id: str
     value: float

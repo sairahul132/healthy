@@ -37,10 +37,10 @@ export function IdentityCard({
               Encrypted
             </span>
           </div>
-          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-brand-foreground)]/60">
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-accent-bright)]/80">
             Healthy ID
           </p>
-          <p className="font-display mt-1 text-2xl font-medium tracking-wide text-[var(--color-brand-foreground)]">
+          <p className="font-display mt-1 text-2xl font-medium tracking-wide text-[var(--color-accent-bright)]">
             {healthyId}
           </p>
           {name ? (

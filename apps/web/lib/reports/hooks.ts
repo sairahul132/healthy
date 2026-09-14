@@ -85,6 +85,11 @@ export function useDeleteReport() {
     onSuccess: (_data, reportId) => {
       queryClient.invalidateQueries({ queryKey: reportsKeys.list });
       queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+      // A deleted report can remove the last result in a category (so it
+      // should stop appearing on the Health page) and always changes
+      // which tests are currently out of range — both need a refetch, not
+      // just the reports list itself.
+      queryClient.invalidateQueries({ queryKey: ["health"] });
       queryClient.removeQueries({ queryKey: reportsKeys.detail(reportId) });
       queryClient.removeQueries({ queryKey: reportsKeys.results(reportId) });
     },
@@ -98,6 +103,9 @@ export function useUploadReport() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reportsKeys.list });
       queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+      // A new report can introduce a category the user had no results in
+      // before, add new trend points, and change the attention count.
+      queryClient.invalidateQueries({ queryKey: ["health"] });
     },
   });
 }

@@ -161,6 +161,10 @@ export interface TestTrend {
   points: TrendPoint[];
 }
 
+export interface AttentionSummary {
+  abnormalCount: number;
+}
+
 export type SearchResultKind = "report" | "result";
 
 export interface SearchResult {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession } from "@/lib/auth/session-context";
 import { useReports } from "@/lib/reports/hooks";
+import { useAttentionSummary } from "@/lib/health/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState, LoadingState } from "@/components/ui/States";
 import { Button } from "@/components/ui/Button";
@@ -14,12 +15,13 @@ import { IdentityCard } from "@/components/dashboard/IdentityCard";
 export default function DashboardPage() {
   const { user } = useSession();
   const { data: reports, isLoading } = useReports();
+  const { data: attentionSummary } = useAttentionSummary();
 
   const recentReports = reports?.slice(0, 3) ?? [];
   const knownCategories = Array.from(
     new Set((reports ?? []).filter((r) => r.status === "COMPLETED").flatMap((r) => r.categories)),
   );
-  const attentionCount = (reports ?? []).reduce((sum, r) => sum + r.abnormalCount, 0);
+  const attentionCount = attentionSummary?.abnormalCount ?? 0;
 
   return (
     <div className="flex flex-col gap-7">

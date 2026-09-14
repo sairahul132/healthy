@@ -94,3 +94,32 @@ export function computeTrend(current: number, previous: number | null): TrendRes
   const direction = absoluteChange > 0 ? "up" : absoluteChange < 0 ? "down" : "flat";
   return { absoluteChange, percentChange, direction };
 }
+
+/** Coarse visual bucket for a clinical direction — shared by the report
+ * detail table and the Health page's result rows so the same value always
+ * reads the same color everywhere. */
+export type Tone = "success" | "warning" | "critical" | "neutral";
+
+export function toneFor(direction: ClinicalDirection): Tone {
+  switch (direction) {
+    case "NORMAL":
+      return "success";
+    case "LOW":
+    case "HIGH":
+      return "warning";
+    case "CRITICAL_LOW":
+    case "CRITICAL_HIGH":
+      return "critical";
+    default:
+      return "neutral";
+  }
+}
+
+/** Sort key for "most in need of attention first" — critical, then
+ * high/low, then normal, then unknown. */
+export function attentionRank(direction: ClinicalDirection): number {
+  if (direction.startsWith("CRITICAL")) return 0;
+  if (direction === "HIGH" || direction === "LOW") return 1;
+  if (direction === "NORMAL") return 2;
+  return 3;
+}

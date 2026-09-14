@@ -29,6 +29,7 @@ from app.providers.virus_scan_provider import VirusScanProvider
 from app.repositories.audit_repository import AuditRepository
 from app.repositories.reports_repository import ReportsRepository
 from app.schemas.reports import (
+    AttentionSummaryResponse,
     ClinicalStatusResponse,
     HealthCategoryDetailResponse,
     HealthCategoryResponse,
@@ -388,12 +389,39 @@ class ReportsService:
 
     # --- Health categories (§21, §145) ---
 
-    def list_categories(self) -> list[HealthCategoryResponse]:
+    @staticmethod
+    def _dedup_latest_by_code(results: list[LabResult]) -> dict[str, LabResult]:
+        """Collapses a result list down to one row per canonical test —
+        whichever has the latest `collection_date` — so a test that used to
+        be abnormal doesn't stay counted once a newer report shows it back
+        in range. Shared by category detail, the attention count, and
+        anywhere else that means "current value" rather than "history"."""
+        latest_by_code: dict[str, LabResult] = {}
+        for result in results:
+            existing = latest_by_code.get(result.canonical_code)
+            if existing is None or (
+                result.collection_date
+                and (
+                    existing.collection_date is None
+                    or result.collection_date > existing.collection_date
+                )
+            ):
+                latest_by_code[result.canonical_code] = result
+        return latest_by_code
+
+    async def list_categories(self, user_id: uuid.UUID) -> list[HealthCategoryResponse]:
+        """Only the categories the user actually has a result in — not the
+        full fixed list. A user who has only ever uploaded a blood panel
+        shouldn't see 14 empty category tiles for organs nothing has been
+        tested for yet."""
+        results = await self._reports.list_results_for_user(user_id)
+        present = {r.category for r in results if r.category in _CATEGORY_LABELS}
         return [
             HealthCategoryResponse(
                 id=cid, label=_CATEGORY_LABELS[cid][0], icon=_CATEGORY_LABELS[cid][1]
             )
             for cid in HEALTH_CATEGORY_IDS
+            if cid in present
         ]
 
     async def get_category_detail(
@@ -402,17 +430,7 @@ class ReportsService:
         if category_id not in _CATEGORY_LABELS:
             raise NotFoundError("Unknown health category.")
         results = await self._reports.list_results_for_user(user_id, category=category_id)
-        latest_by_test: dict[str, LabResult] = {}
-        for result in results:
-            existing = latest_by_test.get(result.canonical_code)
-            if existing is None or (
-                result.collection_date
-                and (
-                    existing.collection_date is None
-                    or result.collection_date > existing.collection_date
-                )
-            ):
-                latest_by_test[result.canonical_code] = result
+        latest_by_test = self._dedup_latest_by_code(results)
         label, icon = _CATEGORY_LABELS[category_id]
         return HealthCategoryDetailResponse(
             id=category_id,
@@ -420,6 +438,19 @@ class ReportsService:
             icon=icon,
             latest_results=[result_to_response(r) for r in latest_by_test.values()],
         )
+
+    async def get_attention_summary(self, user_id: uuid.UUID) -> AttentionSummaryResponse:
+        """Count of tests currently outside their reference range, using
+        each test's most recent result only — so this number rises and
+        falls with the user's actual latest results instead of only ever
+        growing as more reports pile up (see get_trends' same-shaped fix
+        below for why a naive per-report sum is wrong)."""
+        results = await self._reports.list_results_for_user(user_id)
+        latest_by_test = self._dedup_latest_by_code(results)
+        abnormal_count = sum(
+            1 for r in latest_by_test.values() if r.status_direction != "NORMAL"
+        )
+        return AttentionSummaryResponse(abnormal_count=abnormal_count)
 
     # --- Trends (§31) ---
 
@@ -431,8 +462,6 @@ class ReportsService:
 
         trends: list[TestTrendResponse] = []
         for code, items in by_code.items():
-            if len(items) < 2:
-                continue
             canonical = get_by_code(code)
             if canonical is None:
                 continue

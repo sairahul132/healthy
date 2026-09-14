@@ -216,13 +216,49 @@ async def test_health_categories_and_category_detail(
     await register_and_verify(client, otp_provider, unique_identifier("patient"))
     categories = await client.get("/api/v1/health/categories")
     assert categories.status_code == 200
-    ids = [c["id"] for c in categories.json()]
-    assert "blood" in ids and "kidney" in ids
+    # Nothing uploaded yet — no category has any data, so none are shown.
+    assert categories.json() == []
 
     await _upload(client, content=CBC_TEXT.encode())
+    categories = await client.get("/api/v1/health/categories")
+    ids = [c["id"] for c in categories.json()]
+    assert ids == ["blood"]  # only the category this report actually has
+
     detail = await client.get("/api/v1/health/categories/blood")
     assert detail.status_code == 200, detail.text
     assert len(detail.json()["latestResults"]) == 3
+
+
+async def test_attention_summary_reflects_latest_result_only(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    """A test that was abnormal in an older report shouldn't stay counted
+    forever once a newer report shows it back in range — the count tracks
+    current status, not report history."""
+    await register_and_verify(client, otp_provider, unique_identifier("patient"))
+
+    await _upload(
+        client,
+        filename="old.txt",
+        content=(
+            b"Collected On: 05-Jan-2025\n"
+            b"Hemoglobin        9.0   g/dL   (13.0 - 17.0)\n"
+        ),
+    )
+    summary = await client.get("/api/v1/health/attention-summary")
+    assert summary.status_code == 200
+    assert summary.json()["abnormalCount"] == 1
+
+    await _upload(
+        client,
+        filename="new.txt",
+        content=(
+            b"Collected On: 20-Jun-2025\n"
+            b"Hemoglobin        13.5   g/dL   (13.0 - 17.0)\n"
+        ),
+    )
+    summary = await client.get("/api/v1/health/attention-summary")
+    assert summary.json()["abnormalCount"] == 0
 
 
 async def test_timeline_includes_completed_report(

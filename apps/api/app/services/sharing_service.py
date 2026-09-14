@@ -412,6 +412,8 @@ class SharingService:
         scopes = await self._sharing.list_scopes(session.id)
         authorized = {s.category for s in scopes}
         healthy_id_row = await self._users.get_healthy_id(session.patient_user_id)
+        patient_results = await self._reports.list_results_for_user(session.patient_user_id)
+        patient_categories = {r.category for r in patient_results}
 
         await self._audit.record(
             actor_user_id=None,
@@ -427,6 +429,7 @@ class SharingService:
             categories=[
                 ShareCategoryStatus(id=cat, authorized=cat in authorized)
                 for cat in HEALTH_CATEGORY_IDS
+                if cat in patient_categories
             ],
             expires_at=session.expires_at,
             data_note=DATA_NOTE,

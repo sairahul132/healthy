@@ -7,6 +7,7 @@ export const healthKeys = {
   categories: ["health", "categories"] as const,
   categoryDetail: (id: string) => ["health", "categories", id] as const,
   trends: ["health", "trends"] as const,
+  attentionSummary: ["health", "attention-summary"] as const,
 };
 
 export function useHealthCategories() {
@@ -27,5 +28,12 @@ export function useHealthTrends() {
   return useQuery({
     queryKey: healthKeys.trends,
     queryFn: () => reportsApi.getHealthTrends(),
+  });
+}
+
+export function useAttentionSummary() {
+  return useQuery({
+    queryKey: healthKeys.attentionSummary,
+    queryFn: () => reportsApi.getAttentionSummary(),
   });
 }

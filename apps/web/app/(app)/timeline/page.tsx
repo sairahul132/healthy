@@ -29,7 +29,7 @@ function TimelineEvents() {
         />
       ) : null}
       {events && events.length > 0 ? (
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-5 shadow-sm">
+        <div className="max-w-3xl">
           {events.map((event, index) => (
             <TimelineItem key={event.id} event={event} isLast={index === events.length - 1} />
           ))}
@@ -42,9 +42,13 @@ function TimelineEvents() {
 export default function TimelinePage() {
   return (
     <div>
-      <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">Timeline</h1>
+      <span className="text-[10.5px] font-bold tracking-[0.14em] text-[var(--color-accent)] uppercase">
+        Every report, visit, and event
+      </span>
+      <h1 className="mt-1 font-display text-2xl font-medium text-[var(--color-text)]">Timeline</h1>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-        Every report, visit, and event in your health history, in one chronological view.
+        Your whole health history in one chronological view. Hover a report to remove it —
+        deleting here removes it everywhere, including Reports and Health.
       </p>
 
       <div className="mt-7">

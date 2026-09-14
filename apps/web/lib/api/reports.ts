@@ -1,5 +1,6 @@
 import { apiDownload, apiFetch, apiUpload } from "./client";
 import type {
+  AttentionSummary,
   HealthCategory,
   HealthCategoryDetail,
   LabReport,
@@ -49,6 +50,10 @@ export function getHealthCategoryDetail(categoryId: string): Promise<HealthCateg
 
 export function getHealthTrends(): Promise<TestTrend[]> {
   return apiFetch<TestTrend[]>("/health/trends");
+}
+
+export function getAttentionSummary(): Promise<AttentionSummary> {
+  return apiFetch<AttentionSummary>("/health/attention-summary");
 }
 
 export function search(query: string): Promise<SearchResult[]> {

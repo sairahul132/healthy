@@ -7,7 +7,7 @@ import type { ClinicalDirection, HealthCategoryId, LabResult } from "@/lib/api/t
 import { ApiError } from "@/lib/api/types";
 import { useDeleteReport, useDownloadReportFile, useReport, useReportResults } from "@/lib/reports/hooks";
 import { useCompareReport } from "@/lib/ai/hooks";
-import { computeTrend } from "@/lib/health/status-engine";
+import { attentionRank, computeTrend, toneFor, type Tone } from "@/lib/health/status-engine";
 import { getCategory } from "@/lib/health/categories";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
@@ -17,102 +17,9 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { ExplainPanel } from "@/components/ai/ExplainPanel";
 import { CategoryIcon } from "@/components/health/CategoryIcon";
+import { StatusPill, TONE_PILL, VisualRange } from "@/components/health/StatusVisuals";
 import { ShareReportDialog } from "@/components/sharing/ShareReportDialog";
 import { ReportToolbar, type SortBy, type StatusFilter } from "@/components/reports/ReportToolbar";
-
-type Tone = "success" | "warning" | "critical" | "neutral";
-
-const TONE_PILL: Record<Tone, string> = {
-  success: "bg-[var(--status-green-tint)] text-[var(--status-green)]",
-  warning: "bg-[var(--status-yellow-tint)] text-[var(--status-yellow)]",
-  critical: "bg-[var(--status-red-tint)] text-[var(--status-red)]",
-  neutral: "bg-[var(--status-neutral-tint)] text-[var(--status-neutral)]",
-};
-
-const TONE_TRACK: Record<Tone, string> = {
-  success: "bg-[var(--status-green-tint)]",
-  warning: "bg-[var(--status-yellow-tint)]",
-  critical: "bg-[var(--status-red-tint)]",
-  neutral: "bg-[var(--status-neutral-tint)]",
-};
-
-const TONE_DOT: Record<Tone, string> = {
-  success: "bg-[var(--status-green)]",
-  warning: "bg-[var(--status-yellow)]",
-  critical: "bg-[var(--status-red)]",
-  neutral: "bg-[var(--status-neutral)]",
-};
-
-function toneFor(direction: ClinicalDirection): Tone {
-  switch (direction) {
-    case "NORMAL":
-      return "success";
-    case "LOW":
-    case "HIGH":
-      return "warning";
-    case "CRITICAL_LOW":
-    case "CRITICAL_HIGH":
-      return "critical";
-    default:
-      return "neutral";
-  }
-}
-
-function attentionRank(direction: ClinicalDirection): number {
-  if (direction.startsWith("CRITICAL")) return 0;
-  if (direction === "HIGH" || direction === "LOW") return 1;
-  if (direction === "NORMAL") return 2;
-  return 3;
-}
-
-function StatusPill({ result }: { result: LabResult }) {
-  const tone = toneFor(result.status.direction);
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
-        TONE_PILL[tone],
-      )}
-    >
-      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
-      {result.status.label}
-    </span>
-  );
-}
-
-function VisualRange({ result }: { result: LabResult }) {
-  const { referenceLow: low, referenceHigh: high, value } = result;
-  if (low === null || high === null || low >= high) {
-    return <p className="text-xs text-[var(--color-text-faint)]">{result.referenceText || "No reference range"}</p>;
-  }
-  const rawPct = ((value - low) / (high - low)) * 100;
-  const pct = Math.min(Math.max(rawPct, -12), 112);
-  const tone = toneFor(result.status.direction);
-
-  return (
-    <div className="w-full min-w-[150px]">
-      <div className={cn("relative mt-4.5 h-px rounded-full", TONE_TRACK[tone])}>
-        <span
-          className="absolute -top-4 -translate-x-1/2 text-[10.5px] font-bold text-[var(--color-text)] tabular-nums"
-          style={{ left: `${pct}%` }}
-        >
-          {value}
-        </span>
-        <span
-          className={cn(
-            "absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--color-surface)] shadow-sm",
-            TONE_DOT[tone],
-          )}
-          style={{ left: `${pct}%` }}
-        />
-      </div>
-      <div className="mt-1.5 flex justify-between text-[10px] text-[var(--color-text-faint)] tabular-nums">
-        <span>{low}</span>
-        <span>{high}</span>
-      </div>
-    </div>
-  );
-}
 
 function ResultsTable({ results }: { results: LabResult[] }) {
   const [explainingId, setExplainingId] = useState<string | null>(null);
