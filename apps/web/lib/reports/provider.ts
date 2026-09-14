@@ -1,4 +1,4 @@
-import type { LabReport, LabResult, TimelineEvent } from "@/lib/api/types";
+import type { HistoryEntry, LabReport, LabResult, TimelineEvent } from "@/lib/api/types";
 
 /**
  * Provider interface for report storage/processing (docs/SPEC.md §137/§138
@@ -15,6 +15,9 @@ export interface ReportsProvider {
   downloadReportFile(id: string): Promise<{ blob: Blob; filename: string }>;
   deleteReport(id: string): Promise<void>;
   listTimelineEvents(): Promise<TimelineEvent[]>;
+  deleteTimelineEvent(id: string): Promise<void>;
+  getHistory(): Promise<HistoryEntry[]>;
+  clearHistory(): Promise<void>;
 }
 
 export class ReportValidationError extends Error {}

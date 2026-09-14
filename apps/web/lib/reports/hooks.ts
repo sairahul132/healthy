@@ -10,6 +10,7 @@ export const reportsKeys = {
   detail: (id: string) => ["reports", id] as const,
   results: (id: string) => ["reports", id, "results"] as const,
   timeline: ["timeline"] as const,
+  history: ["timeline", "history"] as const,
 };
 
 export function useReports() {
@@ -59,6 +60,37 @@ export function useTimelineEvents() {
   return useQuery({
     queryKey: reportsKeys.timeline,
     queryFn: () => getReportsProvider().listTimelineEvents(),
+  });
+}
+
+/** Fallback delete for a timeline card with no dedicated owner — see
+ * lib/api/reports.ts's deleteTimelineEvent. Reports and medicines use their
+ * own delete hooks instead (useDeleteReport / useDeleteMedicine), which
+ * also remove the record the card describes. */
+export function useDeleteTimelineEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) => getReportsProvider().deleteTimelineEvent(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+    },
+  });
+}
+
+export function useTimelineHistory() {
+  return useQuery({
+    queryKey: reportsKeys.history,
+    queryFn: () => getReportsProvider().getHistory(),
+  });
+}
+
+export function useClearHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => getReportsProvider().clearHistory(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsKeys.history });
+    },
   });
 }
 

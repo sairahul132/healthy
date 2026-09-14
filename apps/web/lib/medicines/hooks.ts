@@ -32,6 +32,20 @@ export function useUpdateMedicine() {
       medicinesApi.updateMedicine(id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: medicinesKeys.list });
+      // Active/inactive and name/reason edits both change what the
+      // timeline (and its History tab) shows for this medicine.
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    },
+  });
+}
+
+export function useDeleteMedicine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => medicinesApi.deleteMedicine(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: medicinesKeys.list });
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
     },
   });
 }

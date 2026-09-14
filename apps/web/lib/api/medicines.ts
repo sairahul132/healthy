@@ -27,8 +27,13 @@ export interface UpdateMedicineInput {
   dosage?: string;
   frequency?: string;
   endDate?: string;
+  reason?: string;
 }
 
 export function updateMedicine(id: string, input: UpdateMedicineInput): Promise<Medicine> {
   return apiFetch<Medicine>(`/medicines/${id}`, { method: "PATCH", body: input });
+}
+
+export function deleteMedicine(id: string): Promise<void> {
+  return apiFetch<void>(`/medicines/${id}`, { method: "DELETE" });
 }

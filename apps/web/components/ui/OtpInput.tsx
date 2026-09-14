@@ -1,6 +1,6 @@
 "use client";
 
-import { type ClipboardEvent, type KeyboardEvent, useRef } from "react";
+import { type ClipboardEvent, type KeyboardEvent, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export interface OtpInputProps {
@@ -19,6 +19,14 @@ export interface OtpInputProps {
 export function OtpInput({ length = 6, value, onChange, onEnter, error, disabled }: OtpInputProps) {
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const digits = value.padEnd(length, " ").slice(0, length).split("");
+
+  // Land the caret in the first box as soon as the page is ready, so typing
+  // works immediately without the user having to click in — every other
+  // focus move already happens automatically (see fillFrom/setDigit below).
+  useEffect(() => {
+    if (!disabled) inputRefs.current[0]?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function fillFrom(digitsOnly: string) {
     const next = digitsOnly.slice(0, length);

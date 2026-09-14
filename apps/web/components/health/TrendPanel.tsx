@@ -81,7 +81,7 @@ export function TrendPanel({
       : "";
 
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-5 py-5 sm:px-6">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-5 py-5 sm:rounded-[14px] sm:px-[26px] sm:py-[22px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-display text-sm text-[var(--color-text)]">
           {testName} over time
@@ -127,6 +127,10 @@ export function TrendPanel({
   );
 }
 
+/** Deliberately plain — a single baseline, a line, and dots, matching
+ * design/health-page-mockup.html's chart exactly (no area fill, no extra
+ * grid rows). The hover tooltip is the one interactive addition the static
+ * mockup couldn't show. */
 function Chart({
   points,
   hoverIndex,
@@ -203,11 +207,11 @@ function Chart({
 
       {hovered ? (
         <g transform={`translate(${hovered.x},${hovered.y})`} style={{ pointerEvents: "none" }}>
-          <rect x={-46} y={-40} width={92} height={26} rx="7" fill="var(--color-brand)" />
-          <polygon points="-5,-14 5,-14 0,-7" fill="var(--color-brand)" />
+          <rect x={-52} y={-38} width={104} height={27} rx="7" fill="var(--color-brand)" />
+          <polygon points="-5,-11 5,-11 0,-4" fill="var(--color-brand)" />
           <text
             x="0"
-            y="-22"
+            y="-19"
             textAnchor="middle"
             fontSize="12"
             fontWeight="600"

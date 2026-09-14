@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -27,6 +27,10 @@ class AuditLog(UUIDPrimaryKeyMixin, Base):
     event_metadata: Mapped[dict] = mapped_column(JSONEncodedDict, default=dict, nullable=False)
     prev_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     row_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    # App-side (not server_default) so ordering has real sub-second
+    # precision even on SQLite, whose CURRENT_TIMESTAMP only resolves to
+    # the second — several audit rows written within one request/second
+    # would otherwise sort arbitrarily among themselves.
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True
     )

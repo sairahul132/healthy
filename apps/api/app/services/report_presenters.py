@@ -5,6 +5,7 @@ one place to keep the wire shape consistent across all three.
 """
 
 from app.db.models import LabReport, LabResult
+from app.repositories.reports_repository import ReportsRepository
 from app.schemas.reports import ClinicalStatusResponse, LabReportResponse, LabResultResponse
 
 
@@ -47,3 +48,30 @@ def result_to_response(result: LabResult) -> LabResultResponse:
         extraction_confidence=result.extraction_confidence,
         collection_date=result.collection_date,
     )
+
+
+async def results_to_response_with_live_previous(
+    repo: ReportsRepository, results: list[LabResult]
+) -> list[LabResultResponse]:
+    """Like `result_to_response`, but recomputes each result's "previous"
+    comparison live instead of trusting the `previous_value`/
+    `previous_collection_date` columns — those are frozen onto the row once,
+    when its report was processed (see ReportsService.process_report), so a
+    later delete of whichever report supplied that comparison would
+    otherwise leave "Trends from Previous Reports" pointing at a report that
+    no longer exists. Recomputing here means the trend self-heals: it drops
+    the comparison, or picks up whatever is now the next most recent
+    completed report, automatically — no bookkeeping needed on delete."""
+    responses = []
+    for result in results:
+        response = result_to_response(result)
+        previous = await repo.get_previous_result(
+            result.user_id,
+            result.canonical_code,
+            exclude_report_id=result.report_id,
+            before_date=result.collection_date,
+        )
+        response.previous_value = previous.value if previous else None
+        response.previous_collection_date = previous.collection_date if previous else None
+        responses.append(response)
+    return responses

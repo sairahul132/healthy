@@ -28,7 +28,7 @@ export function StatusPill({ result }: { result: LabResult }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-[5px] rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap",
         TONE_PILL[tone],
       )}
     >
@@ -48,15 +48,20 @@ export function VisualRange({ result }: { result: LabResult }) {
     return <p className="text-xs text-[var(--color-text-faint)]">{result.referenceText || "No reference range"}</p>;
   }
   const rawPct = ((value - low) / (high - low)) * 100;
-  const pct = Math.min(Math.max(rawPct, -12), 112);
+  // Marker (dot) can sit slightly outside the track to show an out-of-range
+  // value — but its value label is clamped tighter so the label text itself
+  // never overhangs the track's own width and clips against the row next
+  // to it or the min/max labels below.
+  const dotPct = Math.min(Math.max(rawPct, -12), 112);
+  const labelPct = Math.min(Math.max(rawPct, 6), 94);
   const tone = toneFor(result.status.direction);
 
   return (
-    <div className="w-full min-w-[150px]">
-      <div className={cn("relative mt-4.5 h-px rounded-full", TONE_TRACK[tone])}>
+    <div className="w-full min-w-0">
+      <div className={cn("relative mt-4 h-px rounded-full", TONE_TRACK[tone])}>
         <span
-          className="absolute -top-4 -translate-x-1/2 text-[10.5px] font-bold text-[var(--color-text)] tabular-nums"
-          style={{ left: `${pct}%` }}
+          className="absolute -top-[18px] -translate-x-1/2 text-[10.5px] font-bold text-nowrap text-[var(--color-text)] tabular-nums"
+          style={{ left: `${labelPct}%` }}
         >
           {value}
         </span>
@@ -65,7 +70,7 @@ export function VisualRange({ result }: { result: LabResult }) {
             "absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--color-surface)] shadow-sm",
             TONE_DOT[tone],
           )}
-          style={{ left: `${pct}%` }}
+          style={{ left: `${dotPct}%` }}
         />
       </div>
       <div className="mt-1.5 flex justify-between text-[10px] text-[var(--color-text-faint)] tabular-nums">

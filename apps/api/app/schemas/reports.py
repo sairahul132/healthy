@@ -57,6 +57,7 @@ class HealthCategoryDetailResponse(CamelModel):
 
 class AttentionSummaryResponse(CamelModel):
     abnormal_count: int
+    results: list[LabResultResponse]
 
 
 class TrendPointResponse(CamelModel):
@@ -82,6 +83,15 @@ class TimelineEventResponse(CamelModel):
     description: str | None
     occurred_at: date
     related_report_id: str | None
+    related_medicine_id: str | None
+
+
+class HistoryEntryResponse(CamelModel):
+    id: str
+    event_type: str
+    title: str
+    description: str | None
+    occurred_at: datetime
 
 
 class SearchResultResponse(CamelModel):

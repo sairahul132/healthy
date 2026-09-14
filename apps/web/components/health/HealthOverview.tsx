@@ -3,11 +3,14 @@
 import { useState } from "react";
 import type { HealthCategoryId } from "@/lib/api/types";
 import { useHealthCategories, useHealthTrends } from "@/lib/health/hooks";
+import { HEALTH_CATEGORIES } from "@/lib/health/categories";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { CategorySection } from "@/components/health/CategorySection";
 import { cn } from "@/lib/utils/cn";
+
+const TOTAL_CATEGORY_COUNT = Object.keys(HEALTH_CATEGORIES).length;
 
 /** The Health page's content — a category filter plus every test's latest
  * result, grouped by body system. Only categories the user actually has a
@@ -47,6 +50,12 @@ export function HealthOverview({ initialCategory }: { initialCategory?: HealthCa
 
   const visible = selected === "all" ? categories : categories.filter((c) => c.id === selected);
 
+  const hiddenCount = TOTAL_CATEGORY_COUNT - categories.length;
+  const hiddenSample = Object.values(HEALTH_CATEGORIES)
+    .filter((c) => !categories.some((present) => present.id === c.id))
+    .slice(0, 3)
+    .map((c) => c.label);
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
@@ -54,7 +63,7 @@ export function HealthOverview({ initialCategory }: { initialCategory?: HealthCa
           type="button"
           onClick={() => setSelected("all")}
           className={cn(
-            "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+            "rounded-full border px-[15px] py-2 text-[13px] font-medium transition-colors",
             selected === "all"
               ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
               : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)]",
@@ -68,7 +77,7 @@ export function HealthOverview({ initialCategory }: { initialCategory?: HealthCa
             type="button"
             onClick={() => setSelected(category.id)}
             className={cn(
-              "flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-[7px] rounded-full border px-[15px] py-2 text-[13px] font-medium transition-colors",
               selected === category.id
                 ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
                 : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)]",
@@ -78,9 +87,15 @@ export function HealthOverview({ initialCategory }: { initialCategory?: HealthCa
             {category.label}
           </button>
         ))}
+        {hiddenCount > 0 ? (
+          <span className="ml-1 self-center text-xs text-[var(--color-text-faint)]">
+            Only categories with results are shown — {hiddenCount} more ({hiddenSample.join(", ")}
+            …) will appear once you&rsquo;ve been tested.
+          </span>
+        ) : null}
       </div>
 
-      <div>
+      <div className="mt-[30px]">
         {visible.map((category) => (
           <CategorySection
             key={category.id}

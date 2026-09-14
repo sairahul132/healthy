@@ -8,6 +8,7 @@ import { LoadingState } from "@/components/ui/States";
 import { CategoryIcon } from "@/components/health/CategoryIcon";
 import { StatusPill, VisualRange } from "@/components/health/StatusVisuals";
 import { TrendPanel } from "@/components/health/TrendPanel";
+import { cn } from "@/lib/utils/cn";
 
 function latestDate(results: LabResult[]): string | null {
   return results.reduce<string | null>((latest, r) => {
@@ -21,36 +22,74 @@ function ResultRow({ result, trend }: { result: LabResult; trend: TestTrend | un
   const [expanded, setExpanded] = useState(false);
   const canExpand = Boolean(trend && trend.points.length > 0);
 
+  const name = (
+    <p className="font-display text-[14.5px] font-medium text-[var(--color-text)]">
+      {result.canonicalTestName}
+    </p>
+  );
+  const value = (
+    <p className="font-mono text-[15px] font-semibold text-[var(--color-text)] whitespace-nowrap">
+      {result.value}
+      <span className="font-sans ml-1 text-[11px] font-medium text-[var(--color-text-faint)]">{result.unit}</span>
+    </p>
+  );
+  const date = (
+    <p className="text-xs text-[var(--color-text-faint)] whitespace-nowrap">
+      {formatDate(result.collectionDate)}
+    </p>
+  );
+  const expandButton = (
+    <button
+      type="button"
+      disabled={!canExpand}
+      onClick={() => setExpanded((v) => !v)}
+      aria-expanded={expanded}
+      aria-label={`${expanded ? "Hide" : "Show"} trend for ${result.canonicalTestName}`}
+      className={cn(
+        "flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full",
+        expanded
+          ? "bg-[var(--color-brand)] text-[var(--color-accent-bright)]"
+          : "border border-[var(--color-border)] text-[var(--color-text-muted)] disabled:cursor-not-allowed disabled:opacity-40",
+      )}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M4 19h16M7 19V9M12 19V5M17 19v-7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+
   return (
     <div className="border-b border-[var(--color-border)] last:border-b-0">
-      <div className="grid grid-cols-[1.6fr_1fr_1.6fr_0.9fr_0.9fr_auto] items-center gap-4 px-5 py-4 sm:px-6">
-        <p className="font-display text-[14.5px] font-medium text-[var(--color-text)]">{result.canonicalTestName}</p>
-        <p className="font-mono text-[15px] font-semibold text-[var(--color-text)]">
-          {result.value}
-          <span className="font-sans ml-1 text-[11px] font-medium text-[var(--color-text-faint)]">{result.unit}</span>
-        </p>
+      {/* Mobile: stacked. Kept as a fully separate layout from the desktop
+          row below (rather than one grid reflowed via `display:contents`)
+          because Safari doesn't place grid items correctly when their
+          parent has `display:contents` — this is the reliable version. */}
+      <div className="flex flex-col gap-3 px-5 py-4 sm:hidden">
+        <div className="flex items-start justify-between gap-3">
+          {name}
+          {expandButton}
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          {value}
+          <StatusPill result={result} />
+        </div>
+        <VisualRange result={result} />
+        {date}
+      </div>
+
+      {/* Desktop: one row, plain grid, no contents trick. Column ratios and
+          spacing match design/health-page-mockup.html's .result-row. */}
+      <div className="hidden sm:grid sm:grid-cols-[1.5fr_1fr_1.6fr_0.9fr_0.9fr_44px] sm:items-center sm:gap-[18px] sm:px-[22px] sm:py-4">
+        {name}
+        {value}
         <VisualRange result={result} />
         <StatusPill result={result} />
-        <p className="text-xs text-[var(--color-text-faint)]">{formatDate(result.collectionDate)}</p>
-        <button
-          type="button"
-          disabled={!canExpand}
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          aria-label={`${expanded ? "Hide" : "Show"} trend for ${result.canonicalTestName}`}
-          className={
-            expanded
-              ? "flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand)] text-[var(--color-accent-bright)]"
-              : "flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] disabled:cursor-not-allowed disabled:opacity-40"
-          }
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M4 19h16M7 19V9M12 19V5M17 19v-7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+        {date}
+        {expandButton}
       </div>
+
       {expanded && trend ? (
-        <div className="px-5 pb-5 sm:px-6">
+        <div className="px-5 pb-5 sm:px-[22px] sm:pb-[18px]">
           <TrendPanel
             testName={result.canonicalTestName}
             points={trend.points}
@@ -82,12 +121,12 @@ export function CategorySection({
 
   return (
     <section className="mb-2">
-      <div className="mb-3 mt-8 flex items-center gap-3 first:mt-0">
-        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--color-brand-tint)] text-[var(--color-brand)]">
+      <div className="mb-3 mt-[30px] flex flex-wrap items-center gap-x-3 gap-y-1 first:mt-0">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-brand-tint)] text-[var(--color-brand)]">
           <CategoryIcon id={categoryId} className="h-4 w-4" />
         </span>
         <h2 className="font-display text-[17px] font-medium text-[var(--color-text)]">{label}</h2>
-        <span aria-hidden="true" className="h-px flex-1 bg-[var(--color-border-strong)]" />
+        <span aria-hidden="true" className="hidden h-px min-w-4 flex-1 bg-[var(--color-border-strong)] sm:block" />
         <span className="text-xs text-[var(--color-text-faint)]">
           {results.length} {results.length === 1 ? "test" : "tests"}
           {(() => {
@@ -96,7 +135,7 @@ export function CategorySection({
           })()}
         </span>
       </div>
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)]">
         {results.map((result) => (
           <ResultRow
             key={result.id}

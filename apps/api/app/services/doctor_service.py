@@ -28,7 +28,7 @@ from app.schemas.doctors import (
 )
 from app.schemas.reports import LabResultResponse
 from app.schemas.sharing import ShareCategoriesResponse, ShareCategoryStatus
-from app.services.report_presenters import result_to_response
+from app.services.report_presenters import results_to_response_with_live_previous
 
 
 def _session_status(session: SharingSession) -> str:
@@ -187,4 +187,4 @@ class DoctorService:
         )
         await self._db.commit()
 
-        return [result_to_response(r) for r in results]
+        return await results_to_response_with_live_previous(self._reports, results)

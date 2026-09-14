@@ -12,4 +12,7 @@ export const httpReportsProvider: ReportsProvider = {
   downloadReportFile: reportsApi.downloadReportFile,
   deleteReport: reportsApi.deleteReport,
   listTimelineEvents: reportsApi.listTimelineEvents,
+  deleteTimelineEvent: reportsApi.deleteTimelineEvent,
+  getHistory: reportsApi.getHistory,
+  clearHistory: reportsApi.clearHistory,
 };

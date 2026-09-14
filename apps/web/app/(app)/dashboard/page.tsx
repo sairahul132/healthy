@@ -11,6 +11,7 @@ import { ReportCard } from "@/components/reports/ReportCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { DataCompleteness } from "@/components/dashboard/DataCompleteness";
 import { IdentityCard } from "@/components/dashboard/IdentityCard";
+import { OutsideRangeList } from "@/components/dashboard/OutsideRangeList";
 
 export default function DashboardPage() {
   const { user } = useSession();
@@ -46,6 +47,8 @@ export default function DashboardPage() {
       />
 
       <QuickActions hasReports={(reports?.length ?? 0) > 0} />
+
+      <OutsideRangeList results={attentionSummary?.results ?? []} />
 
       <Card>
         <CardHeader>

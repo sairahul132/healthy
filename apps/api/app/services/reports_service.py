@@ -22,6 +22,7 @@ from app.db.models import (
     ReportProcessingStatus,
     TimelineEvent,
     TimelineEventType,
+    User,
 )
 from app.providers.ocr_provider import OcrProvider
 from app.providers.storage_provider import StorageProvider, build_object_key
@@ -33,6 +34,7 @@ from app.schemas.reports import (
     ClinicalStatusResponse,
     HealthCategoryDetailResponse,
     HealthCategoryResponse,
+    HistoryEntryResponse,
     LabReportResponse,
     LabResultResponse,
     SearchResultResponse,
@@ -42,7 +44,11 @@ from app.schemas.reports import (
 )
 from app.services.lab_extraction import extract_results
 from app.services.report_metadata_extraction import extract_collection_date
-from app.services.report_presenters import report_to_response, result_to_response
+from app.services.report_presenters import (
+    report_to_response,
+    result_to_response,
+    results_to_response_with_live_previous,
+)
 
 logger = logging.getLogger("healthy.reports")
 
@@ -68,6 +74,41 @@ _CATEGORY_LABELS: dict[str, tuple[str, str]] = {
     "tumor_markers": ("Cancer/Tumor Markers", "🔬"),
     "other": ("Other", "📄"),
 }
+
+# Worse-first ordering for the "outside range" list (§29/§30 severities).
+_SEVERITY_RANK = {"red": 0, "orange": 1, "yellow": 2, "green": 3}
+
+# Only domain CRUD events belong on the user-facing activity history — the
+# rest of the audit trail (logins, OTPs, shares, AI usage, ...) exists for
+# security/compliance, not for this feed (§55 vs. this being a convenience
+# view of "what did I add/remove").
+_HISTORY_EVENT_TYPES = {
+    audit_events.REPORT_UPLOADED,
+    audit_events.REPORT_DELETED,
+    audit_events.MEDICINE_CREATED,
+    audit_events.MEDICINE_UPDATED,
+    audit_events.MEDICINE_DELETED,
+}
+
+_HISTORY_TITLES = {
+    audit_events.REPORT_UPLOADED: "Report added",
+    audit_events.REPORT_DELETED: "Report deleted",
+    audit_events.MEDICINE_CREATED: "Medicine added",
+    audit_events.MEDICINE_UPDATED: "Medicine edited",
+    audit_events.MEDICINE_DELETED: "Medicine deleted",
+}
+
+
+def _describe_history_entry(event_type: str, metadata: dict) -> str | None:
+    if event_type in (audit_events.REPORT_UPLOADED, audit_events.REPORT_DELETED):
+        return metadata.get("fileName")
+    if event_type in (
+        audit_events.MEDICINE_CREATED,
+        audit_events.MEDICINE_UPDATED,
+        audit_events.MEDICINE_DELETED,
+    ):
+        return metadata.get("name")
+    return None
 
 
 def _sniff_mime(data: bytes, filename: str, declared_content_type: str) -> str | None:
@@ -385,7 +426,11 @@ class ReportsService:
         if report is None or report.user_id != user_id:
             raise NotFoundError("Report not found.")
         results = await self._reports.list_results_for_report(report_id)
-        return [result_to_response(r) for r in results]
+        # Live, not the frozen previous_value/previous_collection_date
+        # columns — see results_to_response_with_live_previous for why:
+        # this is what keeps "Trends from Previous Reports" correct after a
+        # report is deleted.
+        return await results_to_response_with_live_previous(self._reports, results)
 
     # --- Health categories (§21, §145) ---
 
@@ -447,10 +492,14 @@ class ReportsService:
         below for why a naive per-report sum is wrong)."""
         results = await self._reports.list_results_for_user(user_id)
         latest_by_test = self._dedup_latest_by_code(results)
-        abnormal_count = sum(
-            1 for r in latest_by_test.values() if r.status_direction != "NORMAL"
+        abnormal = [r for r in latest_by_test.values() if r.status_direction != "NORMAL"]
+        abnormal.sort(
+            key=lambda r: (_SEVERITY_RANK.get(r.status_severity, 9), r.canonical_test_name)
         )
-        return AttentionSummaryResponse(abnormal_count=abnormal_count)
+        return AttentionSummaryResponse(
+            abnormal_count=len(abnormal),
+            results=[result_to_response(r) for r in abnormal],
+        )
 
     # --- Trends (§31) ---
 
@@ -502,9 +551,54 @@ class ReportsService:
                 description=e.description,
                 occurred_at=e.occurred_at,
                 related_report_id=str(e.related_report_id) if e.related_report_id else None,
+                related_medicine_id=str(e.related_medicine_id) if e.related_medicine_id else None,
             )
             for e in events
         ]
+
+    async def delete_timeline_event(self, user_id: uuid.UUID, event_id: uuid.UUID) -> None:
+        """Fallback delete for a timeline entry with no domain-specific owner
+        (e.g. a future DOCTOR_VISIT/DIAGNOSIS entry) — LAB_REPORT and
+        MEDICINE entries are deleted through their own service instead
+        (ReportsService.delete_report / MedicinesService.delete), which also
+        remove the record the entry was describing, not just the entry."""
+        event = await self._reports.get_timeline_event_by_id(event_id)
+        if event is None or event.user_id != user_id:
+            raise NotFoundError("Timeline event not found.")
+        await self._reports.delete_timeline_event(event)
+        await self._db.commit()
+
+    # --- Activity history (§55-adjacent: a user-facing view over the same
+    # append-only audit trail, filtered to domain CRUD and rendered in plain
+    # language) ---
+
+    async def get_history(self, user_id: uuid.UUID) -> list[HistoryEntryResponse]:
+        user = await self._db.get(User, user_id)
+        after = user.history_cleared_at if user else None
+        entries = await self._audit.list_for_user(
+            user_id, event_types=_HISTORY_EVENT_TYPES, after=after
+        )
+        return [
+            HistoryEntryResponse(
+                id=str(e.id),
+                event_type=e.event_type,
+                title=_HISTORY_TITLES.get(e.event_type, e.event_type.replace("_", " ").title()),
+                description=_describe_history_entry(e.event_type, e.event_metadata),
+                occurred_at=e.created_at,
+            )
+            for e in entries
+        ]
+
+    async def clear_history(self, user_id: uuid.UUID) -> None:
+        """Doesn't touch a single AuditLog row — those are append-only by
+        design (§55, DB-level GRANT). "Clearing" just moves this user's
+        history-visibility cutoff forward; get_history only shows entries
+        after it."""
+        user = await self._db.get(User, user_id)
+        if user is None:
+            raise NotFoundError("User not found.")
+        user.history_cleared_at = datetime.now(UTC)
+        await self._db.commit()
 
     # --- Search (§62) ---
 

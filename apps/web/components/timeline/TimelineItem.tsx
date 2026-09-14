@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import type { TimelineEvent, TimelineEventType } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/types";
-import { useDeleteReport } from "@/lib/reports/hooks";
+import { useDeleteTimelineEvent, useDeleteReport } from "@/lib/reports/hooks";
+import { useDeleteMedicine } from "@/lib/medicines/hooks";
 import { formatDate } from "@/lib/utils/format";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cn } from "@/lib/utils/cn";
@@ -73,16 +74,30 @@ export function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: 
   const meta = TYPE_META[event.type];
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteReport = useDeleteReport();
+  const deleteMedicine = useDeleteMedicine();
+  const deleteTimelineEvent = useDeleteTimelineEvent();
   const isReport = event.type === "LAB_REPORT";
 
-  // Delete only ever removes a whole report, so it's only offered on the
-  // LAB_REPORT entries that have one — a doctor-visit or medicine event
-  // isn't backed by a report and has no equivalent "delete" yet.
-  const canDelete = isReport && Boolean(event.relatedReportId);
+  // Every entry can be removed — which mutation runs depends on what backs
+  // it: a report/medicine entry deletes that whole record (so it also
+  // disappears from Reports/Health or Medicines, not just this list); any
+  // other entry falls back to deleting just the timeline card itself.
+  const deleteMutation = event.relatedReportId
+    ? deleteReport
+    : event.relatedMedicineId
+      ? deleteMedicine
+      : deleteTimelineEvent;
+
+  const deleteTarget = event.relatedReportId ?? event.relatedMedicineId ?? event.id;
+
+  const confirmCopy = event.relatedReportId
+    ? `Removes "${event.title}" and its results everywhere — Reports, Health, and this Timeline. Anything already shared stops updating too. This can't be undone.`
+    : event.relatedMedicineId
+      ? `Removes "${event.title}" from your medicines and this timeline. This can't be undone.`
+      : `Removes "${event.title}" from your timeline. This can't be undone.`;
 
   function handleConfirmDelete() {
-    if (!event.relatedReportId) return;
-    deleteReport.mutate(event.relatedReportId, {
+    deleteMutation.mutate(deleteTarget, {
       onSuccess: () => setConfirmOpen(false),
     });
   }
@@ -126,27 +141,25 @@ export function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: 
         ) : (
           cardInner
         )}
-        {canDelete ? (
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(true)}
-            aria-label={`Delete ${event.title}`}
-            className="absolute top-4 right-4 flex h-7.5 w-7.5 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-faint)] opacity-0 transition-all duration-150 group-hover:opacity-100 hover:border-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-8 0l1 13a2 2 0 002 2h4a2 2 0 002-2l1-13" />
-            </svg>
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          aria-label={`Delete ${event.title}`}
+          className="absolute top-4 right-4 flex h-7.5 w-7.5 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-faint)] opacity-100 transition-all duration-150 hover:border-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-8 0l1 13a2 2 0 002 2h4a2 2 0 002-2l1-13" />
+          </svg>
+        </button>
       </div>
 
       {confirmOpen ? (
         <ConfirmDialog
-          title="Delete this report?"
-          description={`Removes "${event.title}" and its results everywhere — Reports, Health, and this Timeline. Anything already shared stops updating too. This can't be undone.`}
-          confirmLabel="Delete report"
-          isLoading={deleteReport.isPending}
-          error={deleteReport.error instanceof ApiError ? deleteReport.error.message : null}
+          title={`Delete this ${meta.label.toLowerCase()}?`}
+          description={confirmCopy}
+          confirmLabel="Delete"
+          isLoading={deleteMutation.isPending}
+          error={deleteMutation.error instanceof ApiError ? deleteMutation.error.message : null}
           onConfirm={handleConfirmDelete}
           onClose={() => setConfirmOpen(false)}
         />

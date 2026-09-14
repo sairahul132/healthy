@@ -47,7 +47,7 @@ from app.schemas.sharing import (
     ShareStatusResponse,
     SharingSessionResponse,
 )
-from app.services.report_presenters import result_to_response
+from app.services.report_presenters import results_to_response_with_live_previous
 
 OTP_RESEND_COOLDOWN_SECONDS = 30
 DATA_NOTE = (
@@ -468,7 +468,7 @@ class SharingService:
         )
         await self._db.commit()
 
-        return [result_to_response(r) for r in results]
+        return await results_to_response_with_live_previous(self._reports, results)
 
     async def create_access_request(
         self, session: SharingSession, *, category: str, reason: str, requested_duration_hours: int

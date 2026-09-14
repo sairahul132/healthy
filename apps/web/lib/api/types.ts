@@ -136,6 +136,19 @@ export interface TimelineEvent {
   description: string | null;
   occurredAt: string; // ISO date
   relatedReportId: string | null;
+  relatedMedicineId: string | null;
+}
+
+/** A single entry in the "History" tab — a plain-language read of the
+ * append-only activity log (docs/SPEC.md §55), filtered to report/medicine
+ * add/edit/delete events. Distinct from TimelineEvent: the timeline shows
+ * the user's current health record, history shows what changed and when. */
+export interface HistoryEntry {
+  id: string;
+  eventType: string;
+  title: string;
+  description: string | null;
+  occurredAt: string; // ISO datetime
 }
 
 export interface HealthCategoryDetail {
@@ -163,6 +176,7 @@ export interface TestTrend {
 
 export interface AttentionSummary {
   abnormalCount: number;
+  results: LabResult[];
 }
 
 export type SearchResultKind = "report" | "result";
