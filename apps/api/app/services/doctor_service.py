@@ -28,7 +28,7 @@ from app.schemas.doctors import (
 )
 from app.schemas.reports import LabResultResponse
 from app.schemas.sharing import ShareCategoriesResponse, ShareCategoryStatus
-from app.services.report_presenters import result_to_response
+from app.services.report_presenters import results_to_response_with_live_previous
 
 
 def _session_status(session: SharingSession) -> str:
@@ -140,6 +140,8 @@ class DoctorService:
         scopes = await self._sharing.list_scopes(session.id)
         authorized = {s.category for s in scopes}
         healthy_id_row = await self._users.get_healthy_id(session.patient_user_id)
+        patient_results = await self._reports.list_results_for_user(session.patient_user_id)
+        patient_categories = {r.category for r in patient_results}
 
         await self._audit.record(
             actor_user_id=doctor_user_id,
@@ -155,6 +157,7 @@ class DoctorService:
             categories=[
                 ShareCategoryStatus(id=cat, authorized=cat in authorized)
                 for cat in HEALTH_CATEGORY_IDS
+                if cat in patient_categories
             ],
             expires_at=session.expires_at,
             data_note=(
@@ -184,4 +187,4 @@ class DoctorService:
         )
         await self._db.commit()
 
-        return [result_to_response(r) for r in results]
+        return await results_to_response_with_live_previous(self._reports, results)

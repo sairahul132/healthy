@@ -15,6 +15,7 @@ from tests.conftest import (
 )
 
 CBC_TEXT = "Hemoglobin        13.5   g/dL   (13.0 - 17.0)\n"
+KIDNEY_TEXT = "Creatinine        1.0   mg/dL   (0.6 - 1.3)\n"
 
 
 async def _verify_doctor(test_engine, identifier: str) -> None:
@@ -90,6 +91,14 @@ async def test_verified_doctor_sees_linked_patient_and_authorized_results(
         files={"file": ("cbc.txt", io.BytesIO(CBC_TEXT.encode()), "text/plain")},
     )
     assert upload.status_code == 201, upload.text
+    # Kidney must exist in the patient's own data for it to appear at all
+    # in the doctor's category list (unauthorized categories with no data
+    # aren't shown, same as authorized ones — see reports_service tests).
+    kidney_upload = await client.post(
+        "/api/v1/reports/upload",
+        files={"file": ("kidney.txt", io.BytesIO(KIDNEY_TEXT.encode()), "text/plain")},
+    )
+    assert kidney_upload.status_code == 201, kidney_upload.text
 
     create_resp = await client.post(
         "/api/v1/sharing/sessions",

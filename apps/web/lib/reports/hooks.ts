@@ -10,6 +10,7 @@ export const reportsKeys = {
   detail: (id: string) => ["reports", id] as const,
   results: (id: string) => ["reports", id, "results"] as const,
   timeline: ["timeline"] as const,
+  history: ["timeline", "history"] as const,
 };
 
 export function useReports() {
@@ -62,6 +63,37 @@ export function useTimelineEvents() {
   });
 }
 
+/** Fallback delete for a timeline card with no dedicated owner — see
+ * lib/api/reports.ts's deleteTimelineEvent. Reports and medicines use their
+ * own delete hooks instead (useDeleteReport / useDeleteMedicine), which
+ * also remove the record the card describes. */
+export function useDeleteTimelineEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) => getReportsProvider().deleteTimelineEvent(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+    },
+  });
+}
+
+export function useTimelineHistory() {
+  return useQuery({
+    queryKey: reportsKeys.history,
+    queryFn: () => getReportsProvider().getHistory(),
+  });
+}
+
+export function useClearHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => getReportsProvider().clearHistory(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsKeys.history });
+    },
+  });
+}
+
 export function useDownloadReportFile() {
   return useMutation({
     mutationFn: (reportId: string) => getReportsProvider().downloadReportFile(reportId),
@@ -85,6 +117,11 @@ export function useDeleteReport() {
     onSuccess: (_data, reportId) => {
       queryClient.invalidateQueries({ queryKey: reportsKeys.list });
       queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+      // A deleted report can remove the last result in a category (so it
+      // should stop appearing on the Health page) and always changes
+      // which tests are currently out of range — both need a refetch, not
+      // just the reports list itself.
+      queryClient.invalidateQueries({ queryKey: ["health"] });
       queryClient.removeQueries({ queryKey: reportsKeys.detail(reportId) });
       queryClient.removeQueries({ queryKey: reportsKeys.results(reportId) });
     },
@@ -98,6 +135,9 @@ export function useUploadReport() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reportsKeys.list });
       queryClient.invalidateQueries({ queryKey: reportsKeys.timeline });
+      // A new report can introduce a category the user had no results in
+      // before, add new trend points, and change the attention count.
+      queryClient.invalidateQueries({ queryKey: ["health"] });
     },
   });
 }

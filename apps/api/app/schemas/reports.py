@@ -55,7 +55,13 @@ class HealthCategoryDetailResponse(CamelModel):
     latest_results: list[LabResultResponse]
 
 
+class AttentionSummaryResponse(CamelModel):
+    abnormal_count: int
+    results: list[LabResultResponse]
+
+
 class TrendPointResponse(CamelModel):
+    id: str
     report_id: str
     value: float
     unit: str
@@ -68,6 +74,9 @@ class TestTrendResponse(CamelModel):
     canonical_code: str
     category: str
     unit: str
+    reference_low: float | None
+    reference_high: float | None
+    reference_text: str
     points: list[TrendPointResponse]
 
 
@@ -78,6 +87,15 @@ class TimelineEventResponse(CamelModel):
     description: str | None
     occurred_at: date
     related_report_id: str | None
+    related_medicine_id: str | None
+
+
+class HistoryEntryResponse(CamelModel):
+    id: str
+    event_type: str
+    title: str
+    description: str | None
+    occurred_at: datetime
 
 
 class SearchResultResponse(CamelModel):

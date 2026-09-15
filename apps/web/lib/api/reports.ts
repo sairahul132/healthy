@@ -1,7 +1,9 @@
 import { apiDownload, apiFetch, apiUpload } from "./client";
 import type {
+  AttentionSummary,
   HealthCategory,
   HealthCategoryDetail,
+  HistoryEntry,
   LabReport,
   LabResult,
   SearchResult,
@@ -39,6 +41,21 @@ export function listTimelineEvents(): Promise<TimelineEvent[]> {
   return apiFetch<TimelineEvent[]>("/timeline");
 }
 
+/** Fallback delete for a timeline entry with no dedicated owner — reports
+ * and medicines are deleted through deleteReport/deleteMedicine instead,
+ * which also remove the record the entry describes, not just the card. */
+export function deleteTimelineEvent(id: string): Promise<void> {
+  return apiFetch<void>(`/timeline/${id}`, { method: "DELETE" });
+}
+
+export function getHistory(): Promise<HistoryEntry[]> {
+  return apiFetch<HistoryEntry[]>("/timeline/history");
+}
+
+export function clearHistory(): Promise<void> {
+  return apiFetch<void>("/timeline/history", { method: "DELETE" });
+}
+
 export function listHealthCategories(): Promise<HealthCategory[]> {
   return apiFetch<HealthCategory[]>("/health/categories");
 }
@@ -49,6 +66,10 @@ export function getHealthCategoryDetail(categoryId: string): Promise<HealthCateg
 
 export function getHealthTrends(): Promise<TestTrend[]> {
   return apiFetch<TestTrend[]>("/health/trends");
+}
+
+export function getAttentionSummary(): Promise<AttentionSummary> {
+  return apiFetch<AttentionSummary>("/health/attention-summary");
 }
 
 export function search(query: string): Promise<SearchResult[]> {

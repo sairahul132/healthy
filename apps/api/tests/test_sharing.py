@@ -12,6 +12,16 @@ from tests.conftest import (
 RECIPIENT_IDENTIFIER = "doctor@example.com"
 
 CBC_TEXT = "Hemoglobin        13.5   g/dL   (13.0 - 17.0)\n"
+HEART_TEXT = "Total Cholesterol        180   mg/dL   (0 - 200)\n"
+KIDNEY_TEXT = "Creatinine        1.0   mg/dL   (0.6 - 1.3)\n"
+
+
+async def _upload(client: AsyncClient, *, filename: str = "report.txt", content: str) -> None:
+    resp = await client.post(
+        "/api/v1/reports/upload",
+        files={"file": (filename, io.BytesIO(content.encode()), "text/plain")},
+    )
+    assert resp.status_code == 201, resp.text
 
 
 async def _create_share(
@@ -21,9 +31,12 @@ async def _create_share(
     categories: list[str],
     recipient: str = RECIPIENT_IDENTIFIER,
     duration_hours: int = 24,
+    upload_texts: list[str] | None = None,
 ) -> dict:
     patient_identifier = unique_identifier("patient")
     await register_and_verify(client, otp_provider, patient_identifier)
+    for i, text in enumerate(upload_texts or []):
+        await _upload(client, filename=f"report-{i}.txt", content=text)
     resp = await client.post(
         "/api/v1/sharing/sessions",
         json={
@@ -93,7 +106,9 @@ async def test_recipient_with_wrong_identity_is_rejected(
 async def test_recipient_sees_only_granted_categories(
     client: AsyncClient, otp_provider: RecordingOtpProvider
 ):
-    session = await _create_share(client, otp_provider, categories=["blood", "heart"])
+    session = await _create_share(
+        client, otp_provider, categories=["blood", "heart"], upload_texts=[CBC_TEXT, HEART_TEXT]
+    )
     token = _extract_token(session["shareUrl"])
     access_token = await _authenticate_recipient(client, otp_provider, token)
 
@@ -155,6 +170,11 @@ async def test_full_access_request_lifecycle(
     """
     patient_identifier = unique_identifier("patient")
     await register_and_verify(client, otp_provider, patient_identifier)
+    # Kidney must exist in the patient's own data for it to ever appear in
+    # the recipient's category list (with authorized: false) — a category
+    # nothing was ever tested for isn't shown at all, granted or not.
+    await _upload(client, content=CBC_TEXT)
+    await _upload(client, filename="kidney.txt", content=KIDNEY_TEXT)
 
     create_resp = await client.post(
         "/api/v1/sharing/sessions",

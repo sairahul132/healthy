@@ -60,6 +60,7 @@ class MedicinesService:
                 title=body.name,
                 description=body.reason,
                 occurred_at=body.start_date or date.today(),
+                related_medicine_id=medicine.id,
             )
         )
 
@@ -89,13 +90,37 @@ class MedicinesService:
         for field, value in updates.items():
             setattr(medicine, field, value)
 
+        # Keep the timeline card in sync — it was seeded from the medicine's
+        # name/reason at creation and would otherwise go stale after an edit.
+        event = await self._medicines.get_timeline_event(medicine.id)
+        if event is not None:
+            event.title = medicine.name
+            event.description = medicine.reason
+
         await self._audit.record(
             actor_user_id=user_id,
             event_type=audit_events.MEDICINE_UPDATED,
             outcome="success",
             resource_type="medicine",
             resource_id=str(medicine.id),
-            metadata={"fields": list(updates.keys())},
+            metadata={"name": medicine.name, "fields": list(updates.keys())},
         )
         await self._db.commit()
         return _to_response(medicine)
+
+    async def delete(self, user_id: uuid.UUID, medicine_id: uuid.UUID) -> None:
+        medicine = await self._medicines.get_by_id(medicine_id)
+        if medicine is None or medicine.user_id != user_id:
+            raise NotFoundError("Medicine not found.")
+        name = medicine.name
+
+        await self._medicines.delete(medicine)
+        await self._audit.record(
+            actor_user_id=user_id,
+            event_type=audit_events.MEDICINE_DELETED,
+            outcome="success",
+            resource_type="medicine",
+            resource_id=str(medicine_id),
+            metadata={"name": name},
+        )
+        await self._db.commit()

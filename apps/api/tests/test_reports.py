@@ -208,6 +208,8 @@ async def test_trend_uses_previous_completed_report(
     assert trends.status_code == 200, trends.text
     hgb_trend = next(t for t in trends.json() if t["canonicalCode"] == "HGB")
     assert [p["value"] for p in hgb_trend["points"]] == [13.5, 12.0]
+    assert hgb_trend["referenceLow"] == 13.0
+    assert hgb_trend["referenceHigh"] == 17.0
 
 
 async def test_health_categories_and_category_detail(
@@ -216,13 +218,96 @@ async def test_health_categories_and_category_detail(
     await register_and_verify(client, otp_provider, unique_identifier("patient"))
     categories = await client.get("/api/v1/health/categories")
     assert categories.status_code == 200
-    ids = [c["id"] for c in categories.json()]
-    assert "blood" in ids and "kidney" in ids
+    # Nothing uploaded yet — no category has any data, so none are shown.
+    assert categories.json() == []
 
     await _upload(client, content=CBC_TEXT.encode())
+    categories = await client.get("/api/v1/health/categories")
+    ids = [c["id"] for c in categories.json()]
+    assert ids == ["blood"]  # only the category this report actually has
+
     detail = await client.get("/api/v1/health/categories/blood")
     assert detail.status_code == 200, detail.text
     assert len(detail.json()["latestResults"]) == 3
+
+
+async def test_attention_summary_reflects_latest_result_only(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    """A test that was abnormal in an older report shouldn't stay counted
+    forever once a newer report shows it back in range — the count tracks
+    current status, not report history."""
+    await register_and_verify(client, otp_provider, unique_identifier("patient"))
+
+    await _upload(
+        client,
+        filename="old.txt",
+        content=(
+            b"Collected On: 05-Jan-2025\n"
+            b"Hemoglobin        9.0   g/dL   (13.0 - 17.0)\n"
+        ),
+    )
+    summary = await client.get("/api/v1/health/attention-summary")
+    assert summary.status_code == 200
+    assert summary.json()["abnormalCount"] == 1
+    assert [r["canonicalTestName"] for r in summary.json()["results"]] == ["Hemoglobin"]
+
+    await _upload(
+        client,
+        filename="new.txt",
+        content=(
+            b"Collected On: 20-Jun-2025\n"
+            b"Hemoglobin        13.5   g/dL   (13.0 - 17.0)\n"
+        ),
+    )
+    summary = await client.get("/api/v1/health/attention-summary")
+    assert summary.json()["abnormalCount"] == 0
+    assert summary.json()["results"] == []
+
+
+async def test_previous_value_updates_when_referenced_report_is_deleted(
+    client: AsyncClient, otp_provider: RecordingOtpProvider
+):
+    """"Trends from Previous Reports" reads each result's previous-value
+    comparison — it must stay correct even after the report that supplied
+    that comparison is deleted, not keep pointing at data that's gone."""
+    await register_and_verify(client, otp_provider, unique_identifier("patient"))
+
+    oldest = await _upload(
+        client,
+        filename="oldest.txt",
+        content=b"Collected On: 01-Jan-2025\nHemoglobin        12.0   g/dL   (13.0 - 17.0)\n",
+    )
+    middle = await _upload(
+        client,
+        filename="middle.txt",
+        content=b"Collected On: 05-Jan-2025\nHemoglobin        9.0   g/dL   (13.0 - 17.0)\n",
+    )
+    newest = await _upload(
+        client,
+        filename="newest.txt",
+        content=b"Collected On: 20-Jun-2025\nHemoglobin        13.5   g/dL   (13.0 - 17.0)\n",
+    )
+    newest_id = newest.json()["id"]
+    middle_id = middle.json()["id"]
+
+    results = await client.get(f"/api/v1/reports/{newest_id}/results")
+    assert results.json()[0]["previousValue"] == 9.0
+
+    # Delete the report that supplied that comparison — the newest report's
+    # results should automatically fall back to the next most recent report
+    # (oldest, 12.0), not keep showing 9.0.
+    delete = await client.delete(f"/api/v1/reports/{middle_id}")
+    assert delete.status_code == 204
+
+    results = await client.get(f"/api/v1/reports/{newest_id}/results")
+    assert results.json()[0]["previousValue"] == 12.0
+
+    oldest_id = oldest.json()["id"]
+    await client.delete(f"/api/v1/reports/{oldest_id}")
+
+    results = await client.get(f"/api/v1/reports/{newest_id}/results")
+    assert results.json()[0]["previousValue"] is None
 
 
 async def test_timeline_includes_completed_report(

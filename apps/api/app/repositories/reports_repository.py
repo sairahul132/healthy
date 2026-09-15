@@ -1,11 +1,18 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
-from app.db.models import LabReport, LabResult, ReportProcessingStatus, TimelineEvent
+from app.db.models import (
+    LabReport,
+    LabResult,
+    Medicine,
+    ReportProcessingStatus,
+    TimelineEvent,
+    TimelineEventType,
+)
 
 
 class ReportsRepository:
@@ -121,10 +128,27 @@ class ReportsRepository:
     async def add_timeline_event(self, event: TimelineEvent) -> None:
         self._db.add(event)
 
+    async def get_timeline_event_by_id(self, event_id: uuid.UUID) -> TimelineEvent | None:
+        return await self._db.get(TimelineEvent, event_id)
+
+    async def delete_timeline_event(self, event: TimelineEvent) -> None:
+        await self._db.delete(event)
+
     async def list_timeline_for_user(self, user_id: uuid.UUID) -> list[TimelineEvent]:
+        # A MEDICINE event stays linked to its medicine after the medicine is
+        # marked inactive (so editing/deleting it still works), but it should
+        # drop off the visible timeline — only currently-active medicines
+        # belong there (§spec: "only active medicines visible in timeline").
         stmt = (
             select(TimelineEvent)
-            .where(TimelineEvent.user_id == user_id)
+            .outerjoin(Medicine, TimelineEvent.related_medicine_id == Medicine.id)
+            .where(
+                TimelineEvent.user_id == user_id,
+                or_(
+                    TimelineEvent.event_type != TimelineEventType.MEDICINE,
+                    Medicine.active.is_(True),
+                ),
+            )
             .order_by(TimelineEvent.occurred_at.desc())
         )
         return list((await self._db.execute(stmt)).scalars().all())

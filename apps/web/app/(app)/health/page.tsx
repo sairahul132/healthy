@@ -1,60 +1,16 @@
-"use client";
-
-import Link from "next/link";
-import { useHealthCategories } from "@/lib/health/hooks";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { ErrorState, LoadingState } from "@/components/ui/States";
+import { HealthMasterDetail } from "@/components/health/HealthMasterDetail";
+import { parseHealthStatusFilter } from "@/lib/health/status-filter";
 import { RequireReports } from "@/components/reports/RequireReports";
-import { CategoryIcon } from "@/components/health/CategoryIcon";
 
-function HealthCategories() {
-  const { data: categories, isLoading, isError, refetch } = useHealthCategories();
-
-  return (
-    <>
-      {isLoading ? <LoadingState label="Loading categories…" /> : null}
-      {isError ? (
-        <ErrorState
-          description="We couldn't load health categories."
-          action={
-            <Button size="sm" onClick={() => refetch()}>
-              Retry
-            </Button>
-          }
-        />
-      ) : null}
-      {categories ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {categories.map((category) => (
-            <Link key={category.id} href={`/health/${category.id}`} className="block focus-visible:outline-none">
-              <Card className="flex flex-col items-center gap-2 p-5 text-center transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--color-brand)]/30 hover:shadow-md">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-tint)] text-[var(--color-brand)]">
-                  <CategoryIcon id={category.id} className="h-4.5 w-4.5" />
-                </span>
-                <span className="text-sm font-medium text-[var(--color-text)]">{category.label}</span>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      ) : null}
-    </>
-  );
+interface HealthPageProps {
+  searchParams: Promise<{ filter?: string }>;
 }
 
-export default function HealthPage() {
+export default async function HealthPage({ searchParams }: HealthPageProps) {
+  const { filter } = await searchParams;
   return (
-    <div>
-      <h1 className="font-display text-2xl font-medium text-[var(--color-text)]">Health</h1>
-      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-        Your results, organized by body system (docs/SPEC.md §21/§145).
-      </p>
-
-      <div className="mt-7">
-        <RequireReports description="Please upload reports to see your health categories.">
-          <HealthCategories />
-        </RequireReports>
-      </div>
-    </div>
+    <RequireReports description="Please upload reports to see your health categories.">
+      <HealthMasterDetail initialStatusFilter={parseHealthStatusFilter(filter)} />
+    </RequireReports>
   );
 }

@@ -1,4 +1,10 @@
-import type { LabReport, LabResult, ReportProcessingStatus, TimelineEvent } from "@/lib/api/types";
+import type {
+  HistoryEntry,
+  LabReport,
+  LabResult,
+  ReportProcessingStatus,
+  TimelineEvent,
+} from "@/lib/api/types";
 import { computeClinicalStatus } from "@/lib/health/status-engine";
 import {
   CANONICAL_TESTS,
@@ -160,6 +166,7 @@ function seedState(): MockState {
       description: `${lipidResults.length} tests processed`,
       occurredAt: lipidDate,
       relatedReportId: lipidReportId,
+      relatedMedicineId: null,
     },
     {
       id: id(),
@@ -168,6 +175,7 @@ function seedState(): MockState {
       description: "Routine consultation",
       occurredAt: daysAgo(175),
       relatedReportId: null,
+      relatedMedicineId: null,
     },
     {
       id: id(),
@@ -176,6 +184,7 @@ function seedState(): MockState {
       description: null,
       occurredAt: daysAgo(90),
       relatedReportId: null,
+      relatedMedicineId: null,
     },
     {
       id: id(),
@@ -184,6 +193,7 @@ function seedState(): MockState {
       description: `${cbcResults.length} tests processed`,
       occurredAt: cbcDate,
       relatedReportId: cbcReportId,
+      relatedMedicineId: null,
     },
   ];
 
@@ -295,6 +305,20 @@ export class MockReportsProvider implements ReportsProvider {
     );
   }
 
+  async deleteTimelineEvent(eventId: string): Promise<void> {
+    this.ensureHydrated();
+    this.state.timelineEvents = this.state.timelineEvents.filter((e) => e.id !== eventId);
+    persist(this.state);
+  }
+
+  // History isn't part of this mock's simulated pipeline — no real audit
+  // trail exists client-side to read it from (see the file banner above).
+  async getHistory(): Promise<HistoryEntry[]> {
+    return [];
+  }
+
+  async clearHistory(): Promise<void> {}
+
   async uploadReport(file: File): Promise<LabReport> {
     this.ensureHydrated();
     validateUpload(file);
@@ -358,6 +382,7 @@ export class MockReportsProvider implements ReportsProvider {
             description: `${results.length} tests extracted`,
             occurredAt: new Date().toISOString(),
             relatedReportId: reportId,
+            relatedMedicineId: null,
           },
           ...this.state.timelineEvents,
         ];

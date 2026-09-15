@@ -1,5 +1,7 @@
 import hashlib
 import uuid
+from collections.abc import Iterable
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,3 +53,21 @@ class AuditRepository:
         )
         self._db.add(entry)
         return entry
+
+    async def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        event_types: Iterable[str],
+        after: datetime | None = None,
+    ) -> list[AuditLog]:
+        """Read-only — pairs with the write-only `record` above. Used to
+        surface a user-facing activity history from the same append-only
+        trail (§55), never to let a caller mutate it."""
+        stmt = select(AuditLog).where(
+            AuditLog.actor_user_id == user_id, AuditLog.event_type.in_(list(event_types))
+        )
+        if after is not None:
+            stmt = stmt.where(AuditLog.created_at > after)
+        stmt = stmt.order_by(AuditLog.created_at.desc())
+        return list((await self._db.execute(stmt)).scalars().all())

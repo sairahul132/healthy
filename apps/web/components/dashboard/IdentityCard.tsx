@@ -1,13 +1,18 @@
 import { Logomark } from "@/components/layout/Logo";
+import { cn } from "@/lib/utils/cn";
 
 export function IdentityCard({
   healthyId,
   name,
   attentionCount,
+  outsideRangeOpen,
+  onToggleOutsideRange,
 }: {
   healthyId: string;
   name: string | null;
   attentionCount: number;
+  outsideRangeOpen?: boolean;
+  onToggleOutsideRange?: () => void;
 }) {
   return (
     <div
@@ -37,10 +42,10 @@ export function IdentityCard({
               Encrypted
             </span>
           </div>
-          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-brand-foreground)]/60">
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-accent-bright)]/80">
             Healthy ID
           </p>
-          <p className="font-display mt-1 text-2xl font-medium tracking-wide text-[var(--color-brand-foreground)]">
+          <p className="font-display mt-1 text-2xl font-medium tracking-wide text-[var(--color-accent-bright)]">
             {healthyId}
           </p>
           {name ? (
@@ -49,12 +54,28 @@ export function IdentityCard({
         </div>
 
         {attentionCount > 0 ? (
-          <div className="shrink-0 rounded-xl bg-[var(--color-accent)] px-3 py-2 text-right text-[var(--color-accent-foreground)] shadow-sm">
-            <p className="text-lg font-semibold leading-none">{attentionCount}</p>
-            <p className="mt-1 text-[10px] font-medium uppercase tracking-wide leading-none">
+          <button
+            type="button"
+            onClick={onToggleOutsideRange}
+            aria-expanded={outsideRangeOpen}
+            className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-[var(--color-accent-foreground)] shadow-sm transition-opacity hover:opacity-90"
+          >
+            <p className="text-lg leading-none font-semibold">{attentionCount}</p>
+            <p className="flex items-center gap-1 text-[9.5px] leading-none font-medium whitespace-nowrap uppercase">
               Outside range
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                className={cn("shrink-0 transition-transform", outsideRangeOpen && "rotate-180")}
+              >
+                <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </p>
-          </div>
+          </button>
         ) : null}
       </div>
     </div>

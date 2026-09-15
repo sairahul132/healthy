@@ -41,3 +41,6 @@ class TimelineEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     related_report_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(), ForeignKey("lab_reports.id", ondelete="CASCADE"), nullable=True
     )
+    related_medicine_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("medicines.id", ondelete="CASCADE"), nullable=True
+    )

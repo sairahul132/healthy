@@ -16,3 +16,10 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Activity-history "clear" cutoff (see ReportsService.clear_history) — the
+    # underlying AuditLog rows are append-only (§55) and never deleted, so
+    # "clearing" history just moves this forward and the history read filters
+    # to events after it, rather than mutating/removing audit rows.
+    history_cleared_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

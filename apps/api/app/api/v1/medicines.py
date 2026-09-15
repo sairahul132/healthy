@@ -34,3 +34,12 @@ async def update_medicine(
     service: MedicinesService = Depends(get_medicines_service),
 ) -> MedicineResponse:
     return await service.update(identity.user_id, medicine_id, body)
+
+
+@router.delete("/{medicine_id}", status_code=204)
+async def delete_medicine(
+    medicine_id: uuid.UUID,
+    identity: CurrentIdentity = Depends(get_current_identity),
+    service: MedicinesService = Depends(get_medicines_service),
+) -> None:
+    await service.delete(identity.user_id, medicine_id)
